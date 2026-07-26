@@ -83,6 +83,11 @@ extension EditorViewController {
     bridge.config.setFocusMode(enabled: enabled)
   }
 
+  func setVisualEditing(enabled: Bool) {
+    bridge.config.setVisualEditing(enabled: enabled)
+    workspaceSidebarView?.setVisualEditingEnabled(enabled)
+  }
+
   func setLineWrapping(enabled: Bool) {
     bridge.config.setLineWrapping(enabled: enabled)
   }
