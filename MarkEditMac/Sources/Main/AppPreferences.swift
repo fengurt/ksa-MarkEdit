@@ -50,6 +50,9 @@ enum AppPreferences {
     @Storage(key: "general.workspace-folder-bookmark", defaultValue: nil)
     static var workspaceFolderBookmark: Data?
 
+    @Storage(key: "general.workspace-folder-bookmarks", defaultValue: [:])
+    static var workspaceFolderBookmarks: [String: Data]
+
     static var quitAlwaysKeepsWindows: Bool {
       get {
         UserDefaults.standard.bool(forKey: NSQuitAlwaysKeepsWindows)

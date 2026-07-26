@@ -79,8 +79,18 @@ final class WorkspaceSession {
     return WorkspaceSession(rootURL: url, bookmark: resolvedBookmark, isAuthorized: isAuthorized)
   }
 
-  func persist() {
+  func persist(for fileURLs: [URL] = []) {
     AppPreferences.General.workspaceFolderBookmark = bookmark
+
+    guard !fileURLs.isEmpty else {
+      return
+    }
+
+    var bookmarks = AppPreferences.General.workspaceFolderBookmarks
+    for fileURL in fileURLs where contains(fileURL) {
+      bookmarks[fileURL.standardizedFileURL.path] = bookmark
+    }
+    AppPreferences.General.workspaceFolderBookmarks = bookmarks
   }
 
   func contains(_ url: URL) -> Bool {
