@@ -7,6 +7,7 @@
 
 import Foundation
 import MarkEditCore
+import MarkEditKit
 
 /**
  To make localization work, always use `String(localized:comment:)` directly and add to this file.
