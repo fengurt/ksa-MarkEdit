@@ -63,7 +63,7 @@ struct GeneralSettingsView: View {
 
         Picker(Localized.Settings.defaultTextEncoding, selection: $defaultTextEncoding) {
           ForEach(EditorTextEncoding.allCases, id: \.self) {
-            Text($0.description)
+            Text($0.localizedDescription)
 
             if EditorTextEncoding.groupingCases.contains($0) {
               Divider()

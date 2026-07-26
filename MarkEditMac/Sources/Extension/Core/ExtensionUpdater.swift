@@ -12,7 +12,7 @@ import MarkEditKit
 extension Notification.Name {
   /// Posted when the Extensions surfaces should refresh, e.g. the registry index or installed
   /// extensions changed, or the manager was opened for the first time.
-  static let extensionsMenuNeedsUpdate = Self("app.cyan.markedit.extensionsMenuNeedsUpdate")
+  static let extensionsMenuNeedsUpdate = Self("art.apuch.ksamint.markedit.extensionsMenuNeedsUpdate")
 }
 
 /// Checks the registry for newer extension releases and applies them per `registry.updateBehavior`.

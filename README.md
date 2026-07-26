@@ -1,74 +1,95 @@
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/MarkEdit-app/MarkEdit/main/Icon.png" width="96">
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MarkEdit-app/MarkEdit/main/Icon-dark.png" width="96">
-  <img src="./Icon.png" width="96">
-</picture>
+# ksamint MarkEdit
 
-# MarkEdit
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-0F4B42)](https://github.com/fengurt/ksa-MarkEdit/releases/latest)
+[![Build and test](https://github.com/fengurt/ksa-MarkEdit/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/fengurt/ksa-MarkEdit/actions/workflows/build-and-test.yml)
 
-[![](https://img.shields.io/badge/Platform-macOS_15.0+-blue?color=007bff)](https://github.com/MarkEdit-app/MarkEdit?tab=readme-ov-file#installation) [![](https://github.com/MarkEdit-app/MarkEdit/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/MarkEdit-app/MarkEdit/actions/workflows/build-and-test.yml)
+ksamint MarkEdit is a fast, native Markdown editor for macOS with first-class
+Simplified Chinese, Traditional Chinese, Japanese, and French interfaces.
+It is an independent localization-focused fork of
+[MarkEdit](https://github.com/MarkEdit-app/MarkEdit).
 
-MarkEdit is a free and **open-source** Markdown editor, for macOS. It's just like _TextEdit_ on Mac but dedicated to `Markdown`.
+The editor remains small and responsive because localization is compiled into
+Apple string catalogs and macOS supplies language selection, spellchecking,
+tokenization, and input methods. The CodeMirror editing engine and extension
+API stay compatible with upstream MarkEdit.
 
-No bloat. Markdown editing done right in a 4 MB app that flies through million-line files.
+## Features
 
-We do not claim to be the best in any single dimension. Instead, we aim to strike the right balance across **size**, **speed**, **native integration**, and **correctness**.
-
-_For perspective: at just 4 MB, MarkEdit is much smaller than Electron apps. Handling a 10 MB file with ease puts it ahead of TextKit-based editors. Performance-first editors built with Rust lack native features, while correctness alone rules out editors that rely on regex-based Markdown parsing._
-
-> [!TIP]
-> Discover our other free and open-source apps at [libremac.github.io](https://libremac.github.io/).
->
-> Follow our Mastodon account [@MarkEditApp](https://mastodon.social/@MarkEditApp) for the latest updates.
-
-## Preview
-
-![Screenshots 01](/Screenshots/01.png)
-
-![Screenshots 02](/Screenshots/02.png)
-
-![Screenshots 03](/Screenshots/03.png)
-
-![Screenshots 04](/Screenshots/04.png)
-
-## What makes MarkEdit different
-
-- Privacy-focused: doesn't collect any user data
-- Native: clean and intuitive, feels right at home on Mac
-- Fast: edits 10 MB files easily
-- Lightweight: installer size is about 4 MB
-- Extensible: seamless integration with Shortcuts and AppleScript
-
-MarkEdit strictly follows the [GFM specification](https://github.github.com/gfm/), with no proprietary syntax or invented features. Complex editing like multi-caret and code folding is built on [CodeMirror 6](https://codemirror.net/) for correctness and performance, consistently faster than most macOS editors. UI controls remain native to macOS in both aesthetics and behavior, including force-touch word lookup, inline predictions, and Writing Tools.
-
-Customization is built around CSS, JavaScript, and [CodeMirror extensions](https://github.com/MarkEdit-app/MarkEdit-api). Official extensions include [MarkEdit-preview](https://markedit-app.github.io/extensions/#markedit-preview) for a preview pane, [MarkEdit-theming](https://github.com/MarkEdit-app/MarkEdit-theming) for custom themes, and [MarkEdit-ai-writer](https://markedit-app.github.io/extensions/#markedit-ai-writer) for Apple Intelligence on macOS Tahoe or later.
-
-> To learn more, refer to [Philosophy](https://github.com/MarkEdit-app/MarkEdit/wiki/Philosophy), [Why MarkEdit](https://github.com/MarkEdit-app/MarkEdit/wiki/Why-MarkEdit) and [MarkEdit Extensions](https://markedit-app.github.io/extensions/).
+- Native AppKit and SwiftUI interface
+- Automatic macOS and per-app language selection
+- Chinese and Japanese IME-aware editing
+- UTF-8, GB 18030, Big 5, EUC-JP, Shift JIS, and other native encodings
+- GFM-compatible Markdown powered by CodeMirror 6
+- Finder and Quick Look extensions
+- Shortcuts, AppleScript, and JavaScript extension support
+- Universal Intel and Apple silicon build
 
 ## Installation
 
-Get `MarkEdit.dmg` from the <a href="https://github.com/MarkEdit-app/MarkEdit/releases/latest" target="_blank">latest release</a>, open it, and drag `MarkEdit.app` to `Applications`. Or install via [Homebrew](https://brew.sh/): `brew install --cask markedit`.
+The signed and notarized release supports macOS 15 or later:
 
-<img src="./Screenshots/install.png" width="540" alt="Install MarkEdit">
+```sh
+brew install --cask fengurt/ksamint/ksamint-markedit
+open -a "ksamint MarkEdit"
+```
 
-MarkEdit checks for updates automatically; you can also browse version history [here](https://github.com/MarkEdit-app/MarkEdit/releases).
+Alternatively, download `ksamint-MarkEdit-<version>.dmg` from the
+[latest GitHub release](https://github.com/fengurt/ksa-MarkEdit/releases/latest).
 
-For older macOS: [macos-12](https://github.com/MarkEdit-app/MarkEdit/releases/tag/macos-12), [macos-13](https://github.com/MarkEdit-app/MarkEdit/releases/tag/macos-13), [macos-14](https://github.com/MarkEdit-app/MarkEdit/releases/tag/macos-14).
+Pull requests also produce a universal, ad-hoc-signed development artifact.
+Download `ksamint-MarkEdit-development` from the successful GitHub Actions run,
+unzip it, and copy `ksamint MarkEdit.app` into `~/Applications`.
 
-## Using MarkEdit
+## Language review
 
-Please refer to the [wiki page](https://github.com/MarkEdit-app/MarkEdit/wiki/Manual) for details. Check out [MarkEdit-skill](https://github.com/MarkEdit-app/MarkEdit-skill) if you're interested in managing MarkEdit with an AI agent.
+Every translatable catalog entry is validated for completeness and placeholder
+safety in CI. Japanese and French translations are published only after an
+explicit native-language review. Translation corrections are welcome through
+the [issue tracker](https://github.com/fengurt/ksa-MarkEdit/issues).
 
-## Why MarkEdit is free
+## Compatibility
 
-MarkEdit is a tool we use every day and keep improving for ourselves. We ship it openly, hoping it's useful to others with the same needs.
+- Deep links use `ksamint-markedit://` so the fork can coexist with MarkEdit.
+- Bundle IDs, exported UTIs, containers, and preferences use the
+  `art.apuch.ksamint.markedit` namespace.
+- The `MarkEdit` JavaScript API, extension registry, AppleScript commands, and
+  supported Markdown formats remain compatible with the upstream ecosystem.
 
-## Contributing to MarkEdit
+Upstream customization and usage documentation remains applicable:
+[manual](https://github.com/MarkEdit-app/MarkEdit/wiki/Manual),
+[customization](https://github.com/MarkEdit-app/MarkEdit/wiki/Customization),
+and [extensions](https://markedit-app.github.io/extensions/).
 
-For bugs, [open an issue](https://github.com/MarkEdit-app/MarkEdit/issues/new) or [pull request](https://github.com/MarkEdit-app/MarkEdit/compare). For behavior changes, discuss first; MarkEdit is intentionally minimal ([why](https://github.com/MarkEdit-app/MarkEdit/wiki/Why-MarkEdit#feature-poor)).
+## Development
 
-Please refer to the [wiki page](https://github.com/MarkEdit-app/MarkEdit/wiki/Development) for development instructions.
+The project contains:
 
-## Acknowledgments
+- `CoreEditor`: TypeScript, CodeMirror 6, Lezer, Vite, and Jest
+- `MarkEditCore` and `MarkEditKit`: shared Swift packages
+- `MarkEditMac`: the native macOS app and feature modules
+- `FinderExtension` and `PreviewExtension`: native system integrations
 
-Built on [CodeMirror 6](https://codemirror.net/), with [ts-gyb](https://github.com/microsoft/ts-gyb) for code generation.
+Use Node.js 22 and Xcode 26.5:
+
+```sh
+cd CoreEditor
+corepack enable
+yarn install --immutable
+yarn build
+yarn test
+cd ..
+node Scripts/validate-localizations.mjs
+xcodebuild build -project MarkEdit.xcodeproj -scheme MarkEditMac -destination 'platform=macOS'
+```
+
+## Branding and license
+
+The ksamint / 查明 identity and mint/deep-green theme follow the current
+[APUCH brand directory](https://apuch.art/brand?brand=ksamint). No unpublished
+logo has been invented.
+
+ksamint MarkEdit is distributed under the MIT License. The fork is based on
+MarkEdit by Ying Zhong and its contributors; upstream copyright and license
+notices are preserved. Built with
+[CodeMirror 6](https://codemirror.net/) and
+[ts-gyb](https://github.com/microsoft/ts-gyb).

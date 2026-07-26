@@ -98,6 +98,16 @@ describe('Composition over-delete clamp', () => {
     expect(window.editor.state.selection.main.head).toBe(6);
   });
 
+  test('preserves Markdown delimiters during Japanese composition', () => {
+    setUpComposing('**仮**', 5);
+
+    // WebKit can report an over-wide replacement while a Japanese IME commits.
+    dispatchCompose(2, 5, '日本語');
+
+    expect(editor.getText()).toBe('**仮**日本語');
+    expect(window.editor.state.selection.main.head).toBe(8);
+  });
+
   test('clamps a change entirely before the anchor', () => {
     setUpComposing('**?**', 5);
 

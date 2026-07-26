@@ -12,7 +12,7 @@ import MarkEditKit
 enum AppUpdater {
   private enum Constants {
     static let defaultOSVer = "1.0.0"
-    static let endpoint = "https://api.github.com/repos/MarkEdit-app/MarkEdit/releases/latest"
+    static let endpoint = "https://api.github.com/repos/fengurt/ksa-MarkEdit/releases/latest"
     static let decoder = {
       let decoder = JSONDecoder()
       decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -52,11 +52,11 @@ enum AppUpdater {
       return
     }
 
-    // Check if the version is different and wasn't released to MAS
+    // Only offer a strictly newer fork release.
     let currentVersion = Bundle.main.shortVersionString ?? "0.0.0"
     Logger.assert(currentVersion != "0.0.0", "Invalid current version string")
 
-    guard version.name != currentVersion && !version.releasedToMAS else {
+    guard version.isNewer(than: currentVersion) else {
       return {
         guard explicitly else {
           return
@@ -123,7 +123,7 @@ private extension AppUpdater {
     alert.addButton(withTitle: Localized.Updater.notNow)
 
     if alert.runModal() == .alertFirstButtonReturn {
-      NSWorkspace.shared.safelyOpenURL(string: "https://github.com/MarkEdit-app/MarkEdit/releases")
+      NSWorkspace.shared.safelyOpenURL(string: "https://github.com/fengurt/ksa-MarkEdit/releases")
     }
   }
 
@@ -204,15 +204,15 @@ private extension AppUpdater {
     mainUpdateItem?.title = String(format: Localized.Updater.newVersionOut, newVersion.name)
     mainUpdateItem?.isHidden = false
 
-    delegate.presentUpdateItem?.addAction("app.markedit.present-update") {
+    delegate.presentUpdateItem?.addAction("art.apuch.ksamint.markedit.present-update") {
       NSWorkspace.shared.safelyOpenURL(string: newVersion.htmlUrl)
     }
 
-    delegate.postponeUpdateItem?.addAction("app.markedit.postpone-update") {
+    delegate.postponeUpdateItem?.addAction("art.apuch.ksamint.markedit.postpone-update") {
       mainUpdateItem?.isHidden = true
     }
 
-    delegate.ignoreUpdateItem?.addAction("app.markedit.ignore-update") {
+    delegate.ignoreUpdateItem?.addAction("art.apuch.ksamint.markedit.ignore-update") {
       mainUpdateItem?.isHidden = true
       AppPreferences.Updater.skippedVersions.insert(newVersion.name)
     }

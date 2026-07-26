@@ -65,13 +65,13 @@
         </html>
        </documentation>
       <enumerator name="Plain Text" code="txt " description="Plain text format using the &quot;.txt&quot; extension.">
-        <cocoa string-value="app.markedit.txt"/>
+        <cocoa string-value="art.apuch.ksamint.markedit.txt"/>
       </enumerator>
       <enumerator name="Markdown" code="md  " description="Markdown format using the &quot;.md&quot; extension.">
-        <cocoa string-value="app.markedit.md"/>
+        <cocoa string-value="art.apuch.ksamint.markedit.md"/>
       </enumerator>
       <enumerator name="MarkdownFull" code="mkdn" description="Markdown format using the &quot;.markdown&quot; extension">
-        <cocoa string-value="app.markedit.markdown"/>
+        <cocoa string-value="art.apuch.ksamint.markedit.markdown"/>
       </enumerator>
       <enumerator name="TextBundle" code="txtb" description="Text Bundle format using the &quot;.textbundle&quot; extension.">
         <cocoa string-value="org.textbundle.package"/>

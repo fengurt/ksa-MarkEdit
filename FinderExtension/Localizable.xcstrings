@@ -20,6 +20,18 @@
             "state" : "translated",
             "value" : "新增“%1$@%2$@”"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規“%1$@%2$@”"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau « %1$@%2$@ »"
+          }
         }
       }
     },
@@ -36,6 +48,18 @@
             "state" : "translated",
             "value" : "新增%@檔案"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau fichier %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい %@ ファイル"
+          }
         }
       }
     },
@@ -51,6 +75,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未命名"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans titre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無題"
           }
         }
       }

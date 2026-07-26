@@ -1,0 +1,154 @@
+name: Signed release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Reviewed release tag, for example v1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Sign, notarize, and publish
+    runs-on: macos-26
+    environment: release
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+      RELEASE_TAG: ${{ inputs.tag }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_DEVELOPER_ID_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
+      APPLE_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+      APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+      APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+      APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+      APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      - name: Verify tag and version
+        run: |
+          version="${RELEASE_TAG#v}"
+          test "$version" = "$(sed -n 's/^MARKETING_VERSION = //p' Build.xcconfig)"
+          test "$(git tag --points-at HEAD)" = "$RELEASE_TAG"
+          node Scripts/validate-localizations.mjs
+
+      - name: Build CoreEditor
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
+          yarn test
+
+      - name: Import Developer ID certificate
+        run: |
+          keychain="$RUNNER_TEMP/release.keychain-db"
+          certificate="$RUNNER_TEMP/developer-id.p12"
+          printf '%s' "$APPLE_DEVELOPER_ID_P12_BASE64" | base64 --decode > "$certificate"
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security list-keychains -d user -s "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+
+      - name: Archive and export universal app
+        run: |
+          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
+          test -n "$identity"
+          xcodebuild archive \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditMac \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/ksamint-MarkEdit.xcarchive" \
+            -destination 'generic/platform=macOS' \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_IDENTITY="$identity"
+          plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingStyle -string manual "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/ksamint-MarkEdit.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Create, sign, and notarize DMG
+        run: |
+          version="${RELEASE_TAG#v}"
+          staging="$RUNNER_TEMP/dmg"
+          dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
+          mkdir -p "$staging"
+          ditto "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$staging/ksamint MarkEdit.app"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDZO "$dmg"
+          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
+          codesign --force --timestamp --sign "$identity" "$dmg"
+          notary_key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$notary_key"
+          xcrun notarytool submit "$dmg" \
+            --key "$notary_key" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/export/ksamint MarkEdit.app"
+          spctl --assess --type execute -vv "$RUNNER_TEMP/export/ksamint MarkEdit.app"
+          Scripts/verify-universal.sh "$RUNNER_TEMP/export/ksamint MarkEdit.app"
+          dmg_size="$(stat -f '%z' "$dmg")"
+          test "$dmg_size" -le 6291456
+          printf '{"minOSVer":"15.0"}\n' > "$RUNNER_TEMP/ReleaseInfo.json"
+          shasum -a 256 "$dmg" > "$RUNNER_TEMP/SHA256SUMS"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
+            "$RUNNER_TEMP/ReleaseInfo.json" \
+            "$RUNNER_TEMP/SHA256SUMS" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$version" \
+            --generate-notes \
+            --verify-tag
+
+      - name: Update Homebrew tap
+        env:
+          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
+          sha="$(shasum -a 256 "$dmg" | awk '{print $1}')"
+          mkdir -p ~/.ssh
+          printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" > ~/.ssh/ksamint_tap
+          chmod 600 ~/.ssh/ksamint_tap
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/ksamint_tap -o IdentitiesOnly=yes" \
+            git clone git@github.com:fengurt/homebrew-ksamint.git "$RUNNER_TEMP/tap"
+          ruby Scripts/render-cask.rb "$version" "$sha" > "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
+          brew style --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
+          brew audit --new --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
+          brew install --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
+          test -d "/Applications/ksamint MarkEdit.app"
+          brew uninstall --cask ksamint-markedit
+          cd "$RUNNER_TEMP/tap"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add Casks/ksamint-markedit.rb
+          git commit -m "ksamint MarkEdit $version"
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/ksamint_tap -o IdentitiesOnly=yes" git push

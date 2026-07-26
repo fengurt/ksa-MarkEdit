@@ -2,48 +2,149 @@ name: Build and test
 
 on:
   push:
-    branches: ['main']
+    branches: [main]
   pull_request:
-    branches: ['main']
+    branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]
 
-jobs:
-  markedit-mac:
-    name: MarkEditMac
-    runs-on: macos-26
-    if: github.event.pull_request.draft == false
-    env:
-      node-version: '22.x'
-      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+permissions:
+  contents: read
 
-    defaults:
-      run:
-        working-directory: 'CoreEditor'
+jobs:
+  test:
+    name: Tests (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
 
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js ${{ env.node-version }}
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: ${{ env.node-version }}
-          cache: 'npm'
-          cache-dependency-path: '**/yarn.lock'
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: CoreEditor/yarn.lock
+
+      - name: Validate localizations
+        run: node Scripts/validate-localizations.mjs
 
       - name: Build and test CoreEditor
+        working-directory: CoreEditor
         run: |
           corepack enable
-          yarn install
+          yarn install --immutable
           yarn build
           yarn test
 
-      - name: Build MarkEditMac
+      - name: Build ksamint MarkEdit
         run: |
-          xcodebuild build -project ../MarkEdit.xcodeproj -scheme MarkEditMac -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          xcodebuild build \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditMac \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
 
-      - name: Test MarkEditCoreTests
+      - name: Test Swift packages
         run: |
-          xcodebuild test -project ../MarkEdit.xcodeproj -scheme MarkEditCoreTests -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          swift test --package-path MarkEditKit
+          xcodebuild test \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditCoreTests \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+          xcodebuild test \
+            -project MarkEdit.xcodeproj \
+            -scheme ModulesTests \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
 
-      - name: Test ModulesTests
+  compatibility:
+    name: macOS 15 compatibility (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+      - name: Build CoreEditor
+        working-directory: CoreEditor
         run: |
-          xcodebuild test -project ../MarkEdit.xcodeproj -scheme ModulesTests -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          corepack enable
+          yarn install --immutable
+          yarn build
+      - name: Build deployment-target release
+        run: |
+          xcodebuild build \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditMac \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            MACOSX_DEPLOYMENT_TARGET=15.0 \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+  development-artifact:
+    name: Universal development app
+    needs: [test, compatibility]
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+      - name: Build CoreEditor
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
+      - name: Build universal app
+        run: |
+          xcodebuild build \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditMac \
+            -configuration Release \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -destination 'generic/platform=macOS' \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/ksamint MarkEdit.app"
+          codesign --force --deep --sign - "$app"
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ksamint-MarkEdit-development
+          path: ${{ runner.temp }}/ksamint-MarkEdit-development.zip
+          if-no-files-found: error
