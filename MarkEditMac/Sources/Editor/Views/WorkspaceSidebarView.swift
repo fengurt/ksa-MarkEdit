@@ -20,6 +20,7 @@ final class WorkspaceSidebarView: NSView {
   var onMove: ((URL, URL) -> Bool)?
   var onResize: ((Double) -> Void)?
   var onPreviewSyncChanged: ((Bool) -> Void)?
+  var onVisualEditingChanged: ((Bool) -> Void)?
 
   var mode: WorkspaceSidebarMode = .files {
     didSet {
@@ -54,6 +55,7 @@ final class WorkspaceSidebarView: NSView {
   private let previewContainer = NSView()
   private let previewContentContainer = NSView()
   private let previewSyncButton = NSButton()
+  private let previewEditorModeControl = NSSegmentedControl()
   private let rootLabel = NSTextField(labelWithString: "")
   private let authorizationLabel = NSTextField(wrappingLabelWithString: "")
   private let authorizeButton = NSButton()
@@ -110,6 +112,10 @@ final class WorkspaceSidebarView: NSView {
 
   func setPreviewSyncEnabled(_ enabled: Bool) {
     previewSyncButton.state = enabled ? .on : .off
+  }
+
+  func setVisualEditingEnabled(_ enabled: Bool) {
+    previewEditorModeControl.selectedSegment = enabled ? 1 : 0
   }
 }
 
@@ -168,7 +174,7 @@ private extension WorkspaceSidebarView {
       $0.translatesAutoresizingMaskIntoConstraints = false
       searchContainer.addSubview($0)
     }
-    [previewSyncButton, previewContentContainer].forEach {
+    [previewSyncButton, previewEditorModeControl, previewContentContainer].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       previewContainer.addSubview($0)
     }
@@ -232,7 +238,10 @@ private extension WorkspaceSidebarView {
       previewSyncButton.topAnchor.constraint(equalTo: previewContainer.topAnchor, constant: 5),
       previewSyncButton.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor, constant: 8),
       previewSyncButton.trailingAnchor.constraint(lessThanOrEqualTo: previewContainer.trailingAnchor, constant: -8),
-      previewContentContainer.topAnchor.constraint(equalTo: previewSyncButton.bottomAnchor, constant: 4),
+      previewEditorModeControl.topAnchor.constraint(equalTo: previewSyncButton.bottomAnchor, constant: 5),
+      previewEditorModeControl.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor, constant: 8),
+      previewEditorModeControl.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor, constant: -8),
+      previewContentContainer.topAnchor.constraint(equalTo: previewEditorModeControl.bottomAnchor, constant: 6),
       previewContentContainer.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
       previewContentContainer.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
       previewContentContainer.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
@@ -303,6 +312,15 @@ private extension WorkspaceSidebarView {
     previewSyncButton.state = AppPreferences.Window.workspacePreviewSync ? .on : .off
     previewSyncButton.target = self
     previewSyncButton.action = #selector(togglePreviewSync(_:))
+
+    previewEditorModeControl.segmentCount = 2
+    previewEditorModeControl.setLabel(Localized.Workspace.sourceEditing, forSegment: 0)
+    previewEditorModeControl.setLabel(Localized.Workspace.visualEditing, forSegment: 1)
+    previewEditorModeControl.segmentStyle = .texturedRounded
+    previewEditorModeControl.trackingMode = .selectOne
+    previewEditorModeControl.selectedSegment = AppPreferences.Editor.visualEditingMode ? 1 : 0
+    previewEditorModeControl.target = self
+    previewEditorModeControl.action = #selector(selectEditorMode(_:))
   }
 
   func updateAuthorizationState() {
@@ -374,6 +392,10 @@ private extension WorkspaceSidebarView {
 
   @objc func togglePreviewSync(_ sender: NSButton) {
     onPreviewSyncChanged?(sender.state == .on)
+  }
+
+  @objc func selectEditorMode(_ sender: NSSegmentedControl) {
+    onVisualEditingChanged?(sender.selectedSegment == 1)
   }
 
   @objc func chooseWorkspace(_ sender: Any?) {

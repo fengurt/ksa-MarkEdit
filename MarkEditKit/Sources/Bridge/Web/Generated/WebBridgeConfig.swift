@@ -126,6 +126,18 @@ public final class WebBridgeConfig {
     webView?.invoke(path: "webModules.config.setFocusMode", message: message, completion: completion)
   }
 
+  public func setVisualEditing(enabled: Bool, completion: ((Result<Void, WKWebView.InvokeError>) -> Void)? = nil) {
+    struct Message: Encodable {
+      let enabled: Bool
+    }
+
+    let message = Message(
+      enabled: enabled
+    )
+
+    webView?.invoke(path: "webModules.config.setVisualEditing", message: message, completion: completion)
+  }
+
   public func setLineWrapping(enabled: Bool, completion: ((Result<Void, WKWebView.InvokeError>) -> Void)? = nil) {
     struct Message: Encodable {
       let enabled: Bool

@@ -12,6 +12,7 @@ import { loadTheme } from '../../styling/themes';
 
 import * as styling from '../../styling/config';
 import * as completion from '../completion';
+import { setVisualEditing as applyVisualEditingMode } from '../visualEditing';
 
 export function setTheme(name: string) {
   window.config.theme = name;
@@ -96,6 +97,10 @@ export function setFocusMode(enabled: boolean) {
   styling.setFocusMode(enabled);
 }
 
+export function setVisualEditing(enabled: boolean) {
+  applyVisualEditingMode(enabled);
+}
+
 export function setLineWrapping(enabled: boolean) {
   window.config.lineWrapping = enabled;
   styling.setLineWrapping(enabled);
@@ -150,4 +155,3 @@ export function recalculateTextMetrics() {
   document.documentElement.style.setProperty('--tooltip-completion-max-height', totalHeight);
   document.body.removeChild(span);
 }
-

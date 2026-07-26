@@ -20,6 +20,7 @@ public struct EditorConfig: Encodable {
   let readOnlyMode: Bool
   let typewriterMode: Bool
   let focusMode: Bool
+  let visualEditingMode: Bool
   let lineWrapping: Bool
   let lineHeight: Double
   let suggestWhileTyping: Bool
@@ -48,6 +49,7 @@ public struct EditorConfig: Encodable {
     readOnlyMode: Bool,
     typewriterMode: Bool,
     focusMode: Bool,
+    visualEditingMode: Bool,
     lineWrapping: Bool,
     lineHeight: Double,
     suggestWhileTyping: Bool,
@@ -75,6 +77,7 @@ public struct EditorConfig: Encodable {
     self.readOnlyMode = readOnlyMode
     self.typewriterMode = typewriterMode
     self.focusMode = focusMode
+    self.visualEditingMode = visualEditingMode
     self.lineWrapping = lineWrapping
     self.lineHeight = lineHeight
     self.suggestWhileTyping = suggestWhileTyping

@@ -79,6 +79,11 @@ extension EditorViewController {
           self.toggleWorkspaceSidebar(.preview)
           return nil
         }
+
+        if event.keyCode == .kVK_ANSI_V, event.userModifierFlags == [.option, .command] {
+          self.toggleVisualEditing()
+          return nil
+        }
       }
 
       // Press F to potentially change the find mode or switch focus between two fields

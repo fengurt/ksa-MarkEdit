@@ -115,6 +115,8 @@ enum Localized {
     static let resultCountFormat = String(localized: "%d results", comment: "Workspace search result count")
     static let indexFailed = String(localized: "Index unavailable — search will scan files.", comment: "Workspace index failure message")
     static let syncPreview = String(localized: "Follow editor position", comment: "Toggle rendered preview scroll synchronization")
+    static let sourceEditing = String(localized: "Source", comment: "Markdown source editing mode")
+    static let visualEditing = String(localized: "Visual", comment: "Visual Markdown editing mode")
     static let outsideWorkspace = String(localized: "The item is outside the workspace folder.", comment: "Blocked workspace traversal message")
     static let invalidName = String(localized: "Enter a valid name without path separators.", comment: "Invalid workspace item name")
     static let itemExists = String(localized: "An item with that name already exists.", comment: "Duplicate workspace item message")

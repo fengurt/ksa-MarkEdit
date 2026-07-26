@@ -12,6 +12,7 @@ import {
   setReadOnlyMode,
   setTypewriterMode,
   setFocusMode,
+  setVisualEditing,
   setLineWrapping,
   setLineHeight,
   setDefaultLineBreak,
@@ -35,6 +36,7 @@ export interface WebModuleConfig extends WebModule {
   setReadOnlyMode({ enabled }: { enabled: boolean }): void;
   setTypewriterMode({ enabled }: { enabled: boolean }): void;
   setFocusMode({ enabled }: { enabled: boolean }): void;
+  setVisualEditing({ enabled }: { enabled: boolean }): void;
   setLineWrapping({ enabled }: { enabled: boolean }): void;
   setLineHeight({ lineHeight }: { lineHeight: number }): void;
   setDefaultLineBreak({ lineBreak }: { lineBreak?: string }): void;
@@ -78,6 +80,10 @@ export class WebModuleConfigImpl implements WebModuleConfig {
 
   setFocusMode({ enabled }: { enabled: boolean }): void {
     setFocusMode(enabled);
+  }
+
+  setVisualEditing({ enabled }: { enabled: boolean }): void {
+    setVisualEditing(enabled);
   }
 
   setLineWrapping({ enabled }: { enabled: boolean }): void {
