@@ -164,8 +164,7 @@ private extension EditorViewController {
     WorkspaceSessionRegistry.register(session, for: url)
     let targetWindow = view.window
 
-    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) {
-      [weak self] document, _, error in
+    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { [weak self] document, _, error in
       if let error {
         self?.showWorkspaceError(error.localizedDescription)
         return

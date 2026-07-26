@@ -58,9 +58,7 @@ public actor WorkspaceIndex {
 
         do {
           for url in files {
-            if try insert(url, database: database) {
-              insertedFileCount += 1
-            }
+            insertedFileCount += try insert(url, database: database) ? 1 : 0
           }
           try execute(database, sql: "COMMIT")
         } catch {

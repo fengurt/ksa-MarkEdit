@@ -371,9 +371,11 @@ private extension WorkspaceSidebarView {
     }
 
     if node.isDirectory && !node.isSymbolicLink {
-      outlineView.isItemExpanded(node)
-        ? outlineView.collapseItem(node)
-        : outlineView.expandItem(node)
+      if outlineView.isItemExpanded(node) {
+        outlineView.collapseItem(node)
+      } else {
+        outlineView.expandItem(node)
+      }
     } else {
       onOpenResult?(node.url, nil)
     }

@@ -18,6 +18,7 @@ import MarkEditKit
  The only exception to not using this file for localization is the app intents,
  where we rely on `LocalizedStringResource` instead.
  */
+// swiftlint:disable:next type_body_length
 enum Localized {
   enum General {
     static let done = String(localized: "Done", comment: "Button title, confirm an action")

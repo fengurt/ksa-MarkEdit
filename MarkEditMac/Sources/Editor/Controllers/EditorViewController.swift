@@ -13,6 +13,7 @@ import MarkEditKit
 import Statistics
 import TextCompletion
 
+// swiftlint:disable:next type_body_length
 final class EditorViewController: NSViewController {
   var hasFinishedLoading = false {
     didSet {
