@@ -1,0 +1,209 @@
+:root {
+  color-scheme: light dark;
+  --background: #ffffff;
+  --foreground: #24292f;
+  --secondary: #656d76;
+  --border: #d0d7de;
+  --surface: #f6f8fa;
+  --accent: #0969da;
+  --quote: #6e7781;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --secondary: #8b949e;
+    --border: #30363d;
+    --surface: #161b22;
+    --accent: #58a6ff;
+    --quote: #8b949e;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  font: 15px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  overflow-wrap: anywhere;
+}
+
+#content {
+  max-width: 760px;
+  min-height: 100vh;
+  padding: 20px clamp(16px, 6vw, 48px) 56px;
+  margin: 0 auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 1.25em 0 0.55em;
+  line-height: 1.28;
+}
+
+h1,
+h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 1.9em;
+}
+
+h2 {
+  font-size: 1.5em;
+}
+
+h3 {
+  font-size: 1.25em;
+}
+
+p,
+ul,
+ol,
+blockquote,
+pre,
+.table-scroll,
+figure,
+.footnote {
+  margin: 0 0 1em;
+}
+
+ul,
+ol {
+  padding-left: 1.7em;
+}
+
+li + li {
+  margin-top: 0.25em;
+}
+
+.task {
+  margin: 0 0.45em 0 -1.35em;
+  vertical-align: -0.1em;
+  accent-color: var(--accent);
+}
+
+blockquote {
+  padding: 0.15em 1em;
+  color: var(--quote);
+  border-left: 4px solid var(--border);
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  padding: 0.15em 0.35em;
+  border-radius: 5px;
+  background: var(--surface);
+  font: 0.9em/1.5 "SFMono-Regular", Consolas, monospace;
+}
+
+pre {
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.raw-html {
+  color: var(--secondary);
+  border-style: dashed;
+}
+
+.front-matter {
+  color: var(--secondary);
+}
+
+.math-source {
+  display: block;
+  margin-bottom: 1em;
+  white-space: pre-wrap;
+}
+
+figure {
+  text-align: center;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+figcaption,
+.image-fallback,
+.unsafe-link {
+  color: var(--secondary);
+  font-size: 0.9em;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+}
+
+th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+hr {
+  height: 1px;
+  margin: 1.5em 0;
+  border: 0;
+  background: var(--border);
+}
+
+.footnote,
+.footnote-ref {
+  color: var(--secondary);
+  font-size: 0.9em;
+}
+
+[data-source-from] {
+  scroll-margin-top: 16px;
+}

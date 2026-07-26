@@ -8777,6 +8777,35 @@
         }
       }
     },
+    "Follow editor position": {
+      "comment": "Toggle rendered preview scroll synchronization",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随编辑位置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟隨編輯位置"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集位置に追従"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivre la position d’édition"
+          }
+        }
+      }
+    },
     "Workspace Operation Failed": {
       "comment": "Workspace interface",
       "localizations": {

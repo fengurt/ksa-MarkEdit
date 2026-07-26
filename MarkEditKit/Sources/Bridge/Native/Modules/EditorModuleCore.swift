@@ -30,8 +30,14 @@ public protocol EditorModuleCoreDelegate: AnyObject {
     isDirty: Bool,
     selectedLineColumn: LineColumnInfo
   )
+  func editorCoreTextChanged(
+    _ sender: EditorModuleCore,
+    revision: UInt64,
+    changes: [EditorTextChange],
+    compositionEnded: Bool
+  )
   func editorCoreContentHeightDidChange(_ sender: EditorModuleCore, bottomPanelHeight: Double)
-  func editorCoreContentOffsetDidChange(_ sender: EditorModuleCore)
+  func editorCoreContentOffsetDidChange(_ sender: EditorModuleCore, sourcePosition: Int)
   func editorCoreCompositionEnded(_ sender: EditorModuleCore, selectedLineColumn: LineColumnInfo)
   func editorCoreLinkClicked(_ sender: EditorModuleCore, link: String)
   func editorCoreLightWarning(_ sender: EditorModuleCore)
@@ -99,8 +105,21 @@ public final class EditorModuleCore: NativeModuleCore {
     delegate?.editorCoreContentHeightDidChange(self, bottomPanelHeight: bottomPanelHeight)
   }
 
-  public func notifyContentOffsetDidChange() {
-    delegate?.editorCoreContentOffsetDidChange(self)
+  public func notifyTextChanged(
+    revision: UInt64,
+    changes: [EditorTextChange],
+    compositionEnded: Bool
+  ) {
+    delegate?.editorCoreTextChanged(
+      self,
+      revision: revision,
+      changes: changes,
+      compositionEnded: compositionEnded
+    )
+  }
+
+  public func notifyContentOffsetDidChange(sourcePosition: Int) {
+    delegate?.editorCoreContentOffsetDidChange(self, sourcePosition: sourcePosition)
   }
 
   public func notifyCompositionEnded(selectedLineColumn: LineColumnInfo) {

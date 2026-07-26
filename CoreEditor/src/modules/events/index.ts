@@ -93,12 +93,12 @@ export function startObserving() {
   // It happens usually when the page is scaled, i.e., it's not the actual size
   if ('onscrollend' in window) { // [macOS] 26.2
     document.addEventListener('scrollend', () => {
-      window.nativeModules.core.notifyContentOffsetDidChange();
+      notifyContentOffsetDidChange();
     });
   } else {
     document.addEventListener('scroll', () => {
       clearTimeout(storage.scrollTimer);
-      storage.scrollTimer = setTimeout(() => window.nativeModules.core.notifyContentOffsetDidChange(), 100);
+      storage.scrollTimer = setTimeout(notifyContentOffsetDidChange, 100);
     });
   }
 
@@ -109,6 +109,13 @@ export function startObserving() {
 
   observeEventsForTokenization();
   observeEventsForCompletion();
+}
+
+function notifyContentOffsetDidChange() {
+  const editor = window.editor;
+  window.nativeModules.core.notifyContentOffsetDidChange({
+    sourcePosition: editor.lineBlockAtHeight(editor.scrollDOM.scrollTop).from as CodeGen_Int,
+  });
 }
 
 export function isMouseDown() {

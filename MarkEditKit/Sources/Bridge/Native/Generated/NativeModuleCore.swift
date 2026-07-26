@@ -20,8 +20,9 @@ public protocol NativeModuleCore: NativeModule {
   func notifyBackgroundColorDidChange(color: Int, alpha: Double)
   func notifyViewportScaleDidChange()
   func notifyViewDidUpdate(contentEdited: Bool, compositionEnded: Bool, isDirty: Bool, selectedLineColumn: LineColumnInfo)
+  func notifyTextChanged(revision: UInt64, changes: [EditorTextChange], compositionEnded: Bool)
   func notifyContentHeightDidChange(bottomPanelHeight: Double)
-  func notifyContentOffsetDidChange()
+  func notifyContentOffsetDidChange(sourcePosition: Int)
   func notifyCompositionEnded(selectedLineColumn: LineColumnInfo)
   func notifyLinkClicked(link: String)
   func notifyLightWarning()
@@ -58,6 +59,9 @@ final class NativeBridgeCore: NativeBridge {
     },
     "notifyViewDidUpdate": { [weak self] in
       await self?.notifyViewDidUpdate(parameters: $0)
+    },
+    "notifyTextChanged": { [weak self] in
+      await self?.notifyTextChanged(parameters: $0)
     },
     "notifyContentHeightDidChange": { [weak self] in
       await self?.notifyContentHeightDidChange(parameters: $0)
@@ -179,6 +183,25 @@ final class NativeBridgeCore: NativeBridge {
     return .success(nil)
   }
 
+  private func notifyTextChanged(parameters: Data) async -> Result<Any?, Error>? {
+    struct Message: Decodable {
+      var revision: UInt64
+      var changes: [EditorTextChange]
+      var compositionEnded: Bool
+    }
+
+    let message: Message
+    do {
+      message = try decoder.decode(Message.self, from: parameters)
+    } catch {
+      Logger.assertFail("Failed to decode parameters: \(parameters)")
+      return .failure(error)
+    }
+
+    module.notifyTextChanged(revision: message.revision, changes: message.changes, compositionEnded: message.compositionEnded)
+    return .success(nil)
+  }
+
   private func notifyContentHeightDidChange(parameters: Data) async -> Result<Any?, Error>? {
     struct Message: Decodable {
       var bottomPanelHeight: Double
@@ -197,7 +220,19 @@ final class NativeBridgeCore: NativeBridge {
   }
 
   private func notifyContentOffsetDidChange(parameters: Data) async -> Result<Any?, Error>? {
-    module.notifyContentOffsetDidChange()
+    struct Message: Decodable {
+      var sourcePosition: Int
+    }
+
+    let message: Message
+    do {
+      message = try decoder.decode(Message.self, from: parameters)
+    } catch {
+      Logger.assertFail("Failed to decode parameters: \(parameters)")
+      return .failure(error)
+    }
+
+    module.notifyContentOffsetDidChange(sourcePosition: message.sourcePosition)
     return .success(nil)
   }
 
@@ -264,5 +299,17 @@ public struct LineColumnInfo: Decodable, Equatable {
     self.columnText = columnText
     self.selectionText = selectionText
     self.selectionRange = selectionRange
+  }
+}
+
+public struct EditorTextChange: Decodable, Equatable {
+  public var from: Int
+  public var to: Int
+  public var insert: String
+
+  public init(from: Int, to: Int, insert: String) {
+    self.from = from
+    self.to = to
+    self.insert = insert
   }
 }

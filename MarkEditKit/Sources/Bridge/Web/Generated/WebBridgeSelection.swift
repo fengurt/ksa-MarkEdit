@@ -62,6 +62,18 @@ public final class WebBridgeSelection {
     webView?.invoke(path: "webModules.selection.gotoLine", message: message, completion: completion)
   }
 
+  public func gotoPosition(position: Int, completion: ((Result<Void, WKWebView.InvokeError>) -> Void)? = nil) {
+    struct Message: Encodable {
+      let position: Int
+    }
+
+    let message = Message(
+      position: position
+    )
+
+    webView?.invoke(path: "webModules.selection.gotoPosition", message: message, completion: completion)
+  }
+
   public func refreshEditFocus(completion: ((Result<Void, WKWebView.InvokeError>) -> Void)? = nil) {
     webView?.invoke(path: "webModules.selection.refreshEditFocus", completion: completion)
   }

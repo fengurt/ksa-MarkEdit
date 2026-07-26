@@ -1,6 +1,6 @@
 import { WebModule } from '../webModule';
 import { WebRect } from '../../@types/WebRect';
-import { selectWholeDocument, selectedMainText, scrollToSelection, getRect, gotoLine, refreshEditFocus } from '../../modules/selection';
+import { selectWholeDocument, selectedMainText, scrollToSelection, getRect, gotoLine, gotoPosition, refreshEditFocus } from '../../modules/selection';
 import { navigateGoBack } from '../../modules/selection/navigate';
 
 /**
@@ -14,6 +14,7 @@ export interface WebModuleSelection extends WebModule {
   getRect({ pos }: { pos: CodeGen_Int }): WebRect | undefined;
   scrollToSelection(): void;
   gotoLine({ lineNumber }: { lineNumber: CodeGen_Int }): void;
+  gotoPosition({ position }: { position: CodeGen_Int }): void;
   refreshEditFocus(): void;
   navigateGoBack(): void;
 }
@@ -37,6 +38,10 @@ export class WebModuleSelectionImpl implements WebModuleSelection {
 
   gotoLine({ lineNumber }: { lineNumber: CodeGen_Int }): void {
     gotoLine(lineNumber);
+  }
+
+  gotoPosition({ position }: { position: CodeGen_Int }): void {
+    gotoPosition(position);
   }
 
   refreshEditFocus(): void {

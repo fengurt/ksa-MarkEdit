@@ -18,6 +18,7 @@ export const editingState = {
   wasScrolledToBottom: false,
   compositionEnded: true,
   compositionPosition: undefined as number | undefined,
+  textRevision: 0,
 };
 
 export const styleSheets: StyleSheets = {};

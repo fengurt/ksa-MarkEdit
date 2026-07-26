@@ -225,6 +225,15 @@ enum AppPreferences {
     @Storage(key: "window.workspace-files-width", defaultValue: 280.0)
     static var workspaceFilesWidth: Double
 
+    @Storage(key: "window.workspace-search-width", defaultValue: 280.0)
+    static var workspaceSearchWidth: Double
+
+    @Storage(key: "window.workspace-preview-width", defaultValue: 0.0)
+    static var workspacePreviewWidth: Double
+
+    @Storage(key: "window.workspace-preview-sync", defaultValue: true)
+    static var workspacePreviewSync: Bool
+
     @Storage(key: "window.toolbar-mode", defaultValue: .normal)
     static var toolbarMode: ToolbarMode {
       didSet {

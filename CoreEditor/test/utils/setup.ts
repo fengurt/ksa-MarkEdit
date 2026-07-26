@@ -42,6 +42,7 @@ window.nativeModules = {
     notifyBackgroundColorDidChange() { /* noop */ },
     notifyViewportScaleDidChange() { /* noop */ },
     notifyViewDidUpdate() { /* noop */ },
+    notifyTextChanged() { /* noop */ },
     notifyContentHeightDidChange() { /* noop */ },
     notifyContentOffsetDidChange() { /* noop */ },
     notifyEditorDidBecomeIdle() { /* noop */ },

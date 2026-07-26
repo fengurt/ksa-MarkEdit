@@ -38,11 +38,15 @@ final class EditorViewController: NSViewController {
     }
   }
   var workspaceSidebarView: WorkspaceSidebarView?
+  var workspacePreviewView: WorkspacePreviewView?
   var workspaceSidebarMode = WorkspaceSidebarMode(
     rawValue: AppPreferences.Window.workspaceSidebarMode
   ) ?? .files
   var workspaceSidebarVisible = AppPreferences.Window.workspaceSidebarVisible
   var workspaceSidebarWidth = AppPreferences.Window.workspaceFilesWidth
+  var workspaceSearchWidth = AppPreferences.Window.workspaceSearchWidth
+  var workspacePreviewWidth = AppPreferences.Window.workspacePreviewWidth
+  var editorTextRevision: UInt64 = 0
 
   weak var presentedMenu: NSMenu?
   weak var presentedPopover: NSPopover?
@@ -388,6 +392,7 @@ extension EditorViewController {
       return
     }
 
+    editorTextRevision = 0
     let textContent = document.stringValue
     let documentID = ObjectIdentifier(document)
 
@@ -429,6 +434,10 @@ extension EditorViewController {
       if self.pendingResetCount == 0 {
         self.resetContinuations.forEach { $0.resume() }
         self.resetContinuations.removeAll()
+      }
+
+      if self.isRenderedPreviewActive {
+        self.resetRenderedPreview()
       }
 
       // Initial content from scenarios like "CreateNewDocumentIntent" or "New File from Clipboard"

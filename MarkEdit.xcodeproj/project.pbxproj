@@ -10,6 +10,8 @@
 		AB1100013000000000000001 /* WorkspaceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100023000000000000001 /* WorkspaceSession.swift */; };
 		AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100043000000000000001 /* WorkspaceSidebarView.swift */; };
 		AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100063000000000000001 /* EditorViewController+Workspace.swift */; };
+		AB1200013000000000000001 /* WorkspacePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1200023000000000000001 /* WorkspacePreviewView.swift */; };
+		AB1200033000000000000001 /* rendered-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = AB1200043000000000000001 /* rendered-preview.html */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -167,6 +169,8 @@
 		AB1100023000000000000001 /* WorkspaceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSession.swift; sourceTree = "<group>"; };
 		AB1100043000000000000001 /* WorkspaceSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarView.swift; sourceTree = "<group>"; };
 		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
+		AB1200023000000000000001 /* WorkspacePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewView.swift; sourceTree = "<group>"; };
+		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
 		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -385,6 +389,7 @@
 		870A51C229470D5C0095C7EB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				AB1200043000000000000001 /* rendered-preview.html */,
 				87ACA65B2C858AF4008E24BA /* chunks */,
 				870A51C8294752530095C7EB /* index.html */,
 				870A51A9294700E00095C7EB /* Assets.xcassets */,
@@ -665,6 +670,7 @@
 			isa = PBXGroup;
 			children = (
 				AB1100043000000000000001 /* WorkspaceSidebarView.swift */,
+				AB1200023000000000000001 /* WorkspacePreviewView.swift */,
 				87091B992A963C6B00F5EF0D /* EditorTextInput.swift */,
 				8752CEB5295B2F8800BA9D5B /* EditorPanelView.swift */,
 				87A73AB2294C4B27006A710E /* EditorWebView.swift */,
@@ -815,6 +821,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB1200033000000000000001 /* rendered-preview.html in Resources */,
 				87ACA65C2C858AF4008E24BA /* chunks in Resources */,
 				870A51C9294752530095C7EB /* index.html in Resources */,
 				AA0000100000000000000001 /* InfoPlist.strings in Resources */,
@@ -896,6 +903,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB1200013000000000000001 /* WorkspacePreviewView.swift in Sources */,
 				AB1100013000000000000001 /* WorkspaceSession.swift in Sources */,
 				AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */,
 				AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */,

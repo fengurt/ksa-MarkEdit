@@ -101,6 +101,7 @@ export async function resetEditor(
 
   const editor = window.editor;
   editor.focus();
+  editingState.textRevision = 0;
 
   MarkEdit.editorView = editor;
   (MarkEdit.editorAPI as TextEditor).setView(editor);
@@ -144,7 +145,7 @@ export async function resetEditor(
 
   if ('onscrollend' in window) { // [macOS] 26.2
     scrollDOM.addEventListener('scrollend', () => {
-      window.nativeModules.core.notifyContentOffsetDidChange();
+      notifyContentOffsetDidChange();
     });
   } else {
     scrollDOM.addEventListener('scroll', () => {
@@ -154,7 +155,7 @@ export async function resetEditor(
       }
 
       storage.scrollTimer = setTimeout(() => {
-        window.nativeModules.core.notifyContentOffsetDidChange();
+        notifyContentOffsetDidChange();
       }, 100);
     });
   }
@@ -212,6 +213,14 @@ export async function resetEditor(
   });
 
   return true;
+}
+
+function notifyContentOffsetDidChange() {
+  const editor = window.editor;
+  const sourcePosition = editor.lineBlockAtHeight(editor.scrollDOM.scrollTop).from;
+  window.nativeModules.core.notifyContentOffsetDidChange({
+    sourcePosition: sourcePosition as CodeGen_Int,
+  });
 }
 
 export function getEditorState() {
