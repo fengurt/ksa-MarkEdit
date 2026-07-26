@@ -541,7 +541,7 @@ extension WorkspaceSidebarView: NSOutlineViewDataSource, NSOutlineViewDelegate {
 
 // MARK: - Search Results
 
-extension WorkspaceSidebarView: NSTableViewDataSource {
+extension WorkspaceSidebarView: NSTableViewDataSource, NSTableViewDelegate {
   func numberOfRows(in tableView: NSTableView) -> Int {
     searchResults.count
   }
