@@ -21,11 +21,29 @@ extension EditorViewController {
       workspaceSession = WorkspaceSessionRegistry.consume(for: document?.fileURL)
     }
 
+    if workspaceSession == nil {
+      workspaceSession = view.window?.tabbedWindows?
+        .compactMap { ($0.contentViewController as? EditorViewController)?.workspaceSession }
+        .first
+    }
+
+    if workspaceSession == nil,
+       let fileURL = document?.fileURL,
+       let bookmark = AppPreferences.General.workspaceFolderBookmarks[fileURL.standardizedFileURL.path],
+       let restoredSession = try? WorkspaceSession.restore(from: bookmark),
+       restoredSession.contains(fileURL) {
+      workspaceSession = restoredSession
+    }
+
     if workspaceSession == nil,
        let bookmark = AppPreferences.General.workspaceFolderBookmark,
        let restoredSession = try? WorkspaceSession.restore(from: bookmark),
        document?.fileURL.map({ restoredSession.contains($0) }) != false {
       workspaceSession = restoredSession
+    }
+
+    if let workspaceSession, let fileURL = document?.fileURL {
+      workspaceSession.persist(for: [fileURL])
     }
 
     if workspaceSidebarVisible {
@@ -132,9 +150,7 @@ private extension EditorViewController {
 
       do {
         let session = try WorkspaceSession.create(for: rootURL)
-        session.persist()
-        workspaceSession = session
-        workspaceSidebarView?.session = session
+        bindWorkspaceSession(session)
       } catch {
         _ = await showAlert(
           title: Localized.Workspace.authorizationFailed,
@@ -143,6 +159,18 @@ private extension EditorViewController {
         )
       }
     }
+  }
+
+  func bindWorkspaceSession(_ session: WorkspaceSession) {
+    let tabbedEditors = view.window?.tabbedWindows?
+      .compactMap { $0.contentViewController as? EditorViewController } ?? []
+    let editors = tabbedEditors.isEmpty ? [self] : tabbedEditors
+
+    for editor in editors {
+      editor.workspaceSession = session
+      editor.workspaceSidebarView?.session = session
+    }
+    session.persist(for: editors.compactMap { $0.document?.fileURL })
   }
 
   func resizeWorkspaceSidebar(by delta: Double) {
@@ -162,6 +190,7 @@ private extension EditorViewController {
     }
 
     WorkspaceSessionRegistry.register(session, for: url)
+    session.persist(for: [url])
     let targetWindow = view.window
 
     NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { [weak self] document, _, error in
