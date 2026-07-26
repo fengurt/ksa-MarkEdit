@@ -81,6 +81,7 @@ extension EditorConfig {
       readOnlyMode: false,
       typewriterMode: false,
       focusMode: false,
+      visualEditingMode: false,
       lineWrapping: true,
       lineHeight: 1.4,
       suggestWhileTyping: false,
