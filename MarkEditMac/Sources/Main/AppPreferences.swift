@@ -47,6 +47,9 @@ enum AppPreferences {
     @Storage(key: "general.granted-folder-bookmark", defaultValue: nil)
     static var grantedFolderBookmark: Data?
 
+    @Storage(key: "general.workspace-folder-bookmark", defaultValue: nil)
+    static var workspaceFolderBookmark: Data?
+
     static var quitAlwaysKeepsWindows: Bool {
       get {
         UserDefaults.standard.bool(forKey: NSQuitAlwaysKeepsWindows)
@@ -213,6 +216,15 @@ enum AppPreferences {
   }
 
   enum Window {
+    @Storage(key: "window.workspace-sidebar-visible", defaultValue: false)
+    static var workspaceSidebarVisible: Bool
+
+    @Storage(key: "window.workspace-sidebar-mode", defaultValue: WorkspaceSidebarMode.files.rawValue)
+    static var workspaceSidebarMode: Int
+
+    @Storage(key: "window.workspace-files-width", defaultValue: 280.0)
+    static var workspaceFilesWidth: Double
+
     @Storage(key: "window.toolbar-mode", defaultValue: .normal)
     static var toolbarMode: ToolbarMode {
       didSet {

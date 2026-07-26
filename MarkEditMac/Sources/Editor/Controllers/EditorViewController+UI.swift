@@ -43,6 +43,7 @@ extension EditorViewController {
     layoutPanels()
     layoutWebView()
     layoutStatusView()
+    layoutWorkspaceSidebar()
 
     if AppDesign.modernTitleBar {
       modernBackgroundView.translatesAutoresizingMaskIntoConstraints = false
@@ -219,9 +220,9 @@ extension EditorViewController {
     let offset = panelDividerRect.minY - height
 
     webView.update(animated).frame = CGRect(
-      x: 0,
+      x: workspaceContentInset,
       y: offset + findPanelHeight,
-      width: view.bounds.width,
+      width: view.bounds.width - workspaceContentInset,
       height: height - findPanelHeight
     )
   }
@@ -511,9 +512,9 @@ private extension EditorViewController {
 
   var findPanelRect: CGRect {
     CGRect(
-      x: 0,
+      x: workspaceContentInset,
       y: contentHeight - (findPanel.mode == .hidden ? 0 : findPanel.frame.height),
-      width: view.bounds.width,
+      width: view.bounds.width - workspaceContentInset,
       height: findPanel.frame.height
     )
   }
@@ -537,9 +538,9 @@ private extension EditorViewController {
     }()
 
     return CGRect(
-      x: 0,
+      x: workspaceContentInset,
       y: offset,
-      width: view.frame.width,
+      width: view.frame.width - workspaceContentInset,
       height: panelDivider.length
     )
   }

@@ -63,6 +63,19 @@ extension EditorViewController {
         return nil
       }
 
+      // Workspace navigation shortcuts must run before the document-local find handler.
+      if let self {
+        if event.keyCode == .kVK_ANSI_E, event.userModifierFlags == [.shift, .command] {
+          self.toggleWorkspaceSidebar(.files)
+          return nil
+        }
+
+        if event.keyCode == .kVK_ANSI_F, event.userModifierFlags == [.shift, .command] {
+          self.toggleWorkspaceSidebar(.search)
+          return nil
+        }
+      }
+
       // Press F to potentially change the find mode or switch focus between two fields
       if event.keyCode == .kVK_ANSI_F, let self, self.updateTextFinderModeIfNeeded(event) {
         return nil

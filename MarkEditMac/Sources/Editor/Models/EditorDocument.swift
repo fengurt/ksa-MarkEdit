@@ -111,6 +111,7 @@ final class EditorDocument: NSDocument {
 
     isTerminating = false
     hostViewController = contentVC
+    hostViewController?.workspaceSession = WorkspaceSessionRegistry.consume(for: fileURL)
     hostViewController?.representedObject = self
 
     externalFilename = AppDocumentController.suggestedFilename

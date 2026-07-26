@@ -31,6 +31,17 @@ final class EditorViewController: NSViewController {
   var localEventMonitor: Any?
   var safeAreaObservation: NSKeyValueObservation?
   var userDefinedMenuItems = [EditorMenuItem]()
+  var workspaceSession: WorkspaceSession? {
+    didSet {
+      workspaceSidebarView?.session = workspaceSession
+    }
+  }
+  var workspaceSidebarView: WorkspaceSidebarView?
+  var workspaceSidebarMode = WorkspaceSidebarMode(
+    rawValue: AppPreferences.Window.workspaceSidebarMode
+  ) ?? .files
+  var workspaceSidebarVisible = AppPreferences.Window.workspaceSidebarVisible
+  var workspaceSidebarWidth = AppPreferences.Window.workspaceFilesWidth
 
   weak var presentedMenu: NSMenu?
   weak var presentedPopover: NSPopover?
@@ -281,6 +292,7 @@ final class EditorViewController: NSViewController {
       return
     }
 
+    layoutWorkspaceSidebar()
     layoutPanels()
     layoutWebView()
     layoutStatusView()
@@ -313,6 +325,8 @@ final class EditorViewController: NSViewController {
 
   override var representedObject: Any? {
     didSet {
+      prepareWorkspaceSession()
+
       // If there's a file on disk, its data must be in memory
       guard document?.isContentReady == true else {
         return
