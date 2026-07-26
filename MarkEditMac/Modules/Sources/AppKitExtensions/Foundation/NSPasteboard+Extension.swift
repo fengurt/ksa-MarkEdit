@@ -98,9 +98,13 @@ public extension NSPasteboard {
 
 private extension NSPasteboard {
   func getDataItems() -> [NSPasteboard.PasteboardType: Data] {
-    (types ?? []).reduce(into: [Self.PasteboardType: Data]()) { items, type in
+    var items: [NSPasteboard.PasteboardType: Foundation.Data] = [:]
+
+    for type in types ?? [] {
       items[type] = data(forType: type)
     }
+
+    return items
   }
 
   func setDataItems(_ items: [NSPasteboard.PasteboardType: Data]) {
