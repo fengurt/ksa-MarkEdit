@@ -33,7 +33,7 @@ describe('visual Markdown editing', () => {
     const source = '# Heading\n\n**bold** and *italic*';
     editor.setUp(source, visualEditingExtension);
     await waitForVisualState(() => {
-      const text = document.body.textContent ?? '';
+      const text = document.body.textContent;
       return text.includes('bold and italic') && !text.includes('**bold**');
     });
 
@@ -44,7 +44,7 @@ describe('visual Markdown editing', () => {
 
     editor.selectRange(source.indexOf('bold'), source.indexOf('bold'));
     await waitForVisualState(() => {
-      const text = document.body.textContent ?? '';
+      const text = document.body.textContent;
       return !text.includes('# Heading') && text.includes('**bold** and *italic*');
     });
 
