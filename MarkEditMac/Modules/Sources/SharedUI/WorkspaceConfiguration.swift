@@ -76,6 +76,14 @@ public struct WorkspaceConfiguration: Codable, Sendable, Equatable {
       "DerivedData/**",
       "node_modules/**",
     ]
+    public var accountEnabled: Bool?
+    public var syncEnabled: Bool?
+    public var cosBackupEnabled: Bool?
+    public var githubBackupEnabled: Bool?
+    public var vaultID: UUID?
+    public var apiBaseURL: URL?
+    public var githubRepository: String?
+    public var lastSuccessfulBackup: Date?
 
     public init() {}
   }

@@ -81,7 +81,13 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
           <h1>{snapshot.workspaceName}</h1>
           <p>{snapshot.rootPath}</p>
         </div>
-        <span className="account-state">{t('accountOff')}</span>
+        <span className="account-state">
+          {snapshot.syncEnabled
+            ? t('syncOn')
+            : snapshot.accountEnabled
+              ? t('accountOn')
+              : t('accountOff')}
+        </span>
       </header>
       <section className="hub-grid">
         <article className="hub-panel recent-panel">
@@ -127,6 +133,13 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
           <h2>Mindmap Station</h2>
           <p>{graph.nodes.length} notes · {graph.edges.length} links</p>
           <button type="button" onClick={() => setMindmapVisible(true)}>{t('open')}</button>
+        </article>
+        <article className="hub-panel">
+          <div className="panel-heading">
+            <h2>{t('backupHealth')}</h2>
+            <span>{snapshot.backupEnabled ? t('enabled') : t('disabled')}</span>
+          </div>
+          <p>{snapshot.backupEnabled ? t('backupOn') : t('disabled')}</p>
         </article>
       </section>
     </main>
@@ -299,7 +312,7 @@ export default function App() {
         if (signal.aborted) {
           throw new DOMException(t('batchCancelled'), 'AbortError');
         }
-        let metadata = structuredClone(file.metadata);
+        const metadata = structuredClone(file.metadata);
         if (kind === 'tag') {
           metadata.tags = metadata.tags.flatMap(tag => {
             if (canonicalTag(tag) !== sourceIdentity) {
@@ -742,8 +755,6 @@ function TagEditor({
   onCategory: (category?: string) => void;
 }) {
   const [value, setValue] = useState('');
-  const [category, setCategoryValue] = useState(file.metadata.category ?? '');
-  useEffect(() => setCategoryValue(file.metadata.category ?? ''), [file.id, file.metadata.category]);
   return (
     <div className="document-tags">
       {file.metadata.tags.slice(0, 4).map(tag => (
@@ -765,23 +776,40 @@ function TagEditor({
         <label className="sr-only" htmlFor="add-tag">{t('addTag')}</label>
         <input id="add-tag" value={value} onChange={event => setValue(event.target.value)} placeholder={`+ ${t('addTag')}`} />
       </form>
-      <form
-        className="category-form"
-        onSubmit={event => {
-          event.preventDefault();
-          onCategory(category);
-        }}
-      >
-        <label className="sr-only" htmlFor="set-category">{t('setCategory')}</label>
-        <input
-          id="set-category"
-          value={category}
-          onChange={event => setCategoryValue(event.target.value)}
-          onBlur={() => onCategory(category)}
-          placeholder={t('category')}
-        />
-      </form>
+      <CategoryEditor
+        key={`${file.id}:${file.metadata.category ?? ''}`}
+        initialValue={file.metadata.category ?? ''}
+        onCategory={onCategory}
+      />
     </div>
+  );
+}
+
+function CategoryEditor({
+  initialValue,
+  onCategory,
+}: {
+  initialValue: string;
+  onCategory: (category?: string) => void;
+}) {
+  const [category, setCategory] = useState(initialValue);
+  return (
+    <form
+      className="category-form"
+      onSubmit={event => {
+        event.preventDefault();
+        onCategory(category);
+      }}
+    >
+      <label className="sr-only" htmlFor="set-category">{t('setCategory')}</label>
+      <input
+        id="set-category"
+        value={category}
+        onChange={event => setCategory(event.target.value)}
+        onBlur={() => onCategory(category)}
+        placeholder={t('category')}
+      />
+    </form>
   );
 }
 

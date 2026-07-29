@@ -11,7 +11,12 @@ export function CoreEditor({ value, readOnly = false, onChange }: CoreEditorProp
   const container = useRef<HTMLDivElement>(null);
   const editor = useRef<StandaloneEditor | undefined>(undefined);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  const initialValue = useRef(value);
+  const initialReadOnly = useRef(readOnly);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     if (!container.current) {
@@ -19,8 +24,8 @@ export function CoreEditor({ value, readOnly = false, onChange }: CoreEditorProp
     }
     editor.current = createStandaloneMarkdownEditor({
       parent: container.current,
-      doc: value,
-      readOnly,
+      doc: initialValue.current,
+      readOnly: initialReadOnly.current,
       onChange: text => onChangeRef.current(text),
     });
     return () => {

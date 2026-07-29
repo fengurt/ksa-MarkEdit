@@ -232,6 +232,8 @@ final class WorkspaceSession {
     let tags = await index.tags()
     let categories = await index.categories()
     let graph = await index.graph()
+    let configuration = try? await WorkspaceConfigurationStore(rootURL: rootURL).load()
+    let sync = configuration?.sync
     return WorkspaceHubSnapshot(
       workspaceName: rootURL.lastPathComponent,
       rootPath: rootURL.path,
@@ -239,9 +241,9 @@ final class WorkspaceSession {
       tags: tags,
       categories: categories,
       graph: graph,
-      accountEnabled: false,
-      syncEnabled: false,
-      backupEnabled: false
+      accountEnabled: sync?.accountEnabled == true,
+      syncEnabled: sync?.syncEnabled == true,
+      backupEnabled: sync?.cosBackupEnabled == true || sync?.githubBackupEnabled == true
     )
   }
 
