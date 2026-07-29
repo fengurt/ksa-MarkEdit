@@ -31,9 +31,11 @@ final class VaultSyncQueueTests: XCTestCase {
         multipartUploadID: "upload"
       )
     )
-    XCTAssertEqual(try await queue.pendingCount(), 3)
+    let pendingCount = try await queue.pendingCount()
+    XCTAssertEqual(pendingCount, 3)
     await queue.runOneBatch()
-    XCTAssertEqual(await transport.count, 3)
+    let completedCount = await transport.count
+    XCTAssertEqual(completedCount, 3)
   }
 
   func testThreeWayMergeCombinesDisjointRanges() {
