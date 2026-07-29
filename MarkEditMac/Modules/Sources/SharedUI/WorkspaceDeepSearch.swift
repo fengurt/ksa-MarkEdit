@@ -944,6 +944,16 @@ private extension WorkspaceDeepSearch {
   }
 }
 
+extension WorkspaceDeepSearch {
+  static func encodeBinary16(_ values: [Float]) -> Data {
+    float16Data(values)
+  }
+
+  static func decodeBinary16(_ data: Data) -> [Float] {
+    floatArray(fromBinary16Data: data)
+  }
+}
+
 // MARK: - HNSW
 
 private struct HNSWMatch {

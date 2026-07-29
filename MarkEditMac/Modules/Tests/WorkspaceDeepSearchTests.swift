@@ -16,8 +16,8 @@ final class WorkspaceDeepSearchTests: XCTestCase {
       -.infinity,
       .nan,
     ]
-    let data = WorkspaceDeepSearch.float16Data(values)
-    let decoded = WorkspaceDeepSearch.floatArray(fromBinary16Data: data)
+    let data = WorkspaceDeepSearch.encodeBinary16(values)
+    let decoded = WorkspaceDeepSearch.decodeBinary16(data)
 
     XCTAssertEqual(data.count, values.count * 2)
     XCTAssertEqual(decoded[0].bitPattern, values[0].bitPattern)
@@ -27,21 +27,21 @@ final class WorkspaceDeepSearchTests: XCTestCase {
     XCTAssertEqual(decoded[4], 0.333251953125)
     XCTAssertEqual(decoded[5], 65_504)
     XCTAssertEqual(decoded[6], 0)
-    XCTAssertEqual(decoded[7], .infinity)
-    XCTAssertEqual(decoded[8], -.infinity)
+    XCTAssertEqual(decoded[7], Float.infinity)
+    XCTAssertEqual(decoded[8], -Float.infinity)
     XCTAssertTrue(decoded[9].isNaN)
   }
 
   func testBinary16StorageUsesStableLittleEndianBytes() {
     XCTAssertEqual(
-      WorkspaceDeepSearch.float16Data([1, -2]),
+      WorkspaceDeepSearch.encodeBinary16([1, -2]),
       Data([0x00, 0x3c, 0x00, 0xc0])
     )
   }
 
   func testCorruptOddLengthEmbeddingIsRejected() {
     XCTAssertTrue(
-      WorkspaceDeepSearch.floatArray(fromBinary16Data: Data([0x00])).isEmpty
+      WorkspaceDeepSearch.decodeBinary16(Data([0x00])).isEmpty
     )
   }
 }
