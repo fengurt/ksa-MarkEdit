@@ -6,12 +6,29 @@
 //
 
 import AppKit
+import Darwin
+import Dispatch
 import ExtensionCore
 import MarkEditKit
+import SharedUI
 
 @main
 final class Application: NSApplication {
   static func main() {
+    if CommandLine.arguments.contains("--mcp-stdio") {
+      Task.detached {
+        do {
+          try await LocalMCPServer.run()
+          Darwin.exit(EXIT_SUCCESS)
+        } catch {
+          let message = Data("ksamint MarkEdit MCP: \(error.localizedDescription)\n".utf8)
+          try? FileHandle.standardError.write(contentsOf: message)
+          Darwin.exit(EXIT_FAILURE)
+        }
+      }
+      dispatchMain()
+    }
+
     NSObject.swizzleAccessibilityBundlesOnce
     NSMenu.swizzleIsUpdatedExcludingContentTypesOnce
     NSSpellChecker.swizzleInlineCompletionEnabledOnce

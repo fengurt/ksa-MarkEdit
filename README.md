@@ -20,6 +20,10 @@ API stay compatible with upstream MarkEdit.
 - Chinese and Japanese IME-aware editing
 - UTF-8, GB 18030, Big 5, EUC-JP, Shift JIS, and other native encodings
 - GFM-compatible Markdown powered by CodeMirror 6
+- Local workspace tree, global Unicode search, tags, categories, backlinks, and graph
+- Optional on-device Deep Search with a separately downloaded multilingual model
+- Offline Web PWA workspace using OPFS with an IndexedDB fallback
+- Opt-in local MCP tools constrained to one authorized workspace
 - Finder and Quick Look extensions
 - Shortcuts, AppleScript, and JavaScript extension support
 - Universal Intel and Apple silicon build
@@ -39,6 +43,27 @@ Alternatively, download `ksamint-MarkEdit-<version>.dmg` from the
 Pull requests also produce a universal, ad-hoc-signed development artifact.
 Download `ksamint-MarkEdit-development` from the successful GitHub Actions run,
 unzip it, and copy `ksamint MarkEdit.app` into `~/Applications`.
+
+## Local MCP
+
+The Mac app can serve its current local-first knowledge tools over stdio without
+starting the GUI. MCP is disabled unless the executable is explicitly launched
+with `--mcp-stdio`, and writes require the separate `--allow-write` opt-in.
+
+```json
+{
+  "mcpServers": {
+    "ksamint-markedit": {
+      "command": "/Applications/ksamint MarkEdit.app/Contents/MacOS/ksamint MarkEdit",
+      "args": ["--mcp-stdio", "--workspace", "/absolute/path/to/notes"]
+    }
+  }
+}
+```
+
+`set_tags`, `set_category`, and `move_to_trash` additionally require
+`confirmed: true` on each call. Paths and symlinks cannot escape the selected
+workspace, and writes append to `.ksamint/audit.log`.
 
 ## Language review
 
@@ -67,6 +92,7 @@ The project contains:
 - `CoreEditor`: TypeScript, CodeMirror 6, Lezer, Vite, and Jest
 - `MarkEditCore` and `MarkEditKit`: shared Swift packages
 - `MarkEditMac`: the native macOS app and feature modules
+- `WebApp`: the shared React/Vite offline knowledge workspace
 - `FinderExtension` and `PreviewExtension`: native system integrations
 
 Use Node.js 22 and Xcode 26.5:
