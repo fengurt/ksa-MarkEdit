@@ -18,6 +18,7 @@ final class WorkspaceSidebarView: NSView {
   var onRename: ((URL) -> Void)?
   var onMoveToTrash: ((URL) -> Void)?
   var onMove: ((URL, URL) -> Bool)?
+  var onTaxonomyAction: ((WorkspaceTaxonomyAction, WorkspaceTaxonomyItem) -> Void)?
   var onResize: ((Double) -> Void)?
   var onPreviewSyncChanged: ((Bool) -> Void)?
   var onVisualEditingChanged: ((Bool) -> Void)?
@@ -27,9 +28,12 @@ final class WorkspaceSidebarView: NSView {
       modeControl.selectedSegment = mode.rawValue
       filesContainer.isHidden = mode != .files
       searchContainer.isHidden = mode != .search
+      taxonomyContainer.isHidden = mode != .tags
       previewContainer.isHidden = mode != .preview
       if mode == .search {
         window?.makeFirstResponder(searchField)
+      } else if mode == .tags {
+        reloadTaxonomy()
       }
     }
   }
@@ -38,12 +42,14 @@ final class WorkspaceSidebarView: NSView {
     didSet {
       session?.onFileSystemChange = { [weak self] in
         self?.reloadTree()
+        self?.reloadTaxonomy()
       }
       session?.onIndexStateChange = { [weak self] state in
         self?.updateIndexState(state)
       }
 
       reloadTree()
+      reloadTaxonomy()
       updateAuthorizationState()
       session?.rebuildIndex()
     }
@@ -52,6 +58,7 @@ final class WorkspaceSidebarView: NSView {
   private let modeControl = NSSegmentedControl()
   private let filesContainer = NSView()
   private let searchContainer = NSView()
+  private let taxonomyContainer = NSView()
   private let previewContainer = NSView()
   private let previewContentContainer = NSView()
   private let previewSyncButton = NSButton()
@@ -64,14 +71,26 @@ final class WorkspaceSidebarView: NSView {
   private let addButton = NSButton()
   private let refreshButton = NSButton()
   private let searchField = NSSearchField()
+  private let searchModeControl = NSSegmentedControl()
   private let searchTableView = NSTableView()
   private let searchScrollView = NSScrollView()
   private let searchStatusLabel = NSTextField(labelWithString: "")
+  private let deepSearchDownloadButton = NSButton()
+  private let taxonomyModeControl = NSSegmentedControl()
+  private let taxonomySearchField = NSSearchField()
+  private let taxonomyTableView = NSTableView()
+  private let taxonomyScrollView = NSScrollView()
+  private let taxonomyStatusLabel = NSTextField(labelWithString: "")
+  private let taxonomyActionsButton = NSButton()
   private let resizeHandle = WorkspaceResizeHandle()
 
   private var rootNode: WorkspaceTreeNode?
   private var searchResults = [WorkspaceSearchResult]()
   private var searchTask: Task<Void, Never>?
+  private var taxonomyTags = [WorkspaceTagSummary]()
+  private var taxonomyCategories = [WorkspaceCategorySummary]()
+  private var taxonomyItems = [WorkspaceTaxonomyItem]()
+  private var taxonomyTask: Task<Void, Never>?
 
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
@@ -85,6 +104,7 @@ final class WorkspaceSidebarView: NSView {
 
   deinit {
     searchTask?.cancel()
+    taxonomyTask?.cancel()
   }
 
   func reloadTree() {
@@ -96,6 +116,27 @@ final class WorkspaceSidebarView: NSView {
 
   func focusSearch() {
     window?.makeFirstResponder(searchField)
+  }
+
+  func reloadTaxonomy() {
+    taxonomyTask?.cancel()
+    taxonomyStatusLabel.stringValue = Localized.Workspace.loadingMetadata
+    taxonomyTask = Task { [weak self] in
+      guard let self, let session else {
+        taxonomyTags = []
+        taxonomyCategories = []
+        updateTaxonomyItems()
+        return
+      }
+
+      let (tags, categories) = await session.taxonomy()
+      guard !Task.isCancelled else {
+        return
+      }
+      taxonomyTags = tags
+      taxonomyCategories = categories
+      updateTaxonomyItems()
+    }
   }
 
   func setPreviewView(_ previewView: NSView) {
@@ -126,10 +167,27 @@ private extension WorkspaceSidebarView {
     wantsLayer = true
     layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
-    modeControl.segmentCount = 3
-    modeControl.setLabel(Localized.Workspace.files, forSegment: 0)
-    modeControl.setLabel(Localized.Workspace.search, forSegment: 1)
-    modeControl.setLabel(Localized.Editor.previewButtonTitle, forSegment: 2)
+    modeControl.segmentCount = 4
+    setModeSegment(
+      0,
+      symbol: "folder",
+      accessibilityDescription: Localized.Workspace.files
+    )
+    setModeSegment(
+      1,
+      symbol: "magnifyingglass",
+      accessibilityDescription: Localized.Workspace.search
+    )
+    setModeSegment(
+      2,
+      symbol: "tag",
+      accessibilityDescription: Localized.Workspace.tags
+    )
+    setModeSegment(
+      3,
+      symbol: "doc.richtext",
+      accessibilityDescription: Localized.Editor.previewButtonTitle
+    )
     modeControl.segmentStyle = .texturedRounded
     modeControl.trackingMode = .selectOne
     modeControl.selectedSegment = 0
@@ -142,6 +200,7 @@ private extension WorkspaceSidebarView {
 
     configureOutlineView()
     configureSearchView()
+    configureTaxonomyView()
     configurePreviewView()
     configureAuthorizationView()
 
@@ -162,7 +221,14 @@ private extension WorkspaceSidebarView {
       self?.onResize?(delta)
     }
 
-    [modeControl, filesContainer, searchContainer, previewContainer, resizeHandle].forEach {
+    [
+      modeControl,
+      filesContainer,
+      searchContainer,
+      taxonomyContainer,
+      previewContainer,
+      resizeHandle,
+    ].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       addSubview($0)
     }
@@ -170,9 +236,19 @@ private extension WorkspaceSidebarView {
       $0.translatesAutoresizingMaskIntoConstraints = false
       filesContainer.addSubview($0)
     }
-    [searchField, searchScrollView, searchStatusLabel].forEach {
+    [searchModeControl, searchField, searchScrollView, searchStatusLabel, deepSearchDownloadButton].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       searchContainer.addSubview($0)
+    }
+    [
+      taxonomyModeControl,
+      taxonomySearchField,
+      taxonomyScrollView,
+      taxonomyStatusLabel,
+      taxonomyActionsButton,
+    ].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      taxonomyContainer.addSubview($0)
     }
     [previewSyncButton, previewEditorModeControl, previewContentContainer].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
@@ -193,6 +269,11 @@ private extension WorkspaceSidebarView {
       searchContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
       searchContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
       searchContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
+
+      taxonomyContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
+      taxonomyContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
+      taxonomyContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
+      taxonomyContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
 
       previewContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
       previewContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
@@ -224,7 +305,10 @@ private extension WorkspaceSidebarView {
       refreshButton.leadingAnchor.constraint(equalTo: addButton.trailingAnchor, constant: 4),
       refreshButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
 
-      searchField.topAnchor.constraint(equalTo: searchContainer.topAnchor, constant: 6),
+      searchModeControl.topAnchor.constraint(equalTo: searchContainer.topAnchor, constant: 6),
+      searchModeControl.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 8),
+      searchModeControl.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -8),
+      searchField.topAnchor.constraint(equalTo: searchModeControl.bottomAnchor, constant: 6),
       searchField.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 8),
       searchField.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -8),
       searchScrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 6),
@@ -232,8 +316,32 @@ private extension WorkspaceSidebarView {
       searchScrollView.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor),
       searchScrollView.bottomAnchor.constraint(equalTo: searchStatusLabel.topAnchor, constant: -4),
       searchStatusLabel.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 10),
-      searchStatusLabel.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -10),
+      searchStatusLabel.trailingAnchor.constraint(
+        lessThanOrEqualTo: deepSearchDownloadButton.leadingAnchor,
+        constant: -6
+      ),
       searchStatusLabel.bottomAnchor.constraint(equalTo: searchContainer.bottomAnchor, constant: -7),
+      deepSearchDownloadButton.trailingAnchor.constraint(
+        equalTo: searchContainer.trailingAnchor,
+        constant: -8
+      ),
+      deepSearchDownloadButton.centerYAnchor.constraint(equalTo: searchStatusLabel.centerYAnchor),
+
+      taxonomyModeControl.topAnchor.constraint(equalTo: taxonomyContainer.topAnchor, constant: 6),
+      taxonomyModeControl.leadingAnchor.constraint(equalTo: taxonomyContainer.leadingAnchor, constant: 8),
+      taxonomyModeControl.trailingAnchor.constraint(equalTo: taxonomyContainer.trailingAnchor, constant: -8),
+      taxonomySearchField.topAnchor.constraint(equalTo: taxonomyModeControl.bottomAnchor, constant: 6),
+      taxonomySearchField.leadingAnchor.constraint(equalTo: taxonomyContainer.leadingAnchor, constant: 8),
+      taxonomySearchField.trailingAnchor.constraint(equalTo: taxonomyContainer.trailingAnchor, constant: -8),
+      taxonomyScrollView.topAnchor.constraint(equalTo: taxonomySearchField.bottomAnchor, constant: 6),
+      taxonomyScrollView.leadingAnchor.constraint(equalTo: taxonomyContainer.leadingAnchor),
+      taxonomyScrollView.trailingAnchor.constraint(equalTo: taxonomyContainer.trailingAnchor),
+      taxonomyScrollView.bottomAnchor.constraint(equalTo: taxonomyActionsButton.topAnchor, constant: -5),
+      taxonomyActionsButton.leadingAnchor.constraint(equalTo: taxonomyContainer.leadingAnchor, constant: 8),
+      taxonomyActionsButton.bottomAnchor.constraint(equalTo: taxonomyContainer.bottomAnchor, constant: -5),
+      taxonomyStatusLabel.leadingAnchor.constraint(equalTo: taxonomyActionsButton.trailingAnchor, constant: 8),
+      taxonomyStatusLabel.trailingAnchor.constraint(equalTo: taxonomyContainer.trailingAnchor, constant: -10),
+      taxonomyStatusLabel.centerYAnchor.constraint(equalTo: taxonomyActionsButton.centerYAnchor),
 
       previewSyncButton.topAnchor.constraint(equalTo: previewContainer.topAnchor, constant: 5),
       previewSyncButton.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor, constant: 8),
@@ -248,8 +356,24 @@ private extension WorkspaceSidebarView {
     ])
 
     searchContainer.isHidden = true
+    taxonomyContainer.isHidden = true
     previewContainer.isHidden = true
     updateAuthorizationState()
+  }
+
+  func setModeSegment(
+    _ segment: Int,
+    symbol: String,
+    accessibilityDescription: String
+  ) {
+    modeControl.setImage(
+      NSImage(
+        systemSymbolName: symbol,
+        accessibilityDescription: accessibilityDescription
+      ),
+      forSegment: segment
+    )
+    modeControl.setToolTip(accessibilityDescription, forSegment: segment)
   }
 
   func configureOutlineView() {
@@ -273,6 +397,15 @@ private extension WorkspaceSidebarView {
   }
 
   func configureSearchView() {
+    searchModeControl.segmentCount = 2
+    searchModeControl.setLabel(Localized.Workspace.fullTextSearch, forSegment: 0)
+    searchModeControl.setLabel(Localized.Workspace.deepSearch, forSegment: 1)
+    searchModeControl.segmentStyle = .texturedRounded
+    searchModeControl.trackingMode = .selectOne
+    searchModeControl.selectedSegment = 0
+    searchModeControl.target = self
+    searchModeControl.action = #selector(selectSearchMode(_:))
+
     let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("WorkspaceSearchResult"))
     column.resizingMask = .autoresizingMask
     searchTableView.addTableColumn(column)
@@ -296,6 +429,56 @@ private extension WorkspaceSidebarView {
     searchStatusLabel.textColor = .secondaryLabelColor
     searchStatusLabel.lineBreakMode = .byTruncatingTail
     searchStatusLabel.stringValue = Localized.Workspace.indexing
+
+    deepSearchDownloadButton.title = Localized.Workspace.downloadModel
+    deepSearchDownloadButton.bezelStyle = .accessoryBarAction
+    deepSearchDownloadButton.target = self
+    deepSearchDownloadButton.action = #selector(downloadDeepSearchModel(_:))
+    deepSearchDownloadButton.isHidden = true
+  }
+
+  func configureTaxonomyView() {
+    taxonomyModeControl.segmentCount = 2
+    taxonomyModeControl.setLabel(Localized.Workspace.tags, forSegment: 0)
+    taxonomyModeControl.setLabel(Localized.Workspace.categories, forSegment: 1)
+    taxonomyModeControl.segmentStyle = .texturedRounded
+    taxonomyModeControl.trackingMode = .selectOne
+    taxonomyModeControl.selectedSegment = 0
+    taxonomyModeControl.target = self
+    taxonomyModeControl.action = #selector(selectTaxonomyMode(_:))
+
+    taxonomySearchField.placeholderString = Localized.Workspace.filterMetadata
+    taxonomySearchField.sendsSearchStringImmediately = true
+    taxonomySearchField.target = self
+    taxonomySearchField.action = #selector(filterTaxonomy(_:))
+
+    let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("WorkspaceTaxonomy"))
+    column.resizingMask = .autoresizingMask
+    taxonomyTableView.addTableColumn(column)
+    taxonomyTableView.headerView = nil
+    taxonomyTableView.rowHeight = 28
+    taxonomyTableView.delegate = self
+    taxonomyTableView.dataSource = self
+    taxonomyTableView.target = self
+    taxonomyTableView.doubleAction = #selector(openSelectedTaxonomy(_:))
+
+    taxonomyScrollView.documentView = taxonomyTableView
+    taxonomyScrollView.hasVerticalScroller = true
+    taxonomyScrollView.drawsBackground = false
+
+    taxonomyActionsButton.title = Localized.Workspace.manage
+    taxonomyActionsButton.image = NSImage(
+      systemSymbolName: "ellipsis.circle",
+      accessibilityDescription: Localized.Workspace.manage
+    )
+    taxonomyActionsButton.imagePosition = .imageLeading
+    taxonomyActionsButton.bezelStyle = .accessoryBarAction
+    taxonomyActionsButton.target = self
+    taxonomyActionsButton.action = #selector(showTaxonomyActions(_:))
+
+    taxonomyStatusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+    taxonomyStatusLabel.textColor = .secondaryLabelColor
+    taxonomyStatusLabel.alignment = .right
   }
 
   func configureAuthorizationView() {
@@ -340,6 +523,9 @@ private extension WorkspaceSidebarView {
     addButton.isEnabled = isAuthorized
     refreshButton.isEnabled = isAuthorized
     searchField.isEnabled = isAuthorized
+    taxonomyModeControl.isEnabled = isAuthorized
+    taxonomySearchField.isEnabled = isAuthorized
+    taxonomyActionsButton.isEnabled = isAuthorized
   }
 
   func updateIndexState(_ state: WorkspaceIndexState) {
@@ -353,9 +539,29 @@ private extension WorkspaceSidebarView {
         format: Localized.Workspace.indexedFilesFormat,
         fileCount
       )
+      reloadTaxonomy()
     case .failed:
       searchStatusLabel.stringValue = Localized.Workspace.indexFailed
     }
+  }
+
+  func updateTaxonomyItems() {
+    let filter = taxonomySearchField.stringValue.trimmingCharacters(
+      in: .whitespacesAndNewlines
+    )
+    let allItems: [WorkspaceTaxonomyItem] = taxonomyModeControl.selectedSegment == 0
+      ? taxonomyTags.map(WorkspaceTaxonomyItem.tag)
+      : taxonomyCategories.map(WorkspaceTaxonomyItem.category)
+    taxonomyItems = filter.isEmpty
+      ? allItems
+      : allItems.filter {
+        $0.displayName.localizedCaseInsensitiveContains(filter)
+      }
+    taxonomyTableView.reloadData()
+    taxonomyStatusLabel.stringValue = String(
+      format: Localized.Workspace.metadataCountFormat,
+      taxonomyItems.count
+    )
   }
 
   func selectedDirectory() -> URL? {
@@ -475,7 +681,27 @@ private extension WorkspaceSidebarView {
         return
       }
 
-      let results = await session.search(query)
+      let results: [WorkspaceSearchResult]
+      if searchModeControl.selectedSegment == 1 {
+        do {
+          results = try await session.deepSearch(query)
+          deepSearchDownloadButton.isHidden = true
+        } catch WorkspaceDeepSearchError.modelNotInstalled {
+          searchResults = []
+          searchTableView.reloadData()
+          searchStatusLabel.stringValue = Localized.Workspace.modelNotDownloaded
+          deepSearchDownloadButton.isHidden = false
+          return
+        } catch {
+          searchResults = []
+          searchTableView.reloadData()
+          searchStatusLabel.stringValue = Localized.Workspace.deepSearchFailed
+          return
+        }
+      } else {
+        results = await session.search(query)
+        deepSearchDownloadButton.isHidden = true
+      }
       guard !Task.isCancelled else {
         return
       }
@@ -487,6 +713,132 @@ private extension WorkspaceSidebarView {
         results.count
       )
     }
+  }
+
+  @objc func selectSearchMode(_ sender: NSSegmentedControl) {
+    deepSearchDownloadButton.isHidden = true
+    if sender.selectedSegment == 1,
+       searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+       let session {
+      searchTask?.cancel()
+      searchTask = Task { [weak self] in
+        guard let self else {
+          return
+        }
+        let state = await session.deepSearchState()
+        if state == .modelNotInstalled {
+          searchStatusLabel.stringValue = Localized.Workspace.modelNotDownloaded
+          deepSearchDownloadButton.isHidden = false
+        } else {
+          searchStatusLabel.stringValue = Localized.Workspace.preparingDeepSearch
+        }
+      }
+      return
+    }
+    search(searchField)
+  }
+
+  @objc func downloadDeepSearchModel(_ sender: NSButton) {
+    guard let session else {
+      return
+    }
+    sender.isEnabled = false
+    searchStatusLabel.stringValue = Localized.Workspace.preparingDeepSearch
+    searchTask?.cancel()
+    searchTask = Task { [weak self] in
+      guard let self else {
+        return
+      }
+      do {
+        try await session.installAndIndexDeepSearch()
+        guard !Task.isCancelled else {
+          return
+        }
+        sender.isEnabled = true
+        sender.isHidden = true
+        search(searchField)
+      } catch {
+        sender.isEnabled = true
+        sender.isHidden = false
+        searchStatusLabel.stringValue = Localized.Workspace.deepSearchFailed
+      }
+    }
+  }
+
+  @objc func selectTaxonomyMode(_ sender: NSSegmentedControl) {
+    updateTaxonomyItems()
+  }
+
+  @objc func filterTaxonomy(_ sender: NSSearchField) {
+    updateTaxonomyItems()
+  }
+
+  @objc func openSelectedTaxonomy(_ sender: Any?) {
+    guard let item = selectedTaxonomyItem() else {
+      return
+    }
+
+    switch item {
+    case let .tag(tag):
+      searchField.stringValue = "tag:\"\(tag.displayName)\""
+    case let .category(category):
+      searchField.stringValue = "category:\"\(category.path)\""
+    }
+    onModeSelected?(.search)
+    search(searchField)
+  }
+
+  @objc func showTaxonomyActions(_ sender: NSButton) {
+    guard selectedTaxonomyItem() != nil else {
+      NSSound.beep()
+      return
+    }
+
+    let menu = NSMenu()
+    menu.addItem(
+      withTitle: Localized.Workspace.rename,
+      action: #selector(renameTaxonomy(_:)),
+      keyEquivalent: ""
+    )
+    if case .tag? = selectedTaxonomyItem() {
+      menu.addItem(
+        withTitle: Localized.Workspace.mergeTag,
+        action: #selector(mergeTaxonomy(_:)),
+        keyEquivalent: ""
+      )
+    }
+    menu.addItem(.separator())
+    menu.addItem(
+      withTitle: Localized.Workspace.deleteMetadata,
+      action: #selector(deleteTaxonomy(_:)),
+      keyEquivalent: ""
+    )
+    menu.items.forEach { $0.target = self }
+    menu.popUp(positioning: nil, at: CGPoint(x: 0, y: sender.bounds.maxY), in: sender)
+  }
+
+  @objc func renameTaxonomy(_ sender: Any?) {
+    performTaxonomyAction(.rename)
+  }
+
+  @objc func mergeTaxonomy(_ sender: Any?) {
+    performTaxonomyAction(.merge)
+  }
+
+  @objc func deleteTaxonomy(_ sender: Any?) {
+    performTaxonomyAction(.delete)
+  }
+
+  func performTaxonomyAction(_ action: WorkspaceTaxonomyAction) {
+    guard let item = selectedTaxonomyItem() else {
+      return
+    }
+    onTaxonomyAction?(action, item)
+  }
+
+  func selectedTaxonomyItem() -> WorkspaceTaxonomyItem? {
+    let row = taxonomyTableView.selectedRow
+    return taxonomyItems.indices.contains(row) ? taxonomyItems[row] : nil
   }
 
   @objc func openSelectedSearchResult(_ sender: Any?) {
@@ -621,7 +973,7 @@ extension WorkspaceSidebarView: NSOutlineViewDataSource, NSOutlineViewDelegate {
 
 extension WorkspaceSidebarView: NSTableViewDataSource, NSTableViewDelegate {
   func numberOfRows(in tableView: NSTableView) -> Int {
-    searchResults.count
+    tableView === taxonomyTableView ? taxonomyItems.count : searchResults.count
   }
 
   func tableView(
@@ -629,6 +981,10 @@ extension WorkspaceSidebarView: NSTableViewDataSource, NSTableViewDelegate {
     viewFor tableColumn: NSTableColumn?,
     row: Int
   ) -> NSView? {
+    if tableView === taxonomyTableView {
+      return taxonomyCell(tableView: tableView, row: row)
+    }
+
     guard searchResults.indices.contains(row) else {
       return nil
     }
@@ -640,6 +996,75 @@ extension WorkspaceSidebarView: NSTableViewDataSource, NSTableViewDelegate {
 
     cell.textField?.stringValue = "\(result.relativePath):\(result.lineNumber)\n\(result.snippet)"
     cell.toolTip = result.url.path
+    return cell
+  }
+
+  private func taxonomyCell(tableView: NSTableView, row: Int) -> NSView? {
+    guard taxonomyItems.indices.contains(row) else {
+      return nil
+    }
+
+    let identifier = NSUserInterfaceItemIdentifier("WorkspaceTaxonomyCell")
+    let cell = (tableView.makeView(withIdentifier: identifier, owner: self) as? NSTableCellView)
+      ?? makeTaxonomyCell(identifier: identifier)
+    let item = taxonomyItems[row]
+    cell.textField?.stringValue = item.displayName
+    cell.imageView?.image = NSImage(
+      systemSymbolName: {
+        if case .tag = item {
+          return "tag"
+        }
+        return "folder"
+      }(),
+      accessibilityDescription: item.displayName
+    )
+    cell.objectValue = item.fileCount
+    (cell.subviews.compactMap { $0 as? WorkspaceCountLabel }.first)?.stringValue = "\(item.fileCount)"
+    cell.toolTip = String(
+      format: Localized.Workspace.filesUsingMetadataFormat,
+      item.fileCount
+    )
+    return cell
+  }
+
+  private func makeTaxonomyCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
+    let cell = NSTableCellView()
+    cell.identifier = identifier
+
+    let imageView = NSImageView()
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    imageView.imageScaling = .scaleProportionallyDown
+    cell.imageView = imageView
+    cell.addSubview(imageView)
+
+    let label = NSTextField(labelWithString: "")
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.lineBreakMode = .byTruncatingMiddle
+    cell.textField = label
+    cell.addSubview(label)
+
+    let countLabel = WorkspaceCountLabel(labelWithString: "")
+    countLabel.translatesAutoresizingMaskIntoConstraints = false
+    countLabel.font = .monospacedDigitSystemFont(
+      ofSize: NSFont.smallSystemFontSize,
+      weight: .regular
+    )
+    countLabel.textColor = .secondaryLabelColor
+    countLabel.alignment = .right
+    cell.addSubview(countLabel)
+
+    NSLayoutConstraint.activate([
+      imageView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 7),
+      imageView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+      imageView.widthAnchor.constraint(equalToConstant: 15),
+      imageView.heightAnchor.constraint(equalToConstant: 15),
+      label.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 6),
+      label.trailingAnchor.constraint(equalTo: countLabel.leadingAnchor, constant: -6),
+      label.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+      countLabel.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -8),
+      countLabel.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+      countLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 26),
+    ])
     return cell
   }
 
@@ -695,6 +1120,8 @@ private final class WorkspaceResizeHandle: NSView {
     NSRect(x: bounds.midX, y: bounds.minY, width: 1, height: bounds.height).fill()
   }
 }
+
+private final class WorkspaceCountLabel: NSTextField {}
 
 private extension NSPasteboard.PasteboardType {
   static let workspaceFileURL = NSPasteboard.PasteboardType("art.apuch.ksamint-markedit.workspace-file")

@@ -72,6 +72,8 @@ let package = Package(
         .enableExperimentalFeature("StrictConcurrency")
       ],
       linkerSettings: [
+        .linkedFramework("Accelerate"),
+        .linkedFramework("CoreML"),
         .linkedLibrary("sqlite3"),
       ],
       plugins: [

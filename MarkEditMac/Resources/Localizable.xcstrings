@@ -8864,6 +8864,177 @@
         }
       }
     },
+    "Tags": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "标签" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "標籤" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "タグ" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Étiquettes" } }
+      }
+    },
+    "Workspace Hub": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "工作区中心" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "工作區中心" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースハブ" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Centre de l’espace de travail" } }
+      }
+    },
+    "Categories": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "分类" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "分類" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "カテゴリー" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Catégories" } }
+      }
+    },
+    "Filter tags and categories": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "筛选标签和分类" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "篩選標籤和分類" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "タグとカテゴリーを絞り込む" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Filtrer les étiquettes et catégories" } }
+      }
+    },
+    "Loading metadata…": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正在载入元数据…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正在載入中繼資料…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "メタデータを読み込み中…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chargement des métadonnées…" } }
+      }
+    },
+    "%d items": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%d 项" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%d 個項目" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%d 項目" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d éléments" } }
+      }
+    },
+    "%d files": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%d 个文件" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%d 個檔案" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%d ファイル" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d fichiers" } }
+      }
+    },
+    "Manage": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "管理" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "管理" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "管理" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gérer" } }
+      }
+    },
+    "Rename": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "重命名" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "重新命名" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "名前を変更" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Renommer" } }
+      }
+    },
+    "Merge Tag": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "合并标签" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "合併標籤" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "タグを統合" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fusionner l’étiquette" } }
+      }
+    },
+    "Target tag": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "目标标签" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "目標標籤" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "統合先のタグ" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Étiquette cible" } }
+      }
+    },
+    "“%@” is used by %d files. Review the impact, then continue.": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "“%1$@”用于 %2$d 个文件。请查看影响后继续。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "「%1$@」用於 %2$d 個檔案。請檢視影響後繼續。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "「%1$@」は %2$d 個のファイルで使用されています。影響を確認して続けてください。" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "« %1$@ » est utilisé par %2$d fichiers. Vérifiez l’impact avant de continuer." } }
+      }
+    },
+    "Edit Tags and Categories": {
+      "comment": "Workspace interface",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "编辑标签和分类" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "編輯標籤和分類" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "タグとカテゴリーを編集" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Modifier les étiquettes et catégories" } }
+      }
+    },
+    "Full Text": {
+      "comment": "Workspace lexical search mode",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "全文" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "全文" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "全文" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Texte intégral" } }
+      }
+    },
+    "Deep Search": {
+      "comment": "Workspace semantic search mode",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "深度搜索" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "深度搜尋" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ディープ検索" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Recherche approfondie" } }
+      }
+    },
+    "Download Model": {
+      "comment": "Download the optional on-device search model",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "下载模型" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "下載模型" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデルをダウンロード" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Télécharger le modèle" } }
+      }
+    },
+    "On-device model not downloaded": {
+      "comment": "Deep Search model state",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "尚未下载设备端模型" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "尚未下載裝置端模型" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "オンデバイスモデルは未ダウンロードです" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Modèle local non téléchargé" } }
+      }
+    },
+    "Preparing private on-device index…": {
+      "comment": "Deep Search indexing state",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正在准备私有设备端索引…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正在準備私有裝置端索引…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "端末内のプライベート索引を準備中…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Préparation de l’index privé local…" } }
+      }
+    },
+    "Deep Search unavailable": {
+      "comment": "Deep Search failure state",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "深度搜索不可用" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "深度搜尋無法使用" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ディープ検索を利用できません" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Recherche approfondie indisponible" } }
+      }
+    },
     "Workspace Operation Failed": {
       "comment": "Workspace interface",
       "localizations": {

@@ -45,7 +45,10 @@ final class EditorViewController: NSViewController {
   var workspaceSidebarVisible = AppPreferences.Window.workspaceSidebarVisible
   var workspaceSidebarWidth = AppPreferences.Window.workspaceFilesWidth
   var workspaceSearchWidth = AppPreferences.Window.workspaceSearchWidth
+  var workspaceTagsWidth = AppPreferences.Window.workspaceTagsWidth
   var workspacePreviewWidth = AppPreferences.Window.workspacePreviewWidth
+  var workspaceMetadataTask: Task<Void, Never>?
+  var workspaceHubWindowController: NSWindowController?
   var editorTextRevision: UInt64 = 0
 
   weak var presentedMenu: NSMenu?
@@ -253,6 +256,8 @@ final class EditorViewController: NSViewController {
   private var resetContinuations = [PreloadContinuation]()
 
   deinit {
+    workspaceMetadataTask?.cancel()
+
     if let monitor = localEventMonitor {
       NSEvent.removeMonitor(monitor)
       localEventMonitor = nil

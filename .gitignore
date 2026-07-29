@@ -5,3 +5,9 @@
 xcuserdata/
 Local.xcconfig
 *.local.entitlements
+
+## Web workspace
+WebApp/node_modules/
+WebApp/*.tsbuildinfo
+WebApp/vite.config.js
+WebApp/vite.config.d.ts

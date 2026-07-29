@@ -11,13 +11,56 @@ import SharedUI
 enum WorkspaceSidebarMode: Int {
   case files
   case search
+  case tags
   case preview
+}
+
+enum WorkspaceTaxonomyItem: Equatable {
+  case tag(WorkspaceTagSummary)
+  case category(WorkspaceCategorySummary)
+
+  var displayName: String {
+    switch self {
+    case let .tag(tag):
+      return tag.displayName
+    case let .category(category):
+      return category.path
+    }
+  }
+
+  var fileCount: Int {
+    switch self {
+    case let .tag(tag):
+      return tag.fileCount
+    case let .category(category):
+      return category.fileCount
+    }
+  }
+}
+
+enum WorkspaceTaxonomyAction: Equatable {
+  case rename
+  case merge
+  case delete
+}
+
+struct WorkspaceHubSnapshot: Codable {
+  let workspaceName: String
+  let rootPath: String
+  let recentFiles: [WorkspaceFileSummary]
+  let tags: [WorkspaceTagSummary]
+  let categories: [WorkspaceCategorySummary]
+  let graph: WorkspaceGraph
+  let accountEnabled: Bool
+  let syncEnabled: Bool
+  let backupEnabled: Bool
 }
 
 @MainActor
 final class WorkspaceSession {
   let rootURL: URL
   let index: WorkspaceIndex
+  let deepSearchIndex: WorkspaceDeepSearch
 
   private(set) var isAuthorized: Bool
   var onFileSystemChange: (() -> Void)?
@@ -33,6 +76,7 @@ final class WorkspaceSession {
     self.bookmark = bookmark
     self.isAuthorized = isAuthorized
     self.index = WorkspaceIndex(rootURL: standardizedRoot)
+    self.deepSearchIndex = WorkspaceDeepSearch(rootURL: standardizedRoot)
     self.filePresenter = WorkspaceFilePresenter(rootURL: standardizedRoot)
 
     filePresenter.onChange = { [weak self] changedURL in
@@ -133,6 +177,72 @@ final class WorkspaceSession {
     }
 
     return await index.search(query)
+  }
+
+  func deepSearch(_ query: String) async throws -> [WorkspaceSearchResult] {
+    guard isAuthorized else {
+      return []
+    }
+    return try await deepSearchIndex.search(query).map(\.result)
+  }
+
+  func deepSearchState() async -> WorkspaceDeepSearchState {
+    await deepSearchIndex.state
+  }
+
+  func installAndIndexDeepSearch() async throws {
+    guard isAuthorized else {
+      return
+    }
+    try await deepSearchIndex.installModel()
+    _ = try await deepSearchIndex.rebuild()
+  }
+
+  func taxonomy() async -> ([WorkspaceTagSummary], [WorkspaceCategorySummary]) {
+    guard isAuthorized else {
+      return ([], [])
+    }
+    let tags = await index.tags()
+    let categories = await index.categories()
+    return (tags, categories)
+  }
+
+  func files(for item: WorkspaceTaxonomyItem) async -> [URL] {
+    guard isAuthorized else {
+      return []
+    }
+
+    switch item {
+    case let .tag(tag):
+      return await index.files(tagIdentity: tag.identity)
+    case let .category(category):
+      return await index.files(categoryPath: category.path)
+    }
+  }
+
+  func graph(limit: Int = WorkspaceIndex.defaultGraphNodeLimit) async -> WorkspaceGraph {
+    guard isAuthorized else {
+      return WorkspaceGraph(nodes: [], edges: [])
+    }
+    return await index.graph(limit: limit)
+  }
+
+  func hubSnapshot() async -> WorkspaceHubSnapshot {
+    let recentFiles = await index.recentFiles()
+    let tags = await index.tags()
+    let categories = await index.categories()
+    let graph = await index.graph()
+    return WorkspaceHubSnapshot(
+      workspaceName: rootURL.lastPathComponent,
+      rootPath: rootURL.path,
+      recentFiles: recentFiles,
+      tags: tags,
+      categories: categories,
+      graph: graph,
+      accountEnabled: false,
+      syncEnabled: false,
+      backupEnabled: false
+    )
   }
 
   private func scheduleRefresh(changedURL: URL?) {
