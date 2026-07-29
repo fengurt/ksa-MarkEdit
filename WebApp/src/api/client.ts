@@ -1,5 +1,40 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.notes.apuch.art';
 
+export type VaultSummary = {
+  id: string;
+  displayName: string;
+  syncSequence: number;
+};
+
+export type LatestManifest = {
+  sequence: number;
+  previousDigest?: string;
+  digest: string;
+  signedCbor: string;
+};
+
+export type TemporaryCosGrant = {
+  protocolVersion: number;
+  bucket: string;
+  region: string;
+  prefix: string;
+  expiration?: string;
+  credentials: {
+    Token: string;
+    TmpSecretId: string;
+    TmpSecretKey: string;
+  };
+};
+
+export type VaultObjectSummary = {
+  objectId: string;
+  kind: 'markdown' | 'attachment' | 'vector_shard' | 'manifest';
+  cipherSize: number;
+  digest: string;
+  sequence: number;
+  objectKey: string;
+};
+
 type PublicKeyOptionsJSON = Omit<
   PublicKeyCredentialCreationOptions,
   'challenge' | 'user' | 'excludeCredentials'
@@ -18,7 +53,7 @@ type PublicKeyRequestOptionsJSON = Omit<
 };
 
 export async function createPasskey(): Promise<void> {
-  const options = await request<PublicKeyOptionsJSON>('/api/v1/passkeys/register/options', {
+  const options = await apiRequest<PublicKeyOptionsJSON>('/api/v1/passkeys/register/options', {
     method: 'POST',
   });
   const credential = await navigator.credentials.create({
@@ -35,14 +70,14 @@ export async function createPasskey(): Promise<void> {
   if (!(credential instanceof PublicKeyCredential)) {
     throw new Error('Passkey creation was cancelled');
   }
-  await request('/api/v1/passkeys/register/verify', {
+  await apiRequest('/api/v1/passkeys/register/verify', {
     method: 'POST',
     body: JSON.stringify(credentialJSON(credential)),
   });
 }
 
 export async function signInWithPasskey(): Promise<void> {
-  const options = await request<PublicKeyRequestOptionsJSON>(
+  const options = await apiRequest<PublicKeyRequestOptionsJSON>(
     '/api/v1/passkeys/authenticate/options',
     { method: 'POST' },
   );
@@ -59,13 +94,130 @@ export async function signInWithPasskey(): Promise<void> {
   if (!(credential instanceof PublicKeyCredential)) {
     throw new Error('Passkey sign-in was cancelled');
   }
-  await request('/api/v1/passkeys/authenticate/verify', {
+  await apiRequest('/api/v1/passkeys/authenticate/verify', {
     method: 'POST',
     body: JSON.stringify(credentialJSON(credential)),
   });
 }
 
-async function request<T = unknown>(path: string, init: RequestInit): Promise<T> {
+export async function listVaults(): Promise<VaultSummary[]> {
+  return apiRequest('/api/v1/vaults', { method: 'GET' });
+}
+
+export async function createVault(displayName: string): Promise<{ id: string }> {
+  return apiRequest('/api/v1/vaults', {
+    method: 'POST',
+    body: JSON.stringify({ display_name: displayName }),
+  });
+}
+
+export async function latestManifest(vaultId: string): Promise<LatestManifest | undefined> {
+  try {
+    return await apiRequest(`/api/v1/vaults/${vaultId}/manifest`, { method: 'GET' });
+  } catch (error) {
+    if (error instanceof AccountServiceError && error.status === 404) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+export async function registerDevice({
+  vaultId,
+  deviceId,
+  hpkePublicKey,
+  signingPublicKey,
+  wrappedGrant,
+}: {
+  vaultId: string;
+  deviceId: string;
+  hpkePublicKey: string;
+  signingPublicKey: string;
+  wrappedGrant: string;
+}): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/devices/${deviceId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ hpkePublicKey, signingPublicKey, wrappedGrant }),
+  });
+}
+
+export async function registerObject({
+  vaultId,
+  objectId,
+  kind,
+  cipherSize,
+  digest,
+}: {
+  vaultId: string;
+  objectId: string;
+  kind: 'markdown' | 'attachment' | 'vector_shard' | 'manifest';
+  cipherSize: number;
+  digest: string;
+}): Promise<{ objectKey: string }> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/objects`, {
+    method: 'POST',
+    body: JSON.stringify({ objectId, kind, cipherSize, digest }),
+  });
+}
+
+export async function listVaultObjects(vaultId: string): Promise<VaultObjectSummary[]> {
+  const objects: VaultObjectSummary[] = [];
+  let after = 0;
+  for (;;) {
+    const page = await apiRequest<VaultObjectSummary[]>(
+      `/api/v1/vaults/${vaultId}/objects?after=${after}&limit=500`,
+      { method: 'GET' },
+    );
+    objects.push(...page);
+    if (page.length < 500) {
+      return objects;
+    }
+    const next = page.at(-1)?.sequence ?? after;
+    if (next <= after) {
+      throw new Error('Object catalog cursor did not advance');
+    }
+    after = next;
+  }
+}
+
+export async function requestTemporaryCosGrant(vaultId: string): Promise<TemporaryCosGrant> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/sts`, { method: 'POST' });
+}
+
+export async function uploadManifest({
+  vaultId,
+  sequence,
+  previousDigest,
+  digest,
+  signedCbor,
+}: {
+  vaultId: string;
+  sequence: number;
+  previousDigest?: string;
+  digest: string;
+  signedCbor: string;
+}): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/manifest`, {
+    method: 'PUT',
+    body: JSON.stringify({ sequence, previousDigest, digest, signedCbor }),
+  });
+}
+
+export async function requestGitHubToken(vaultId: string): Promise<{
+  token: string;
+  expiresAt: string;
+  repository: string;
+}> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/github/token`, { method: 'POST' });
+}
+
+export class AccountServiceError extends Error {
+  constructor(public readonly status: number) {
+    super(`Account service returned ${status}`);
+  }
+}
+
+export async function apiRequest<T = unknown>(path: string, init: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: 'include',
@@ -75,9 +227,13 @@ async function request<T = unknown>(path: string, init: RequestInit): Promise<T>
     },
   });
   if (!response.ok) {
-    throw new Error(`Account service returned ${response.status}`);
+    throw new AccountServiceError(response.status);
   }
-  return response.json() as Promise<T>;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 function credentialJSON(credential: PublicKeyCredential): unknown {

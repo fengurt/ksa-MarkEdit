@@ -12,6 +12,7 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use uuid::Uuid;
 use vault_protocol::{SignedManifestV1, decode_cbor, verify_manifest};
 
@@ -50,6 +51,7 @@ pub struct PutDevice {
 #[serde(rename_all = "camelCase")]
 pub struct PutCapability {
     pub encrypted_grant: String,
+    pub access_token: String,
     pub expires_unix_ms: i64,
     pub revocation_id: Uuid,
 }
@@ -169,6 +171,67 @@ pub async fn put_manifest(
         .as_deref()
         .map(decode_digest)
         .transpose()?;
+    let signed_previous = signed
+        .manifest
+        .previous_manifest_digest
+        .as_ref()
+        .map(|value| value.as_slice());
+    if signed_previous != previous.as_deref() {
+        return Err(ApiError::Invalid(
+            "signed manifest parent digest mismatch".to_owned(),
+        ));
+    }
+    if signed.manifest.entries.len() > 100_000 || signed.manifest.tombstones.len() > 100_000 {
+        return Err(ApiError::Invalid(
+            "manifest exceeds the supported entry limit".to_owned(),
+        ));
+    }
+    let mut file_ids = HashSet::with_capacity(signed.manifest.entries.len());
+    let mut version_ids = HashSet::with_capacity(signed.manifest.entries.len());
+    for entry in &signed.manifest.entries {
+        if !file_ids.insert(entry.file_id) || !version_ids.insert(entry.current_version_id) {
+            return Err(ApiError::Invalid(
+                "manifest contains duplicate file or version identities".to_owned(),
+            ));
+        }
+    }
+    let mut tombstone_ids = HashSet::with_capacity(signed.manifest.tombstones.len());
+    for tombstone in &signed.manifest.tombstones {
+        if file_ids.contains(&tombstone.file_id) || !tombstone_ids.insert(tombstone.file_id) {
+            return Err(ApiError::Invalid(
+                "manifest contains conflicting or duplicate tombstones".to_owned(),
+            ));
+        }
+    }
+    if !signed.manifest.entries.is_empty() {
+        let ids = signed
+            .manifest
+            .entries
+            .iter()
+            .map(|entry| entry.current_version_id)
+            .collect::<Vec<_>>();
+        let digests = signed
+            .manifest
+            .entries
+            .iter()
+            .map(|entry| entry.object_digest.to_vec())
+            .collect::<Vec<_>>();
+        let matched = sqlx::query_scalar::<_, i64>(
+            "SELECT count(*) FROM unnest($2::uuid[], $3::bytea[]) AS expected(id, digest) \
+             JOIN objects ON objects.id = expected.id AND objects.digest = expected.digest \
+             WHERE objects.vault_id = $1",
+        )
+        .bind(vault_id)
+        .bind(ids)
+        .bind(digests)
+        .fetch_one(&state.pool)
+        .await?;
+        if matched != signed.manifest.entries.len() as i64 {
+            return Err(ApiError::Invalid(
+                "manifest references missing or mismatched encrypted objects".to_owned(),
+            ));
+        }
+    }
     let mut transaction = state.pool.begin().await?;
     let current = sqlx::query_as::<_, (i64, Option<Vec<u8>>)>(
         "SELECT sync_sequence, latest_manifest_digest FROM vaults \
@@ -218,6 +281,12 @@ pub async fn register_object(
     require_vault(&state, session.account_id, vault_id).await?;
     if input.cipher_size <= 0 || input.cipher_size > 10 * 1024 * 1024 * 1024_i64 {
         return Err(ApiError::Invalid("invalid cipher size".to_owned()));
+    }
+    if !matches!(
+        input.kind.as_str(),
+        "markdown" | "attachment" | "vector_shard" | "manifest"
+    ) {
+        return Err(ApiError::Invalid("invalid object kind".to_owned()));
     }
     let digest = decode_digest(&input.digest)?;
     let result = sqlx::query(
@@ -286,12 +355,18 @@ pub async fn put_device(
     let hpke = decode_limited(&input.hpke_public_key, 512)?;
     let signing = decode_limited(&input.signing_public_key, 512)?;
     let wrapped = decode_limited(&input.wrapped_grant, 16 * 1024)?;
-    sqlx::query(
+    if hpke.len() != 65 || signing.len() != 65 || hpke[0] != 0x04 || signing[0] != 0x04 {
+        return Err(ApiError::Invalid(
+            "device keys must be uncompressed P-256 public points".to_owned(),
+        ));
+    }
+    let result = sqlx::query(
         "INSERT INTO devices \
          (id, vault_id, hpke_public_key, signing_public_key, wrapped_grant) \
          VALUES ($1, $2, $3, $4, $5) \
          ON CONFLICT (id) DO UPDATE SET wrapped_grant = EXCLUDED.wrapped_grant, \
-         updated_at = now() WHERE devices.vault_id = EXCLUDED.vault_id",
+         updated_at = now() WHERE devices.vault_id = EXCLUDED.vault_id \
+         AND devices.revoked_at IS NULL",
     )
     .bind(device_id)
     .bind(vault_id)
@@ -300,6 +375,11 @@ pub async fn put_device(
     .bind(wrapped)
     .execute(&state.pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(ApiError::Conflict(
+            "device identity belongs to another Vault or is revoked".to_owned(),
+        ));
+    }
     Ok(Json(json!({"id": device_id})))
 }
 
@@ -335,16 +415,23 @@ pub async fn put_capability(
             "capability is already expired".to_owned(),
         ));
     }
+    let access_token = decode_limited(&input.access_token, 128)?;
+    if access_token.len() < 32 {
+        return Err(ApiError::Invalid(
+            "capability access token must contain at least 256 bits".to_owned(),
+        ));
+    }
     sqlx::query(
         "INSERT INTO capability_grants \
-         (id, vault_id, revocation_id, expires_at, encrypted_grant) \
-         VALUES ($1, $2, $3, to_timestamp($4 / 1000.0), $5)",
+         (id, vault_id, revocation_id, expires_at, encrypted_grant, access_token_digest) \
+         VALUES ($1, $2, $3, to_timestamp($4 / 1000.0), $5, $6)",
     )
     .bind(grant_id)
     .bind(vault_id)
     .bind(input.revocation_id)
     .bind(input.expires_unix_ms)
     .bind(decode_limited(&input.encrypted_grant, 64 * 1024)?)
+    .bind(Sha256::digest(access_token).to_vec())
     .execute(&state.pool)
     .await?;
     Ok(Json(json!({"id": grant_id})))

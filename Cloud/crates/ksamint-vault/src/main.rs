@@ -15,8 +15,9 @@ use std::{
 };
 use uuid::Uuid;
 use vault_protocol::{
-    ObjectKindV1, SignedManifestV1, VaultMasterKey, VaultObjectV1, decode_cbor, decrypt_object,
-    decrypt_path, digest_cbor, recovery_phrase, verify_manifest,
+    CapabilityGrantV1, ObjectKindV1, PermissionV1, SignedManifestV1, VaultMasterKey, VaultObjectV1,
+    canonical_cbor, decode_cbor, decrypt_object, decrypt_path, digest_cbor, hpke_seal,
+    recovery_phrase, verify_manifest,
 };
 
 #[derive(Parser)]
@@ -46,6 +47,18 @@ enum Command {
     VerifyKit {
         #[arg(long)]
         kit: PathBuf,
+    },
+    /// Create an expiring, whole-Vault, read-only Agent capability.
+    CreateAgentGrant {
+        #[arg(long)]
+        kit: PathBuf,
+        /// SEC1-encoded P-256 HPKE public key in hexadecimal.
+        #[arg(long)]
+        agent_public_key: String,
+        #[arg(long, default_value_t = 24)]
+        expires_hours: u64,
+        #[arg(long)]
+        output: PathBuf,
     },
     /// Restore source Markdown and, when present, attachments.
     Restore {
@@ -85,6 +98,18 @@ struct RecoveryKitV1 {
     recovery_phrase: String,
     recovery_token: String,
     github_repository: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentGrantPackageV1 {
+    protocol_version: u16,
+    vault_id: Uuid,
+    grant_id: Uuid,
+    revocation_id: Uuid,
+    expires_unix_ms: i64,
+    access_token: String,
+    encrypted_grant: String,
 }
 
 #[derive(Deserialize)]
@@ -171,6 +196,12 @@ async fn main() -> Result<()> {
             );
             Ok(())
         }
+        Command::CreateAgentGrant {
+            kit,
+            agent_public_key,
+            expires_hours,
+            output,
+        } => create_agent_grant(read_kit(&kit)?, &agent_public_key, expires_hours, output),
         Command::Restore {
             kit,
             output,
@@ -222,6 +253,64 @@ async fn main() -> Result<()> {
     }
 }
 
+fn create_agent_grant(
+    kit: RecoveryKitV1,
+    agent_public_key: &str,
+    expires_hours: u64,
+    output: PathBuf,
+) -> Result<()> {
+    if output.exists() {
+        bail!("refusing to overwrite existing Agent grant package");
+    }
+    if !(1..=24 * 30).contains(&expires_hours) {
+        bail!("Agent grant duration must be between 1 hour and 30 days");
+    }
+    let public_key = hex::decode(agent_public_key).context("decode Agent public key")?;
+    if public_key.len() != 65 {
+        bail!("Agent HPKE public key must be an uncompressed P-256 point");
+    }
+    let master_key = VaultMasterKey::from_recovery_phrase(&kit.recovery_phrase)?;
+    let grant_id = Uuid::new_v4();
+    let revocation_id = Uuid::new_v4();
+    let expires_unix_ms = (SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
+        + u128::from(expires_hours) * 60 * 60 * 1_000)
+        .try_into()
+        .context("Agent grant expiration exceeds the protocol range")?;
+    let wrapped_capability_key = hpke_seal(
+        &public_key,
+        master_key.expose_for_wrapping(),
+        grant_id.as_bytes(),
+    )?;
+    let grant = CapabilityGrantV1 {
+        protocol_version: 1,
+        grant_id,
+        agent_hpke_public_key: public_key,
+        permission: PermissionV1::ReadOnly,
+        allowed_path_prefixes: vec![],
+        allowed_tag_identities: vec![],
+        expires_unix_ms,
+        revocation_id,
+        wrapped_capability_key,
+    };
+    let mut access_token = [0_u8; 32];
+    getrandom::fill(&mut access_token).map_err(|_| anyhow!("secure randomness unavailable"))?;
+    let package = AgentGrantPackageV1 {
+        protocol_version: 1,
+        vault_id: kit.vault_id,
+        grant_id,
+        revocation_id,
+        expires_unix_ms,
+        access_token: STANDARD.encode(access_token),
+        encrypted_grant: STANDARD.encode(canonical_cbor(&grant)?),
+    };
+    write_private_json(&output, &package)?;
+    println!(
+        "Read-only Agent grant created at {}. Treat its access token as a secret.",
+        output.display()
+    );
+    Ok(())
+}
+
 fn generate_kit(
     vault_id: Uuid,
     api_base: String,
@@ -242,8 +331,17 @@ fn generate_kit(
         recovery_token: STANDARD.encode(token),
         github_repository,
     };
-    let bytes = serde_json::to_vec_pretty(&kit)?;
-    if let Some(parent) = output.parent() {
+    write_private_json(&output, &kit)?;
+    println!(
+        "Recovery package created at {}. Store it offline; it is never uploaded.",
+        output.display()
+    );
+    Ok(())
+}
+
+fn write_private_json(path: &Path, value: &impl Serialize) -> Result<()> {
+    let bytes = serde_json::to_vec_pretty(value)?;
+    if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
     let mut options = OpenOptions::new();
@@ -253,13 +351,9 @@ fn generate_kit(
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    let mut file = options.open(&output)?;
+    let mut file = options.open(path)?;
     file.write_all(&bytes)?;
     file.sync_all()?;
-    println!(
-        "Recovery package created at {}. Store it offline; it is never uploaded.",
-        output.display()
-    );
     Ok(())
 }
 
@@ -679,6 +773,39 @@ mod tests {
             fs::read_to_string(temporary.join("notes/demo.md")).expect("read"),
             "# hello"
         );
+        fs::remove_dir_all(temporary).expect("cleanup");
+    }
+
+    #[test]
+    fn agent_grant_wraps_the_recovery_key() {
+        let vault_id = Uuid::from_u128(31);
+        let key = VaultMasterKey::from_bytes([12; 32]);
+        let kit = RecoveryKitV1 {
+            protocol_version: 1,
+            vault_id,
+            api_base: String::new(),
+            recovery_phrase: recovery_phrase(&key).expect("phrase"),
+            recovery_token: STANDARD.encode([4; 32]),
+            github_repository: None,
+        };
+        let agent = vault_protocol::generate_hpke_keypair();
+        let temporary = std::env::temp_dir().join(format!("ksamint-{}", Uuid::new_v4()));
+        fs::create_dir_all(&temporary).expect("mkdir");
+        let output = temporary.join("agent-grant.json");
+        create_agent_grant(kit, &hex::encode(&agent.public_key), 1, output.clone())
+            .expect("create grant");
+        let package: AgentGrantPackageV1 =
+            serde_json::from_slice(&fs::read(output).expect("read grant")).expect("parse grant");
+        let grant: CapabilityGrantV1 =
+            decode_cbor(&STANDARD.decode(package.encrypted_grant).expect("base64"))
+                .expect("decode capability");
+        let opened = vault_protocol::hpke_open(
+            &agent.private_key,
+            &grant.wrapped_capability_key,
+            grant.grant_id.as_bytes(),
+        )
+        .expect("open capability key");
+        assert_eq!(opened, key.expose_for_wrapping());
         fs::remove_dir_all(temporary).expect("cleanup");
     }
 }

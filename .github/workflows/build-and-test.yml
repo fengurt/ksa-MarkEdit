@@ -11,6 +11,26 @@ permissions:
   contents: read
 
 jobs:
+  agent-sdk:
+    name: Read-only Agent SDK
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: AgentSDK/package-lock.json
+      - name: Validate TypeScript SDK
+        working-directory: AgentSDK
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm run lint
+          npm test
+          npm run build
+
   cloud:
     name: Private cloud and recovery
     runs-on: ubuntu-24.04

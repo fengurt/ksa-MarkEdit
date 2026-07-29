@@ -43,6 +43,9 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           test "$version" = "$(sed -n 's/^MARKETING_VERSION = //p' Build.xcconfig)"
+          test "$version" = "$(node -p "require('./WebApp/package.json').version")"
+          test "$version" = "$(node -p "require('./AgentSDK/package.json').version")"
+          test "$version" = "$(sed -n 's/^version = \"\\(.*\\)\"/\\1/p' Cloud/Cargo.toml | head -1)"
           test "$(git tag --points-at HEAD)" = "$RELEASE_TAG"
           node Scripts/validate-localizations.mjs
 
@@ -69,6 +72,16 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
+
+      - name: Build and pack read-only Agent SDK
+        working-directory: AgentSDK
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm run lint
+          npm test
+          npm run build
+          npm pack --pack-destination "$RUNNER_TEMP"
 
       - name: Import Developer ID certificate
         run: |
@@ -155,6 +168,7 @@ jobs:
           shasum -a 256 \
             "$dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
             > "$RUNNER_TEMP/SHA256SUMS"
 
       - name: Publish GitHub release
@@ -165,6 +179,7 @@ jobs:
           gh release create "$RELEASE_TAG" \
             "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
             "$RUNNER_TEMP/ReleaseInfo.json" \
             "$RUNNER_TEMP/SHA256SUMS" \
             --repo "$GITHUB_REPOSITORY" \

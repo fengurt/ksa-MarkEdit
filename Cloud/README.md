@@ -11,7 +11,8 @@ usable when this service is absent.
 - `ksamint-api`: Rust/Axum account, Passkey, device, manifest, object catalog,
   audit, Tencent STS, and GitHub App endpoints.
 - `ksamint-vault`: recovery package creation, validation, and restore from COS,
-  GitHub, or a local encrypted backup directory.
+  GitHub, or a local encrypted backup directory, plus expiring Agent grant
+  creation from an offline recovery package.
 - `migrations`: PostgreSQL account and encrypted-sync metadata. The database
   never receives Markdown plaintext, paths, attachment content, or vault keys.
 
@@ -32,6 +33,10 @@ private Singapore backup:
 Permanent Tencent credentials and the GitHub App private key are server
 secrets. They must never be copied into the Mac app, PWA, repository, build
 artifact, or recovery package.
+
+The bucket CORS rule accepts `GET`, `PUT`, and `HEAD` only from
+`https://notes.apuch.art`, with the authorization, content-type, and temporary
+COS token headers needed by encrypted browser sync.
 
 ## Local validation
 
@@ -88,3 +93,23 @@ cargo run -p ksamint-vault -- restore \
 
 The restore process verifies the signed manifest, each object digest and AEAD
 tag, and refuses absolute or parent-traversal paths.
+
+## Read-only Agent grants
+
+Generate a dedicated P-256 identity with `@ksamint/agent-sdk`, then create a
+short-lived whole-Vault grant from the offline recovery package:
+
+```sh
+cargo run -p ksamint-vault -- create-agent-grant \
+  --kit /secure/offline/location/ksamint-recovery.json \
+  --agent-public-key "$KSAMINT_HPKE_PUBLIC_KEY" \
+  --expires-hours 24 \
+  --output /secure/agent/ksamint-agent-grant.json
+```
+
+The output file is created with mode `0600`. Register its opaque
+`encryptedGrant` and hashed `accessToken` through the authenticated capability
+endpoint. The server can revoke or expire the capability but cannot unwrap the
+Vault key. The first SDK release accepts whole-Vault read-only grants only;
+path/tag scopes remain disabled until per-file key envelopes make those scopes
+a cryptographic boundary.

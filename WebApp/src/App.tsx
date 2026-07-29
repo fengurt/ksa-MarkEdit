@@ -6,7 +6,11 @@ import {
   useRef,
   useState,
 } from 'react';
-import { signInWithPasskey } from './api/client';
+import {
+  AccountServiceError,
+  createPasskey,
+  signInWithPasskey,
+} from './api/client';
 import { buildGraph } from './graph/buildGraph';
 import { t } from './i18n';
 import { canonicalTag } from './markdown/metadata';
@@ -20,7 +24,7 @@ type SidebarMode = 'files' | 'search' | 'tags' | 'preview';
 type TaxonomyKind = 'tag' | 'category';
 type TaxonomyAction = 'rename' | 'merge' | 'delete';
 
-const accountEnabled = import.meta.env.VITE_ACCOUNT_ENABLED === 'true';
+const accountFeatureEnabled = import.meta.env.VITE_ACCOUNT_ENABLED === 'true';
 const CoreEditor = lazy(() => import('./editor/CoreEditor').then(module => ({
   default: module.CoreEditor,
 })));
@@ -157,6 +161,10 @@ export default function App() {
   const [notice, setNotice] = useState<string>();
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
   const [taxonomyUndo, setTaxonomyUndo] = useState<NoteFile[]>();
+  const [cloudEnabled, setCloudEnabled] = useState(
+    accountFeatureEnabled || localStorage.getItem('ksamint-cloud-enabled') === 'true',
+  );
+  const [syncing, setSyncing] = useState(false);
   const saveTimer = useRef<number | undefined>(undefined);
   const selected = files.find(file => file.id === selectedId);
   const graph = useMemo(() => buildGraph(files), [files]);
@@ -208,6 +216,38 @@ export default function App() {
       setNotice(undefined);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function syncNow() {
+    if (!storage || syncing) {
+      return;
+    }
+    window.clearTimeout(saveTimer.current);
+    setSaving(false);
+    setSyncing(true);
+    try {
+      const { syncWorkspaceToPrivateCloud } = await import('./security/VaultSyncClient');
+      const report = await syncWorkspaceToPrivateCloud({
+        workspaceId: storage.workspace().id,
+        workspaceName: storage.workspace().name,
+        files,
+      });
+      const synchronized = await storage.replaceFiles(report.files);
+      setFiles(synchronized);
+      setSelectedId(current => (
+        current && synchronized.some(file => file.id === current)
+          ? current
+          : synchronized[0]?.id
+      ));
+      setNotice(
+        `${t('syncComplete')} · ↑${report.uploadedObjects} ↓${report.downloadedObjects}`
+        + (report.conflicts ? ` · ${report.conflicts} ${t('syncConflicts')}` : ''),
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -366,14 +406,26 @@ export default function App() {
         notice={notice}
         onContinue={continueOffline}
         onSignIn={async () => {
-          if (!accountEnabled) {
-            setNotice(t('accountFeatureOff'));
-            return;
-          }
+          localStorage.setItem('ksamint-cloud-enabled', 'true');
+          setCloudEnabled(true);
           try {
             await signInWithPasskey();
             await continueOffline();
           } catch (error) {
+            if (error instanceof AccountServiceError && error.status === 404) {
+              try {
+                await createPasskey();
+                await continueOffline();
+                return;
+              } catch (registrationError) {
+                setNotice(
+                  registrationError instanceof Error
+                    ? registrationError.message
+                    : String(registrationError),
+                );
+                return;
+              }
+            }
             setNotice(error instanceof Error ? error.message : String(error));
           }
         }}
@@ -394,6 +446,11 @@ export default function App() {
         </button>
         <div className="topbar-spacer" />
         <span className="save-indicator" role="status">{saving ? t('saving') : t('saveState')}</span>
+        {cloudEnabled && (
+          <button className="quiet-button" type="button" disabled={syncing} onClick={syncNow}>
+            {syncing ? t('syncing') : t('syncNow')}
+          </button>
+        )}
         <button className="quiet-button" type="button" onClick={() => setRoute('mindmap')}>
           {t('mindmap')}
         </button>
@@ -422,7 +479,12 @@ export default function App() {
         </nav>
 
         {route === 'hub' ? (
-          <Hub files={files} onOpen={openFile} onMindmap={() => setRoute('mindmap')} />
+          <Hub
+            files={files}
+            cloudEnabled={cloudEnabled}
+            onOpen={openFile}
+            onMindmap={() => setRoute('mindmap')}
+          />
         ) : route === 'mindmap' ? (
           <main className="main-content graph-route">
             <Suspense fallback={<RouteLoading />}>
@@ -545,10 +607,12 @@ function Welcome({
 
 function Hub({
   files,
+  cloudEnabled,
   onOpen,
   onMindmap,
 }: {
   files: NoteFile[];
+  cloudEnabled: boolean;
   onOpen: (id: string) => void;
   onMindmap: () => void;
 }) {
@@ -562,7 +626,7 @@ function Hub({
           <h1>{t('hub')}</h1>
           <p>{files.length} Markdown notes, encrypted on this device.</p>
         </div>
-        <span className="account-state">{t('accountOff')}</span>
+        <span className="account-state">{cloudEnabled ? t('accountOn') : t('accountOff')}</span>
       </header>
       <section className="hub-grid">
         <article className="hub-panel recent-panel">

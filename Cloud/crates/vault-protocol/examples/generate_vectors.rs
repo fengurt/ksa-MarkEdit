@@ -22,6 +22,10 @@ struct Vector {
     ciphertext_sha256_hex: String,
     authentication_tag_hex: String,
     object_digest_hex: String,
+    path_nonce_hex: String,
+    path_ciphertext_hex: String,
+    path_authentication_tag_hex: String,
+    manifest_cbor_sha256_hex: String,
     signed_manifest_digest_hex: String,
 }
 
@@ -53,6 +57,8 @@ fn main() {
         object.padded_size,
     ))
     .expect("object aad");
+    let encrypted_path = encrypt_path_with_nonce(&master_key, file_id, "notes/语言.md", [4; 12])
+        .expect("encrypt path");
     let manifest = VaultManifestV1 {
         protocol_version: 1,
         vault_id: Uuid::from_u128(9),
@@ -61,8 +67,7 @@ fn main() {
         entries: vec![ManifestEntryV1 {
             file_id,
             current_version_id: version_id,
-            encrypted_path: encrypt_path_with_nonce(&master_key, file_id, "notes/语言.md", [4; 12])
-                .expect("encrypt path"),
+            encrypted_path: encrypted_path.clone(),
             object_digest,
             byte_size: plaintext.len() as u64,
             modified_unix_ms: 1_700_000_000_000,
@@ -71,6 +76,7 @@ fn main() {
         key_version: 1,
         extensions: BTreeMap::new(),
     };
+    let encoded_manifest = canonical_cbor(&manifest).expect("manifest cbor");
     let signing_key = p256::ecdsa::SigningKey::from_slice(&[5; 32]).expect("signing key");
     let signed = sign_manifest(manifest, &signing_key).expect("sign manifest");
     let vector = Vector {
@@ -86,6 +92,10 @@ fn main() {
         ciphertext_sha256_hex: hex::encode(Sha256::digest(&object.ciphertext)),
         authentication_tag_hex: hex::encode(&object.authentication_tag),
         object_digest_hex: hex::encode(object_digest),
+        path_nonce_hex: hex::encode(&encrypted_path.nonce),
+        path_ciphertext_hex: hex::encode(&encrypted_path.ciphertext),
+        path_authentication_tag_hex: hex::encode(&encrypted_path.authentication_tag),
+        manifest_cbor_sha256_hex: hex::encode(Sha256::digest(encoded_manifest)),
         signed_manifest_digest_hex: hex::encode(Sha256::digest(
             canonical_cbor(&signed).expect("manifest cbor"),
         )),
