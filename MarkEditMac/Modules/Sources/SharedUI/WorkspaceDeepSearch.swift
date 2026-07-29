@@ -839,15 +839,16 @@ private extension WorkspaceDeepSearch {
   }
 
   static func float16Data(_ values: [Float]) -> Data {
-    let halfValues = values.map { Float16($0) }
-    return halfValues.withUnsafeBytes { Data($0) }
+    let halfValues: [Swift.Float16] = values.map { Swift.Float16($0) }
+    return halfValues.withUnsafeBufferPointer { Data(buffer: $0) }
   }
 
   static func floatArray(_ statement: OpaquePointer, column: Int32) -> [Float] {
     let data = data(statement, column: column)
-    return data.withUnsafeBytes { bytes in
-      Array(bytes.bindMemory(to: Float16.self)).map { Float($0) }
+    let halfValues: [Swift.Float16] = data.withUnsafeBytes { bytes in
+      [Swift.Float16](bytes.bindMemory(to: Swift.Float16.self))
     }
+    return halfValues.map { Float($0) }
   }
 }
 
