@@ -1,4 +1,3 @@
-// swiftlint:disable file_length type_body_length
 //
 //  LocalMCPServer.swift
 //
@@ -144,10 +143,12 @@ private extension LocalMCPServer {
       let arguments = parameters["arguments"] as? [String: Any] ?? [:]
       let value = try await callTool(name, arguments: arguments)
       return [
-        "content": [[
-          "type": "text",
-          "text": try Self.prettyJSONString(value),
-        ]],
+        "content": [
+          [
+            "type": "text",
+            "text": try Self.prettyJSONString(value),
+          ],
+        ],
         "structuredContent": value,
         "isError": false,
       ]
@@ -159,11 +160,13 @@ private extension LocalMCPServer {
   func callTool(_ name: String, arguments: [String: Any]) async throws -> Any {
     switch name {
     case "list_workspaces":
-      return [[
-        "name": rootURL.lastPathComponent,
-        "path": rootURL.path,
-        "writeEnabled": allowWrite,
-      ]]
+      return [
+        [
+          "name": rootURL.lastPathComponent,
+          "path": rootURL.path,
+          "writeEnabled": allowWrite,
+        ],
+      ]
     case "list_files":
       return try listFiles(path: arguments["path"] as? String)
     case "read_file":
@@ -530,7 +533,7 @@ private extension LocalMCPServer {
       withJSONObject: value,
       options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
     )
-    return String(decoding: data, as: UTF8.self)
+    return String(data: data, encoding: .utf8) ?? ""
   }
 
   static func requiredString(_ key: String, in arguments: [String: Any]) throws -> String {
@@ -600,12 +603,21 @@ private extension LocalMCPServer {
   static var toolDescriptions: [[String: Any]] {
     [
       tool("list_workspaces", "List the authorized workspace."),
-      tool("list_files", "List Markdown files and folders.", properties: [
-        "path": ["type": "string"],
-      ]),
-      tool("read_file", "Read one Markdown source file.", properties: [
-        "path": ["type": "string"],
-      ], required: ["path"]),
+      tool(
+        "list_files",
+        "List Markdown files and folders.",
+        properties: [
+          "path": ["type": "string"],
+        ]
+      ),
+      tool(
+        "read_file",
+        "Read one Markdown source file.",
+        properties: [
+          "path": ["type": "string"],
+        ],
+        required: ["path"]
+      ),
       tool(
         "search",
         "Search local Markdown text.",
@@ -620,36 +632,71 @@ private extension LocalMCPServer {
       ),
       tool("list_tags", "List normalized tags and file counts."),
       tool("list_categories", "List categories and file counts."),
-      tool("backlinks", "List files linking to a Markdown file.", properties: [
-        "path": ["type": "string"],
-      ], required: ["path"]),
-      tool("graph_neighbors", "Return the local graph around a file.", properties: [
-        "path": ["type": "string"],
-        "depth": ["type": "integer", "minimum": 1, "maximum": 3],
-      ], required: ["path"]),
-      tool("create_file", "Create a Markdown file when writes are enabled.", properties: [
-        "path": ["type": "string"],
-        "text": ["type": "string"],
-      ], required: ["path"]),
-      tool("apply_patch", "Replace one exact source span when writes are enabled.", properties: [
-        "path": ["type": "string"],
-        "oldText": ["type": "string"],
-        "newText": ["type": "string"],
-      ], required: ["path", "oldText", "newText"]),
-      tool("set_tags", "Set YAML tags after explicit confirmation.", properties: [
-        "path": ["type": "string"],
-        "tags": ["type": "array", "items": ["type": "string"]],
-        "confirmed": ["const": true],
-      ], required: ["path", "tags", "confirmed"]),
-      tool("set_category", "Set a YAML category after explicit confirmation.", properties: [
-        "path": ["type": "string"],
-        "category": ["type": "string"],
-        "confirmed": ["const": true],
-      ], required: ["path", "category", "confirmed"]),
-      tool("move_to_trash", "Move a file to Trash after explicit confirmation.", properties: [
-        "path": ["type": "string"],
-        "confirmed": ["const": true],
-      ], required: ["path", "confirmed"]),
+      tool(
+        "backlinks",
+        "List files linking to a Markdown file.",
+        properties: [
+          "path": ["type": "string"],
+        ],
+        required: ["path"]
+      ),
+      tool(
+        "graph_neighbors",
+        "Return the local graph around a file.",
+        properties: [
+          "path": ["type": "string"],
+          "depth": ["type": "integer", "minimum": 1, "maximum": 3],
+        ],
+        required: ["path"]
+      ),
+      tool(
+        "create_file",
+        "Create a Markdown file when writes are enabled.",
+        properties: [
+          "path": ["type": "string"],
+          "text": ["type": "string"],
+        ],
+        required: ["path"]
+      ),
+      tool(
+        "apply_patch",
+        "Replace one exact source span when writes are enabled.",
+        properties: [
+          "path": ["type": "string"],
+          "oldText": ["type": "string"],
+          "newText": ["type": "string"],
+        ],
+        required: ["path", "oldText", "newText"]
+      ),
+      tool(
+        "set_tags",
+        "Set YAML tags after explicit confirmation.",
+        properties: [
+          "path": ["type": "string"],
+          "tags": ["type": "array", "items": ["type": "string"]],
+          "confirmed": ["const": true],
+        ],
+        required: ["path", "tags", "confirmed"]
+      ),
+      tool(
+        "set_category",
+        "Set a YAML category after explicit confirmation.",
+        properties: [
+          "path": ["type": "string"],
+          "category": ["type": "string"],
+          "confirmed": ["const": true],
+        ],
+        required: ["path", "category", "confirmed"]
+      ),
+      tool(
+        "move_to_trash",
+        "Move a file to Trash after explicit confirmation.",
+        properties: [
+          "path": ["type": "string"],
+          "confirmed": ["const": true],
+        ],
+        required: ["path", "confirmed"]
+      ),
     ]
   }
 
