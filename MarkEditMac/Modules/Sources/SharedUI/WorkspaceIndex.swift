@@ -1097,11 +1097,13 @@ private extension WorkspaceIndex {
         Int(sqlite3_column_int(statement, 2))
       )
     }
+    var seenEdges = Set<String>()
     let edges = linkRows.compactMap { source, targetKey, kind -> WorkspaceGraphEdge? in
       guard allowedPaths.contains(source),
             let target = targetMap[targetKey],
             allowedPaths.contains(target),
-            let linkKind = WorkspaceLinkKind(rawValue: kind) else {
+            let linkKind = WorkspaceLinkKind(rawValue: kind),
+            seenEdges.insert("\(source)\u{0}\(target)\u{0}\(kind)").inserted else {
         return nil
       }
       return WorkspaceGraphEdge(sourcePath: source, targetPath: target, kind: linkKind)
@@ -1430,9 +1432,11 @@ private extension WorkspaceIndex {
   ) -> [(Int, String)] {
     let lines = body.components(separatedBy: .newlines)
     let foldedTerms = terms.map(fold)
-    var matchingLineIndices = lines.indices.filter { index in
-      foldedTerms.isEmpty || foldedTerms.contains { fold(lines[index]).contains($0) }
-    }
+    var matchingLineIndices = foldedTerms.isEmpty
+      ? [lines.startIndex]
+      : lines.indices.filter { index in
+        foldedTerms.contains { fold(lines[index]).contains($0) }
+      }
 
     if matchingLineIndices.isEmpty,
        foldedTerms.contains(where: { fold(relativePath).contains($0) }) {
