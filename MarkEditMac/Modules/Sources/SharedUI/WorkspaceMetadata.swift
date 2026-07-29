@@ -15,9 +15,9 @@ public struct WorkspaceDocumentMetadata: Sendable, Equatable {
     self.tags = Self.uniqueDisplayTags(tags)
   }
 
-  public static func parse(_ source: String) -> WorkspaceDocumentMetadata {
+  public static func parse(_ source: String) -> Self {
     guard let frontMatter = FrontMatter(source: source) else {
-      return WorkspaceDocumentMetadata()
+      return Self()
     }
 
     var category: String?
@@ -57,7 +57,7 @@ public struct WorkspaceDocumentMetadata: Sendable, Equatable {
       index += 1
     }
 
-    return WorkspaceDocumentMetadata(category: category, tags: tags)
+    return Self(category: category, tags: tags)
   }
 
   public func applying(to source: String) -> String {

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 //
 //  WorkspaceDeepSearch.swift
 //
@@ -387,10 +388,8 @@ private struct DeepChunkRecord {
 
 private extension WorkspaceDeepSearch {
   static var defaultModelDirectoryURL: URL {
-    let support = FileManager.default.urls(
-      for: .applicationSupportDirectory,
-      in: .userDomainMask
-    ).first!
+    let support = FileManager.default.homeDirectoryForCurrentUser
+      .appending(path: "Library/Application Support", directoryHint: .isDirectory)
     return support.appending(path: "MarkEdit/DeepSearch/multilingual-e5-small-v1")
   }
 
@@ -398,10 +397,8 @@ private extension WorkspaceDeepSearch {
     let digest = SHA256.hash(data: Data(rootURL.path.utf8))
       .map { String(format: "%02x", $0) }
       .joined()
-    let support = FileManager.default.urls(
-      for: .applicationSupportDirectory,
-      in: .userDomainMask
-    ).first!
+    let support = FileManager.default.homeDirectoryForCurrentUser
+      .appending(path: "Library/Application Support", directoryHint: .isDirectory)
     return support.appending(path: "MarkEdit/WorkspaceIndex/\(digest)-deep.sqlite")
   }
 
@@ -485,10 +482,11 @@ private extension WorkspaceDeepSearch {
       )
     }
 
-    for (offset, line) in text.split(
+    let lines = text.split(
       separator: "\n",
       omittingEmptySubsequences: false
-    ).enumerated() {
+    )
+    for (offset, line) in lines.enumerated() {
       let lineNumber = offset + 1
       let string = String(line)
       let trimmed = string.trimmingCharacters(in: .whitespaces)
@@ -1043,11 +1041,12 @@ private struct HNSWIndex {
   }
 
   func exactSearch(_ query: [Float], limit: Int) -> [HNSWMatch] {
-    records.indices
+    Array(
+      records.indices
       .map { HNSWMatch(index: $0, distance: cosineDistance(query, records[$0].embedding)) }
       .sorted { $0.distance < $1.distance }
       .prefix(limit)
-      .map { $0 }
+    )
   }
 
   private func greedyNearest(_ query: [Float], entry: Int, level: Int) -> Int {

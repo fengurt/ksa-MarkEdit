@@ -192,7 +192,7 @@ final class WorkspaceIndexTests: XCTestCase {
     XCTAssertTrue(excluded.isEmpty)
     XCTAssertEqual(Set(disjunction.map(\.relativePath)), ["model.md", "journal.md"])
     XCTAssertEqual(regex.first?.relativePath, "model.md")
-    XCTAssertEqual(tags.first(where: { $0.identity == "research" })?.fileCount, 1)
+    XCTAssertEqual(tags.first { $0.identity == "research" }?.fileCount, 1)
     XCTAssertEqual(categories.map(\.path), ["Journal", "Projects/AI"])
   }
 

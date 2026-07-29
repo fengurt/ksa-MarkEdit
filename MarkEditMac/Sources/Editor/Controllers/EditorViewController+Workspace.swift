@@ -296,20 +296,17 @@ extension EditorViewController {
       }
 
       let snapshot = await session.hubSnapshot()
-      let contentViewController = WorkspaceHubViewController(
-        snapshot: snapshot,
-        onOpen: { [weak self] path in
-          guard let self, let session = workspaceSession else {
-            return
-          }
-          let url = session.rootURL.appending(path: path).standardizedFileURL
-          guard session.contains(url) else {
-            showWorkspaceError(Localized.Workspace.outsideWorkspace)
-            return
-          }
-          openWorkspaceFile(url, lineNumber: nil)
+      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] path in
+        guard let self, let session = workspaceSession else {
+          return
         }
-      )
+        let url = session.rootURL.appending(path: path).standardizedFileURL
+        guard session.contains(url) else {
+          showWorkspaceError(Localized.Workspace.outsideWorkspace)
+          return
+        }
+        openWorkspaceFile(url, lineNumber: nil)
+      }
       let window = NSWindow(contentViewController: contentViewController)
       window.title = Localized.Workspace.hub
       window.setContentSize(NSSize(width: 1_040, height: 720))
