@@ -408,7 +408,6 @@ private final class WorkspaceHubViewController: NSViewController {
       allowingReadAccessTo: indexURL.deletingLastPathComponent()
     )
   }
-
 }
 
 @MainActor
