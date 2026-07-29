@@ -8,6 +8,23 @@ import SharedUI
 import XCTest
 
 final class LocalMCPServerTests: XCTestCase {
+  func testInitializeReportsTheRunningApplicationVersion() async throws {
+    let fixture = try Fixture()
+    defer {
+      fixture.remove()
+    }
+    let server = try LocalMCPServer(
+      workspaceURL: fixture.root,
+      serverVersion: "2.0.0-test"
+    )
+    try await server.prepare()
+
+    let response = try await call(server, id: 1, method: "initialize")
+    let result = try XCTUnwrap(response["result"] as? [String: Any])
+    let serverInfo = try XCTUnwrap(result["serverInfo"] as? [String: Any])
+    XCTAssertEqual(serverInfo["version"] as? String, "2.0.0-test")
+  }
+
   func testReadSearchTaxonomyAndToolDiscovery() async throws {
     let fixture = try Fixture()
     defer {

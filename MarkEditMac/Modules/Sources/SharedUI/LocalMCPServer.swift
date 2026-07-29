@@ -38,10 +38,15 @@ public actor LocalMCPServer {
 
   private let rootURL: URL
   private let allowWrite: Bool
+  private let serverVersion: String
   private let index: WorkspaceIndex
   private let deepSearch: WorkspaceDeepSearch
 
-  public init(workspaceURL: URL, allowWrite: Bool = false) throws {
+  public init(
+    workspaceURL: URL,
+    allowWrite: Bool = false,
+    serverVersion: String? = nil
+  ) throws {
     let rootURL = workspaceURL.standardizedFileURL.resolvingSymlinksInPath()
     var isDirectory: ObjCBool = false
     guard FileManager.default.fileExists(atPath: rootURL.path, isDirectory: &isDirectory),
@@ -51,6 +56,7 @@ public actor LocalMCPServer {
 
     self.rootURL = rootURL
     self.allowWrite = allowWrite
+    self.serverVersion = serverVersion ?? Self.applicationVersion
     self.index = WorkspaceIndex(rootURL: rootURL)
     self.deepSearch = WorkspaceDeepSearch(rootURL: rootURL)
   }
@@ -115,6 +121,11 @@ public actor LocalMCPServer {
 // MARK: - Protocol
 
 private extension LocalMCPServer {
+  static var applicationVersion: String {
+    Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+      ?? "development"
+  }
+
   func handle(_ request: [String: Any]) async throws -> Any {
     guard request["jsonrpc"] as? String == "2.0",
           let method = request["method"] as? String else {
@@ -127,7 +138,7 @@ private extension LocalMCPServer {
         "protocolVersion": "2025-06-18",
         "serverInfo": [
           "name": "ksamint-markedit",
-          "version": "1.3.0",
+          "version": serverVersion,
         ],
         "capabilities": ["tools": ["listChanged": false]],
       ]
