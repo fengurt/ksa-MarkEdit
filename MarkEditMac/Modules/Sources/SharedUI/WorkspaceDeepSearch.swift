@@ -839,16 +839,110 @@ private extension WorkspaceDeepSearch {
   }
 
   static func float16Data(_ values: [Float]) -> Data {
-    let halfValues: [Swift.Float16] = values.map { Swift.Float16($0) }
-    return halfValues.withUnsafeBufferPointer { Data(buffer: $0) }
+    var bytes = [UInt8]()
+    bytes.reserveCapacity(values.count * 2)
+    for value in values {
+      let bits = binary16Bits(value)
+      bytes.append(UInt8(truncatingIfNeeded: bits))
+      bytes.append(UInt8(truncatingIfNeeded: bits >> 8))
+    }
+    return Data(bytes)
   }
 
   static func floatArray(_ statement: OpaquePointer, column: Int32) -> [Float] {
-    let data = data(statement, column: column)
-    let halfValues: [Swift.Float16] = data.withUnsafeBytes { bytes in
-      [Swift.Float16](bytes.bindMemory(to: Swift.Float16.self))
+    floatArray(fromBinary16Data: data(statement, column: column))
+  }
+
+  static func floatArray(fromBinary16Data data: Data) -> [Float] {
+    guard data.count.isMultiple(of: 2) else {
+      return []
     }
-    return halfValues.map { Float($0) }
+    return data.withUnsafeBytes { rawBytes in
+      let bytes = rawBytes.bindMemory(to: UInt8.self)
+      return stride(from: 0, to: bytes.count, by: 2).map { offset in
+        let bits = UInt16(bytes[offset]) | (UInt16(bytes[offset + 1]) << 8)
+        return float(fromBinary16Bits: bits)
+      }
+    }
+  }
+
+  static func binary16Bits(_ value: Float) -> UInt16 {
+    let bits = value.bitPattern
+    let sign = UInt16(truncatingIfNeeded: (bits >> 16) & 0x8000)
+    let sourceExponent = Int((bits >> 23) & 0xff)
+    let sourceSignificand = bits & 0x7f_ffff
+
+    if sourceExponent == 0xff {
+      guard sourceSignificand != 0 else {
+        return sign | 0x7c00
+      }
+      return sign | 0x7c00 | max(1, UInt16(truncatingIfNeeded: sourceSignificand >> 13))
+    }
+
+    let exponent = sourceExponent - 127 + 15
+    if exponent >= 0x1f {
+      return sign | 0x7c00
+    }
+    if exponent <= 0 {
+      guard exponent >= -10 else {
+        return sign
+      }
+      let significand = sourceSignificand | 0x80_0000
+      let shift = UInt32(14 - exponent)
+      var rounded = significand >> shift
+      let remainderMask = (UInt32(1) << shift) - 1
+      let remainder = significand & remainderMask
+      let halfway = UInt32(1) << (shift - 1)
+      if remainder > halfway || (remainder == halfway && rounded & 1 == 1) {
+        rounded += 1
+      }
+      return sign | UInt16(truncatingIfNeeded: rounded)
+    }
+
+    var targetExponent = UInt16(exponent) << 10
+    var targetSignificand = UInt16(truncatingIfNeeded: sourceSignificand >> 13)
+    let remainder = sourceSignificand & 0x1fff
+    if remainder > 0x1000 || (remainder == 0x1000 && targetSignificand & 1 == 1) {
+      targetSignificand += 1
+      if targetSignificand == 0x400 {
+        targetSignificand = 0
+        targetExponent += 0x400
+        if targetExponent >= 0x7c00 {
+          return sign | 0x7c00
+        }
+      }
+    }
+    return sign | targetExponent | targetSignificand
+  }
+
+  static func float(fromBinary16Bits bits: UInt16) -> Float {
+    let sign = UInt32(bits & 0x8000) << 16
+    let exponent = Int((bits >> 10) & 0x1f)
+    var significand = UInt32(bits & 0x03ff)
+    let output: UInt32
+
+    if exponent == 0 {
+      if significand == 0 {
+        output = sign
+      } else {
+        var unbiasedExponent = -14
+        while significand & 0x0400 == 0 {
+          significand <<= 1
+          unbiasedExponent -= 1
+        }
+        significand &= 0x03ff
+        output = sign
+          | UInt32(unbiasedExponent + 127) << 23
+          | significand << 13
+      }
+    } else if exponent == 0x1f {
+      output = sign | 0x7f80_0000 | significand << 13
+    } else {
+      output = sign
+        | UInt32(exponent - 15 + 127) << 23
+        | significand << 13
+    }
+    return Float(bitPattern: output)
   }
 }
 
