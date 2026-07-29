@@ -168,6 +168,7 @@ jobs:
           spctl --assess --type execute -vv "$RUNNER_TEMP/export/ksamint MarkEdit.app"
           Scripts/verify-universal.sh "$RUNNER_TEMP/export/ksamint MarkEdit.app"
           dmg_size="$(stat -f '%z' "$dmg")"
+          echo "Notarized UDBZ size: $dmg_size bytes (limit: 6291456)"
           test "$dmg_size" -le 6291456
           printf '{"minOSVer":"15.0"}\n' > "$RUNNER_TEMP/ReleaseInfo.json"
           shasum -a 256 \

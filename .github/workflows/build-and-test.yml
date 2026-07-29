@@ -195,6 +195,7 @@ jobs:
             -destination 'generic/platform=macOS' \
             ARCHS="arm64 x86_64" \
             ONLY_ACTIVE_ARCH=NO \
+            SWIFT_OPTIMIZATION_LEVEL="-Osize" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
@@ -209,10 +210,15 @@ jobs:
             -ov \
             -format UDBZ \
             "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg"
-          test "$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")" -le 6291456
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
+          dmg_size="$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")"
+          echo "Universal UDBZ size: $dmg_size bytes (limit: 6291456)"
+          test "$dmg_size" -le 6291456
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ksamint-MarkEdit-development
-          path: ${{ runner.temp }}/ksamint-MarkEdit-development.zip
+          path: |
+            ${{ runner.temp }}/ksamint-MarkEdit-development.zip
+            ${{ runner.temp }}/ksamint-MarkEdit-size-check.dmg
           if-no-files-found: error
