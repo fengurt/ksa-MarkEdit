@@ -290,14 +290,17 @@ extension EditorViewController {
     }
 
     Task { @MainActor [weak self] in
-      guard let self, let session = workspaceSession else {
-        toggleWorkspaceSidebar(.files)
+      guard let self else {
+        return
+      }
+      guard let session = self.workspaceSession else {
+        self.toggleWorkspaceSidebar(.files)
         return
       }
 
       let snapshot = await session.hubSnapshot()
       let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] path in
-        guard let self, let session = workspaceSession else {
+        guard let self, let session = self.workspaceSession else {
           return
         }
         let url = session.rootURL.appending(path: path).standardizedFileURL
@@ -406,11 +409,6 @@ private final class WorkspaceHubViewController: NSViewController {
     )
   }
 
-  deinit {
-    webView.configuration.userContentController.removeScriptMessageHandler(
-      forName: "ksamintHub"
-    )
-  }
 }
 
 @MainActor
@@ -673,7 +671,7 @@ private extension EditorViewController {
   ) {
     workspaceMetadataTask?.cancel()
     workspaceMetadataTask = Task { @MainActor [weak self] in
-      guard let self, let session = workspaceSession else {
+      guard let self, let session = self.workspaceSession else {
         return
       }
 

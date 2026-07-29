@@ -123,10 +123,13 @@ final class WorkspaceSidebarView: NSView {
     taxonomyTask?.cancel()
     taxonomyStatusLabel.stringValue = Localized.Workspace.loadingMetadata
     taxonomyTask = Task { [weak self] in
-      guard let self, let session else {
-        taxonomyTags = []
-        taxonomyCategories = []
-        updateTaxonomyItems()
+      guard let self else {
+        return
+      }
+      guard let session = self.session else {
+        self.taxonomyTags = []
+        self.taxonomyCategories = []
+        self.updateTaxonomyItems()
         return
       }
 
@@ -134,9 +137,9 @@ final class WorkspaceSidebarView: NSView {
       guard !Task.isCancelled else {
         return
       }
-      taxonomyTags = tags
-      taxonomyCategories = categories
-      updateTaxonomyItems()
+      self.taxonomyTags = tags
+      self.taxonomyCategories = categories
+      self.updateTaxonomyItems()
     }
   }
 
@@ -678,7 +681,7 @@ private extension WorkspaceSidebarView {
     searchStatusLabel.stringValue = Localized.Workspace.searching
     searchTask = Task { [weak self] in
       try? await Task.sleep(for: .milliseconds(120))
-      guard let self, !Task.isCancelled, let session else {
+      guard let self, !Task.isCancelled, let session = self.session else {
         return
       }
 
