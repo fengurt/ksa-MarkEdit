@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import { EditorView } from '@codemirror/view';
-import { syntaxTree } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import { getNodesNamed, getReadableContent } from '../src/modules/lezer';
 import * as editor from './utils/editor';
 
@@ -223,7 +223,8 @@ describe('Lezer parser', () => {
 
 function parseTypes(editor: EditorView) {
   const types: string[] = [];
-  syntaxTree(editor.state).iterate({
+  const tree = ensureSyntaxTree(editor.state, editor.state.doc.length, 100) ?? syntaxTree(editor.state);
+  tree.iterate({
     enter: node => {
       types.push(node.type.name);
     },
