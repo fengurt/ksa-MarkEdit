@@ -479,11 +479,21 @@ private extension LocalAgentBridge {
     consume: @escaping @Sendable (String) async -> Void
   ) async throws {
     var pending = Data()
+    var buffer = [UInt8](repeating: 0, count: 64 * 1024)
     while !Task.isCancelled {
-      guard let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty else {
+      let count = buffer.withUnsafeMutableBytes { bytes in
+        Darwin.read(handle.fileDescriptor, bytes.baseAddress, bytes.count)
+      }
+      if count < 0 {
+        if errno == EINTR {
+          continue
+        }
+        throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+      }
+      guard count > 0 else {
         break
       }
-      pending.append(chunk)
+      pending.append(buffer, count: count)
       while let newline = pending.firstIndex(of: 0x0A) {
         var line = Data(pending[..<newline])
         pending.removeSubrange(...newline)
