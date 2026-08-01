@@ -114,7 +114,7 @@ private extension EditorViewController {
         agentPanelView?.setStatus(Localized.Agent.noneInstalled)
         return
       }
-      if statuses.first(where: { $0.provider == agentProvider })?.isInstalled != true,
+      if statuses.first(where: { $0.provider == self.agentProvider })?.isInstalled != true,
          let fallback = statuses.first(where: \.isInstalled)?.provider {
         agentProvider = fallback
         agentPanelView?.selectedProvider = fallback
@@ -258,7 +258,7 @@ private extension EditorViewController {
     }
     let action = AgentDraftActionV1(kind: kind, provider: agentProvider, text: generatedText)
     let panel = NSSavePanel()
-    panel.allowedContentTypes = [.markdown]
+    panel.allowedContentTypes = [UTType(filenameExtension: "md") ?? .plainText]
     panel.nameFieldStringValue = reference ? "Agent Reference.md" : "Agent Draft.md"
     let workspaceURL = workspaceSession?.isAuthorized == true ? workspaceSession?.rootURL : nil
     panel.directoryURL = workspaceURL
@@ -347,7 +347,7 @@ private extension EditorViewController {
     }
     guard let handle = try? FileHandle(forWritingTo: url) else { return }
     defer { try? handle.close() }
-    try? handle.seekToEnd()
+    _ = try? handle.seekToEnd()
     try? handle.write(contentsOf: line)
   }
 
