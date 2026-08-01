@@ -7,6 +7,8 @@
 import AppKit
 import AppKitExtensions
 import ExtensionCore
+import ResourceCore
+import ResourceUI
 import SettingsUI
 import MarkEditKit
 
@@ -57,6 +59,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private var appearanceObservation: NSKeyValueObservation?
   private var settingsWindowController: NSWindowController?
+  lazy var resourceModuleHost = ResourceModuleHost(
+    installationRoot: URL.applicationSupportDirectory
+      .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
+      .appending(path: "ResourceModules", directoryHint: .isDirectory),
+    trustStore: ResourceModuleTrustStore(),
+    messages: ResourceUIMessages(
+      noCompatibleModule: Localized.Resource.noCompatibleModule,
+      moduleStopped: Localized.Resource.moduleStopped,
+      moduleFailedPrefix: Localized.Resource.moduleFailed
+    )
+  )
 
   func applicationWillFinishLaunching(_ notification: Notification) {
     NSApp.appearance = AppPreferences.General.appearance.resolved()
@@ -65,6 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     AppDesign.migrateMainMenuIcons(delegate: self)
+    configureResourceMenu()
     appearanceObservation = NSApp.observe(\.effectiveAppearance) { _, _ in
       Task { @MainActor in
         AppTheme.current.updateAppearance()

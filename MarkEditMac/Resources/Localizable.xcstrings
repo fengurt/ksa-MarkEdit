@@ -8023,6 +8023,209 @@
         }
       }
     },
+    "Open Resource…": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开资源…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟資源…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リソースを開く…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir une ressource…"
+          }
+        }
+      }
+    },
+    "Open Resource": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开资源"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟資源"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リソースを開く"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir"
+          }
+        }
+      }
+    },
+    "Choose a folder, archive, HTML file, OKF catalog, or MinerU result.": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择文件夹、压缩包、HTML 文件、OKF 目录或 MinerU 结果。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇資料夾、壓縮檔、HTML 檔案、OKF 目錄或 MinerU 結果。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォルダ、アーカイブ、HTML ファイル、OKF カタログ、または MinerU の結果を選択します。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un dossier, une archive, un fichier HTML, un catalogue OKF ou un résultat MinerU."
+          }
+        }
+      }
+    },
+    "Couldn’t Open Resource": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开资源"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法開啟資源"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リソースを開けませんでした"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’ouvrir la ressource"
+          }
+        }
+      }
+    },
+    "No compatible resource preview module is installed.": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未安装兼容的资源预览模块。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未安裝相容的資源預覽模組。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "互換性のあるリソースプレビューモジュールがインストールされていません。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun module d’aperçu de ressources compatible n’est installé."
+          }
+        }
+      }
+    },
+    "The preview module stopped unexpectedly. Reopen the resource to retry.": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览模块意外停止。请重新打开资源后重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預覽模組意外停止。請重新開啟資源後再試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューモジュールが予期せず停止しました。リソースを開き直して再試行してください。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le module d’aperçu s’est arrêté de manière inattendue. Rouvrez la ressource pour réessayer."
+          }
+        }
+      }
+    },
+    "Preview module failed": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览模块失败"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預覽模組失敗"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューモジュールエラー"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec du module d’aperçu"
+          }
+        }
+      }
+    },
     "Choose a folder to use as this window’s workspace.": {
       "comment": "Workspace interface",
       "localizations": {

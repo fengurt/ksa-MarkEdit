@@ -42,6 +42,14 @@ let package = Package(
       targets: ["Previewer"]
     ),
     .library(
+      name: "ResourceCore",
+      targets: ["ResourceCore"]
+    ),
+    .library(
+      name: "ResourceUI",
+      targets: ["ResourceUI"]
+    ),
+    .library(
       name: "SettingsUI",
       targets: ["SettingsUI"]
     ),
@@ -162,6 +170,30 @@ let package = Package(
       ]
     ),
     .target(
+      name: "ResourceCore",
+      path: "Sources/ResourceCore",
+      swiftSettings: [
+        .enableExperimentalFeature("StrictConcurrency")
+      ],
+      plugins: [
+        .plugin(name: "SwiftLint", package: "MarkEditTools"),
+      ]
+    ),
+    .target(
+      name: "ResourceUI",
+      dependencies: ["ResourceCore"],
+      path: "Sources/ResourceUI",
+      swiftSettings: [
+        .enableExperimentalFeature("StrictConcurrency")
+      ],
+      linkerSettings: [
+        .linkedFramework("WebKit"),
+      ],
+      plugins: [
+        .plugin(name: "SwiftLint", package: "MarkEditTools"),
+      ]
+    ),
+    .target(
       name: "SettingsUI",
       dependencies: ["AppKitExtensions"],
       path: "Sources/SettingsUI",
@@ -211,6 +243,7 @@ let package = Package(
         "AppKitExtensions",
         "ExtensionCore",
         "FileDrop",
+        "ResourceCore",
         "Statistics",
         "TextBundle",
         "MarkEditKit",
