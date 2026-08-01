@@ -108,6 +108,23 @@ public final class LocalMCPUnixServer: @unchecked Sendable {
     self.runtimeDirectory = runtimeDirectory
     self.acceptTask = Task.detached(priority: .utility) {
       while !Task.isCancelled {
+        var readiness = pollfd(fd: listener, events: Int16(POLLIN), revents: 0)
+        let ready = Darwin.poll(&readiness, 1, 250)
+        if Task.isCancelled {
+          break
+        }
+        if ready == 0 {
+          continue
+        }
+        if ready < 0 {
+          if errno == EINTR {
+            continue
+          }
+          break
+        }
+        guard readiness.revents & Int16(POLLIN) != 0 else {
+          break
+        }
         let client = Darwin.accept(listener, nil, nil)
         if client < 0 {
           if errno == EINTR {
