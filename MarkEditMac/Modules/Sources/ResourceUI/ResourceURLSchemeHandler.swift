@@ -35,7 +35,7 @@ public final class ResourceURLSchemeHandler: NSObject, WKURLSchemeHandler, @unch
                 .queryItems?.first(where: { $0.name == "capability" })?.value == session.capability else {
           throw ResourceModuleError.invalidURL
         }
-        let entryID = String(url.path.drop(while: { $0 == "/" })).removingPercentEncoding ?? ""
+        let entryID = String(url.path.drop { $0 == "/" }).removingPercentEncoding ?? ""
         guard ResourcePathPolicy.isSafeRelativePath(entryID) else {
           throw ResourceModuleError.unsafePath(entryID)
         }

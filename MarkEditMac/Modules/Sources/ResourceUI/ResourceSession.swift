@@ -33,8 +33,8 @@ public final class ResourceSession: @unchecked Sendable {
 
 private extension ResourceSession {
   static func randomCapability() -> String {
-    (0..<32).map { _ in
-      String(format: "%02x", UInt8.random(in: .min ... .max))
-    }.joined()
+    (0..<32)
+      .map { _ in String(format: "%02x", UInt8.random(in: .min ... .max)) }
+      .joined()
   }
 }

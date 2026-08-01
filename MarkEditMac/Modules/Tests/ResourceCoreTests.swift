@@ -162,14 +162,13 @@ final class ResourceCoreTests: XCTestCase {
     )
     let installer = ResourceModuleInstaller(
       installationRoot: root,
-      trustStore: trustStore,
-      download: { url in
-        guard let data = responses[url] else {
-          throw ResourceModuleError.notFound(url.absoluteString)
-        }
-        return data
+      trustStore: trustStore
+    ) { url in
+      guard let data = responses[url] else {
+        throw ResourceModuleError.notFound(url.absoluteString)
       }
-    )
+      return data
+    }
 
     let installed = try await installer.install(
       from: manifestURL,

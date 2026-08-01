@@ -37,7 +37,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     fatalError("init(coder:) has not been implemented")
   }
 
-  public override func loadView() {
+  override public func loadView() {
     let container = NSView()
     statusLabel.alignment = .center
     statusLabel.textColor = .secondaryLabelColor
@@ -53,7 +53,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     view = container
   }
 
-  public override func viewDidLoad() {
+  override public func viewDidLoad() {
     super.viewDidLoad()
     guard let moduleURL, let manifest else {
       statusLabel.stringValue = messages.noCompatibleModule

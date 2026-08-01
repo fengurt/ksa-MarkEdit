@@ -69,11 +69,13 @@ public actor ResourceAccessBroker {
     let offset = try Self.decodeCursor(cursor)
     let parentPath = parentID ?? ""
     let parentURL = try resolve(relativePath: parentPath, expectsDirectory: true)
-    let urls = try FileManager.default.contentsOfDirectory(
-      at: parentURL,
-      includingPropertiesForKeys: Self.resourceKeys,
-      options: []
-    ).sorted(by: Self.resourceOrder)
+    let urls = try FileManager.default
+      .contentsOfDirectory(
+        at: parentURL,
+        includingPropertiesForKeys: Self.resourceKeys,
+        options: []
+      )
+      .sorted(by: Self.resourceOrder)
 
     guard offset <= urls.count else {
       throw ResourceModuleError.invalidCursor

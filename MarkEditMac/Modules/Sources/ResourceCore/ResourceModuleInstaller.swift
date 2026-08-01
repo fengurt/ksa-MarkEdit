@@ -83,12 +83,14 @@ public actor ResourceModuleInstaller {
       includingPropertiesForKeys: [.isDirectoryKey],
       options: [.skipsHiddenFiles]
     )) ?? []
-    return urls.filter {
-      (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-        && FileManager.default.fileExists(atPath: $0.appending(path: "manifest.json").path)
-    }.sorted {
-      $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
-    }
+    return urls
+      .filter {
+        (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+          && FileManager.default.fileExists(atPath: $0.appending(path: "manifest.json").path)
+      }
+      .sorted {
+        $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+      }
   }
 
   public func validateInstalledModule(at moduleURL: URL) throws -> ResourceModuleManifestV1 {
