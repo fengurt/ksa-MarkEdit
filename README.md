@@ -158,6 +158,9 @@ approves its displayed name, version, and size. Every manifest has a P-256
 signature and every static asset has a SHA-256 hash. Modules run in a
 non-persistent, network-disabled WebKit process and receive only paginated
 directory metadata or bounded byte ranges from the selected resource.
+Resource containers can be opened from File > Open Resource, the Recent
+Resources submenu, or by dropping a folder, archive, HTML, or OKF resource onto
+an editor window. Ordinary image and PDF drops retain their Markdown behavior.
 
 ## Branding and license
 

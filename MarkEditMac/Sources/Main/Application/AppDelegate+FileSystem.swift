@@ -25,7 +25,15 @@ extension AppDelegate {
     let openIndex = mainFileMenu.items.firstIndex {
       $0.action == #selector(NSDocumentController.openDocument(_:))
     }
-    mainFileMenu.insertItem(item, at: min((openIndex ?? 1) + 1, mainFileMenu.items.count))
+    let itemIndex = min((openIndex ?? 1) + 1, mainFileMenu.items.count)
+    mainFileMenu.insertItem(item, at: itemIndex)
+
+    let recentItem = NSMenuItem(title: Localized.Resource.recentResources, action: nil, keyEquivalent: "")
+    let recentMenu = NSMenu(title: Localized.Resource.recentResources)
+    recentItem.submenu = recentMenu
+    recentResourcesMenu = recentMenu
+    mainFileMenu.insertItem(recentItem, at: min(itemIndex + 1, mainFileMenu.items.count))
+    refreshRecentResourcesMenu()
   }
 
   @IBAction func openResource(_ sender: Any?) {
@@ -42,21 +50,59 @@ extension AppDelegate {
       guard await openPanel.begin() == .OK, let url = openPanel.url else {
         return
       }
-      do {
-        try await resourceModuleHost.open(url, tabbingWindow: tabbingWindow)
-      } catch {
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = Localized.Resource.openFailed
-        alert.informativeText = error.localizedDescription
-        alert.addButton(withTitle: Localized.General.done)
-        if let window = NSApp.keyWindow {
-          await alert.beginSheetModal(for: window)
-        } else {
-          alert.runModal()
-        }
+      await openResourceURL(url, tabbingWindow: tabbingWindow)
+    }
+  }
+
+  func openResourceURL(_ url: URL, tabbingWindow: NSWindow?) async {
+    do {
+      try await resourceModuleHost.open(url, tabbingWindow: tabbingWindow)
+      rememberResource(url)
+    } catch {
+      let alert = NSAlert()
+      alert.alertStyle = .warning
+      alert.messageText = Localized.Resource.openFailed
+      alert.informativeText = error.localizedDescription
+      alert.addButton(withTitle: Localized.General.done)
+      if let window = NSApp.keyWindow {
+        await alert.beginSheetModal(for: window)
+      } else {
+        alert.runModal()
       }
     }
+  }
+
+  @objc func openRecentResource(_ sender: NSMenuItem) {
+    guard let bookmark = sender.representedObject as? Data else {
+      return
+    }
+    do {
+      var isStale = false
+      let url = try URL(
+        resolvingBookmarkData: bookmark,
+        options: [.withSecurityScope],
+        relativeTo: nil,
+        bookmarkDataIsStale: &isStale
+      )
+      guard url.startAccessingSecurityScopedResource() else {
+        throw CocoaError(.fileReadNoPermission)
+      }
+      activeResourceSecurityScopes.append(url)
+      Task {
+        await openResourceURL(url, tabbingWindow: NSApp.keyWindow)
+      }
+    } catch {
+      AppPreferences.General.recentResourceBookmarks.removeAll { $0 == bookmark }
+      refreshRecentResourcesMenu()
+      let alert = NSAlert(error: error)
+      alert.messageText = Localized.Resource.openFailed
+      alert.runModal()
+    }
+  }
+
+  @objc func clearRecentResources(_ sender: Any?) {
+    AppPreferences.General.recentResourceBookmarks = []
+    refreshRecentResourcesMenu()
   }
 
   func confirmResourceModuleInstallation(_ entry: ResourceModuleCatalogEntryV1) async -> Bool {
@@ -137,6 +183,73 @@ extension AppDelegate {
 // MARK: - Private
 
 private extension AppDelegate {
+  func rememberResource(_ url: URL) {
+    guard let bookmark = try? url.bookmarkData(
+      options: [.withSecurityScope],
+      includingResourceValuesForKeys: [.nameKey, .isDirectoryKey],
+      relativeTo: nil
+    ) else {
+      return
+    }
+    var bookmarks = AppPreferences.General.recentResourceBookmarks.filter { existing in
+      var isStale = false
+      guard let existingURL = try? URL(
+        resolvingBookmarkData: existing,
+        options: [.withoutUI],
+        relativeTo: nil,
+        bookmarkDataIsStale: &isStale
+      ), !isStale else {
+        return false
+      }
+      return existingURL.standardizedFileURL != url.standardizedFileURL
+    }
+    bookmarks.insert(bookmark, at: 0)
+    AppPreferences.General.recentResourceBookmarks = Array(bookmarks.prefix(10))
+    refreshRecentResourcesMenu()
+  }
+
+  func refreshRecentResourcesMenu() {
+    guard let recentResourcesMenu else {
+      return
+    }
+    recentResourcesMenu.removeAllItems()
+    let bookmarks = AppPreferences.General.recentResourceBookmarks
+    for bookmark in bookmarks {
+      var isStale = false
+      guard let url = try? URL(
+        resolvingBookmarkData: bookmark,
+        options: [.withoutUI],
+        relativeTo: nil,
+        bookmarkDataIsStale: &isStale
+      ), !isStale else {
+        continue
+      }
+      let item = NSMenuItem(
+        title: url.lastPathComponent,
+        action: #selector(openRecentResource(_:)),
+        keyEquivalent: ""
+      )
+      item.target = self
+      item.representedObject = bookmark
+      item.toolTip = url.path
+      recentResourcesMenu.addItem(item)
+    }
+    if recentResourcesMenu.items.isEmpty {
+      let item = NSMenuItem(title: Localized.Resource.noRecentResources, action: nil, keyEquivalent: "")
+      item.isEnabled = false
+      recentResourcesMenu.addItem(item)
+    }
+    recentResourcesMenu.addItem(.separator())
+    let clearItem = NSMenuItem(
+      title: Localized.Resource.clearRecentResources,
+      action: #selector(clearRecentResources(_:)),
+      keyEquivalent: ""
+    )
+    clearItem.target = self
+    clearItem.isEnabled = !bookmarks.isEmpty
+    recentResourcesMenu.addItem(clearItem)
+  }
+
   func startAccessingBookmarkData(_ bookmarkData: Data) {
     do {
       var isStale = false

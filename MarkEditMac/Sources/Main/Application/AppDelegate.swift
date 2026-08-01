@@ -59,6 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private var appearanceObservation: NSKeyValueObservation?
   private var settingsWindowController: NSWindowController?
+  var recentResourcesMenu: NSMenu?
+  var activeResourceSecurityScopes = [URL]()
   lazy var resourceModuleHost = ResourceModuleHost(
     installationRoot: URL.applicationSupportDirectory
       .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
@@ -194,6 +196,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationWillTerminate(_ notification: Notification) {
     EditorSelectionHistory.purgeStaleEntries()
+    for url in activeResourceSecurityScopes {
+      url.stopAccessingSecurityScopedResource()
+    }
+    activeResourceSecurityScopes.removeAll()
   }
 
   func shouldOpenOrCreateDocument() -> Bool {

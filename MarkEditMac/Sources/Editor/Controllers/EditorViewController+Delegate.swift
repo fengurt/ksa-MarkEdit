@@ -77,6 +77,14 @@ extension EditorViewController: EditorWebViewActionDelegate {
   }
 
   func editorWebView(_ webView: EditorWebView, didDrop fileURLs: [URL]) {
+    if fileURLs.count == 1, let resourceURL = fileURLs.first,
+       shouldOpenDroppedResource(resourceURL) {
+      Task {
+        await NSApp.appDelegate?.openResourceURL(resourceURL, tabbingWindow: view.window)
+      }
+      return
+    }
+
     let lineBreak = document?.stringValue.getLineBreak(
       defaultValue: AppPreferences.General.defaultLineEndings.characters
     ) ?? "\n"
@@ -103,6 +111,15 @@ extension EditorViewController: EditorWebViewActionDelegate {
     if let textToDrop {
       bridge.core.performTextDrop(text: textToDrop)
     }
+  }
+
+  private func shouldOpenDroppedResource(_ url: URL) -> Bool {
+    if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+      return true
+    }
+    let name = url.lastPathComponent.lowercased()
+    return [".zip", ".tar", ".tgz", ".tar.gz", ".html", ".htm", ".okf"]
+      .contains { name.hasSuffix($0) }
   }
 
   func editorWebView(

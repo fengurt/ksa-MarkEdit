@@ -8226,6 +8226,177 @@
         }
       }
     },
+    "Recent Resources": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "最近资源" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "最近資源" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最近使ったリソース" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ressources récentes" } }
+      }
+    },
+    "No Recent Resources": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "没有最近资源" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "沒有最近資源" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最近使ったリソースはありません" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune ressource récente" } }
+      }
+    },
+    "Clear Recent Resources": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "清除最近资源" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "清除最近資源" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最近使ったリソースを消去" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Effacer les ressources récentes" } }
+      }
+    },
+    "Local Agent": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "本地 Agent" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "本機 Agent" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ローカル Agent" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Agent local" } }
+      }
+    },
+    "Close Agent Panel": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "关闭 Agent 面板" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "關閉 Agent 面板" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Agent パネルを閉じる" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fermer le panneau Agent" } }
+      }
+    },
+    "Detecting local Agent CLIs…": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正在检测本地 Agent CLI…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正在偵測本機 Agent CLI…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ローカル Agent CLI を検出中…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Détection des CLI Agent locales…" } }
+      }
+    },
+    "Not installed": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "未安装" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "未安裝" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "未インストール" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Non installé" } }
+      }
+    },
+    "No supported Agent CLI was found. Install and sign in to Codex or Claude Code, then reopen this panel.": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "未找到支持的 Agent CLI。请安装并登录 Codex 或 Claude Code，然后重新打开此面板。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "找不到支援的 Agent CLI。請安裝並登入 Codex 或 Claude Code，然後重新開啟此面板。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "対応する Agent CLI が見つかりません。Codex または Claude Code をインストールしてログインし、このパネルを開き直してください。" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune CLI Agent prise en charge n’a été trouvée. Installez et connectez Codex ou Claude Code, puis rouvrez ce panneau." } }
+      }
+    },
+    "Ask about this workspace or an open resource…": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "询问此工作区或已打开资源…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "詢問此工作區或已開啟資源…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "このワークスペースまたは開いているリソースについて質問…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Interroger cet espace de travail ou une ressource ouverte…" } }
+      }
+    },
+    "Send": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "发送" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "傳送" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "送信" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoyer" } }
+      }
+    },
+    "Allow": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "允许" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "允許" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "許可" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Autoriser" } }
+      }
+    },
+    "Deny": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "拒绝" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "拒絕" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "拒否" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Refuser" } }
+      }
+    },
+    "Insert with Diff…": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "查看差异并插入…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "檢視差異並插入…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "差分を確認して挿入…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Insérer avec comparaison…" } }
+      }
+    },
+    "Save MD…": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "保存 MD…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "儲存 MD…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "MD を保存…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer MD…" } }
+      }
+    },
+    "Save Reference…": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "保存来源快照…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "儲存來源快照…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "参照スナップショットを保存…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer la référence…" } }
+      }
+    },
+    "Review Agent Draft": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "审阅 Agent 草稿" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "審閱 Agent 草稿" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Agent 下書きを確認" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vérifier le brouillon Agent" } }
+      }
+    },
+    "Apply": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "应用" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "套用" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "適用" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Appliquer" } }
+      }
+    },
+    "Agent drafts can only be saved inside the authorized workspace.": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Agent 草稿只能保存在已授权的工作区内。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Agent 草稿只能儲存在已授權的工作區內。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Agent の下書きは、承認済みワークスペース内にのみ保存できます。" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Les brouillons Agent ne peuvent être enregistrés que dans l’espace de travail autorisé." } }
+      }
+    },
+    "--- Current\n+++ Agent Draft\n%@": {
+      "comment": "Local Agent bridge",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "--- 当前内容\n+++ Agent 草稿\n%@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "--- 目前內容\n+++ Agent 草稿\n%@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "--- 現在\n+++ Agent 下書き\n%@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "--- Actuel\n+++ Brouillon Agent\n%@" } }
+      }
+    },
     "“%@” (%@) is required to preview this resource. Download and install it now? Download size: %@.": {
       "comment": "Resource preview",
       "localizations": {

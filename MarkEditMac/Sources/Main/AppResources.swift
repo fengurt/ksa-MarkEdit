@@ -151,6 +151,9 @@ enum Localized {
 
   enum Resource {
     static let openResource = String(localized: "Open Resource…", comment: "Menu item to open a read-only resource")
+    static let recentResources = String(localized: "Recent Resources", comment: "File menu recent read-only resources submenu")
+    static let noRecentResources = String(localized: "No Recent Resources", comment: "Empty recent resource menu item")
+    static let clearRecentResources = String(localized: "Clear Recent Resources", comment: "Clear recent resource menu item")
     static let open = String(localized: "Open Resource", comment: "Resource open panel button")
     static let openDescription = String(
       localized: "Choose a folder, archive, HTML file, OKF catalog, or MinerU result.",
