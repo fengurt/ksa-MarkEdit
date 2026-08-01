@@ -149,7 +149,7 @@ private extension LocalAgentBridgeTests {
     printf '%s\n' '{"id":3,"result":{"turn":{"id":"turn-test","status":"inProgress"}}}'
     printf '%s\n' '{"method":"item/agentMessage/delta","params":{"delta":"mock answer"}}'
     printf '%s\n' '{"method":"turn/completed","params":{"turn":{"id":"turn-test","status":"completed"}}}'
-    while read rest; do :; done
+    exit 0
     """#
     try script.write(to: executable, atomically: true, encoding: .utf8)
     try FileManager.default.setAttributes(
@@ -176,7 +176,7 @@ private extension LocalAgentBridgeTests {
     printf '%s\n' '{"type":"system","subtype":"init"}'
     printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"mock claude answer"}]}}'
     printf '%s\n' '{"type":"result","is_error":false,"result":"mock claude answer"}'
-    while read rest; do :; done
+    exit 0
     """#
     try script.write(to: executable, atomically: true, encoding: .utf8)
     try FileManager.default.setAttributes(
