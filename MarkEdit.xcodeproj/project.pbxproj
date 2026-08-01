@@ -17,6 +17,7 @@
 		AB2100033000000000000001 /* ResourceUI in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100043000000000000001 /* ResourceUI */; };
 		AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200023000000000000001 /* EditorViewController+Agent.swift */; };
 		AB2200033000000000000001 /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200043000000000000001 /* AgentPanelView.swift */; };
+		AB2300013000000000000001 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB2300023000000000000001 /* Icon.png */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -77,7 +78,6 @@
 		8767BBB1295A8C1D00BFACAE /* EditorViewController+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8767BBB0295A8C1D00BFACAE /* EditorViewController+Delegate.swift */; };
 		8767BBB5295AD62700BFACAE /* EditorReplaceButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8767BBB4295AD62700BFACAE /* EditorReplaceButtons.swift */; };
 		8769BABE2C65F9D400EDA0A6 /* AppRuntimeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8769BABD2C65F9D400EDA0A6 /* AppRuntimeConfig.swift */; };
-		876D70872E7A8E9D00E308A4 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 876D70862E7A8E9D00E308A4 /* AppIcon.icon */; };
 		8772E385294AC60D00111E83 /* EditorPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8772E384294AC60D00111E83 /* EditorPreloader.swift */; };
 		8775A77B29867012005867BF /* FontPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 8775A77A29867012005867BF /* FontPicker */; };
 		877B965D2C63815000186414 /* AppHotKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877B965C2C63815000186414 /* AppHotKeys.swift */; };
@@ -224,6 +224,7 @@
 		873D6401295FCC3E0095DEF7 /* AppResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppResources.swift; sourceTree = "<group>"; };
 		874065782BB505F500B5CE5A /* EditorViewController+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Events.swift"; sourceTree = "<group>"; };
 		8743B26229593B2000F83DAE /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+		AB2300023000000000000001 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = SOURCE_ROOT; };
 		874788612C85E11D00ECF05B /* EditorChunkLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorChunkLoader.swift; sourceTree = "<group>"; };
 		874AAE2D2959F197000E0E84 /* EditorReplacePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorReplacePanel.swift; sourceTree = "<group>"; };
 		874BE6F329BB37FA002F83BA /* IntentProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentProvider.swift; sourceTree = "<group>"; };
@@ -347,6 +348,7 @@
 		870A5199294700DE0095C7EB = {
 			isa = PBXGroup;
 			children = (
+				AB2300023000000000000001 /* Icon.png */,
 				870F17752985546500003DA7 /* MarkEditCore */,
 				87C3CBFA29545944002A3436 /* MarkEditKit */,
 				87BFF238298AAC75006C31E4 /* MarkEditTools */,
@@ -843,8 +845,8 @@
 				AA0000100000000000000001 /* InfoPlist.strings in Resources */,
 				87132AA32C188FE900FD262B /* AppShortcuts.xcstrings in Resources */,
 				870A51AA294700E00095C7EB /* Assets.xcassets in Resources */,
+				AB2300013000000000000001 /* Icon.png in Resources */,
 				8757F7FC2AAC815F001957DD /* Localizable.xcstrings in Resources */,
-				876D70872E7A8E9D00E308A4 /* AppIcon.icon in Resources */,
 				870A51AD294700E00095C7EB /* Main.storyboard in Resources */,
 				B0E02F682D8F77A50060DEA5 /* MarkEdit.sdef in Resources */,
 			);
@@ -1226,7 +1228,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8743B26229593B2000F83DAE /* Build.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "$(MARKEDITMAC_ENTITLEMENTS)";
@@ -1264,7 +1265,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8743B26229593B2000F83DAE /* Build.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "$(MARKEDITMAC_ENTITLEMENTS)";
