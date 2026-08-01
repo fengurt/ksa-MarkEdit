@@ -23,6 +23,8 @@ CURRENT_PROJECT_VERSION = 7
 // Keep the universal release below the 6 MiB distribution budget without
 // affecting Debug diagnostics or removing either CPU architecture.
 SWIFT_OPTIMIZATION_LEVEL[config=Release] = -Osize
+SWIFT_COMPILATION_MODE[config=Release] = wholemodule
+OTHER_SWIFT_FLAGS[config=Release] = $(inherited) -cross-module-optimization
 COPY_PHASE_STRIP[config=Release] = YES
 STRIP_INSTALLED_PRODUCT[config=Release] = YES
 STRIP_STYLE[config=Release] = all
