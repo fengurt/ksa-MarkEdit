@@ -115,10 +115,10 @@ final class AgentPanelView: NSView {
   func setProviders(_ statuses: [LocalAgentProviderStatus]) {
     for (index, provider) in LocalAgentProviderID.allCases.enumerated() {
       providerControl.setEnabled(
-        statuses.first(where: { $0.provider == provider })?.isInstalled == true,
+        statuses.first { $0.provider == provider }?.isInstalled == true,
         forSegment: index
       )
-      let version = statuses.first(where: { $0.provider == provider })?.version
+      let version = statuses.first { $0.provider == provider }?.version
       providerControl.setToolTip(version ?? Localized.Agent.notInstalled, forSegment: index)
     }
     if !providerControl.isEnabled(forSegment: providerControl.selectedSegment),

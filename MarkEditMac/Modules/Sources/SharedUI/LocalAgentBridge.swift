@@ -112,7 +112,7 @@ public struct LocalAgentMCPConfiguration: Sendable {
 }
 
 public actor LocalAgentBridge {
-  public nonisolated let events: AsyncStream<LocalAgentEvent>
+  nonisolated public let events: AsyncStream<LocalAgentEvent>
 
   private let eventContinuation: AsyncStream<LocalAgentEvent>.Continuation
   private var process: Process?
@@ -146,7 +146,7 @@ public actor LocalAgentBridge {
   }
 
   public static func detectProviders() async -> [LocalAgentProviderStatus] {
-    await Task.detached(priority: .utility) {
+    let task = Task.detached(priority: .utility) {
       LocalAgentProviderID.allCases.map { provider in
         let executable = executableURL(for: provider)
         return LocalAgentProviderStatus(
@@ -155,7 +155,8 @@ public actor LocalAgentBridge {
           version: executable.flatMap { version(of: $0) }
         )
       }
-    }.value
+    }
+    return await task.value
   }
 
   public func start(
@@ -642,9 +643,11 @@ private extension LocalAgentBridge {
       }
     case "assistant":
       let blocks = object["message"]?["content"]?.arrayValue ?? []
-      let value = blocks.compactMap { block in
-        block["type"]?.stringValue == "text" ? block["text"]?.stringValue : nil
-      }.joined()
+      let value = blocks
+        .compactMap { block in
+          block["type"]?.stringValue == "text" ? block["text"]?.stringValue : nil
+        }
+        .joined()
       if !value.isEmpty {
         emit(.output(value))
       }
@@ -683,7 +686,10 @@ private extension LocalAgentBridge {
     stderrRing.append(redacted)
     stderrRing.append("\n")
     if stderrRing.utf8.count > 64 * 1024 {
-      stderrRing = String(decoding: stderrRing.utf8.suffix(32 * 1024), as: UTF8.self)
+      stderrRing = String(stderrRing.suffix(16 * 1024))
+      while stderrRing.utf8.count > 32 * 1024 {
+        stderrRing.removeFirst()
+      }
     }
   }
 
@@ -747,7 +753,8 @@ private extension LocalAgentBridge {
   static func executableURL(for provider: LocalAgentProviderID) -> URL? {
     let name = provider == .codex ? "codex" : "claude"
     var directories = (ProcessInfo.processInfo.environment["PATH"] ?? "")
-      .split(separator: ":").map(String.init)
+      .split(separator: ":")
+      .map(String.init)
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     directories.append(contentsOf: [
       "\(home)/.local/bin",
@@ -807,17 +814,24 @@ private enum JSONValue: Codable, Equatable, Sendable {
   case bool(Bool)
   case number(Double)
   case string(String)
-  case array([JSONValue])
-  case object([String: JSONValue])
+  case array([Self])
+  case object([String: Self])
 
   init(from decoder: Decoder) throws {
     let container = try decoder.singleValueContainer()
-    if container.decodeNil() { self = .null }
-    else if let value = try? container.decode(Bool.self) { self = .bool(value) }
-    else if let value = try? container.decode(Double.self) { self = .number(value) }
-    else if let value = try? container.decode(String.self) { self = .string(value) }
-    else if let value = try? container.decode([JSONValue].self) { self = .array(value) }
-    else { self = .object(try container.decode([String: JSONValue].self)) }
+    if container.decodeNil() {
+      self = .null
+    } else if let value = try? container.decode(Bool.self) {
+      self = .bool(value)
+    } else if let value = try? container.decode(Double.self) {
+      self = .number(value)
+    } else if let value = try? container.decode(String.self) {
+      self = .string(value)
+    } else if let value = try? container.decode([Self].self) {
+      self = .array(value)
+    } else {
+      self = .object(try container.decode([String: Self].self))
+    }
   }
 
   func encode(to encoder: Encoder) throws {
@@ -832,15 +846,15 @@ private enum JSONValue: Codable, Equatable, Sendable {
     }
   }
 
-  subscript(key: String) -> JSONValue? {
+  subscript(key: String) -> Self? {
     objectValue?[key]
   }
 
-  var objectValue: [String: JSONValue]? {
+  var objectValue: [String: Self]? {
     if case let .object(value) = self { value } else { nil }
   }
 
-  var arrayValue: [JSONValue]? {
+  var arrayValue: [Self]? {
     if case let .array(value) = self { value } else { nil }
   }
 
@@ -858,13 +872,19 @@ private enum JSONValue: Codable, Equatable, Sendable {
 
   var displayText: String {
     switch self {
-    case .null: ""
-    case let .bool(value): String(value)
-    case let .number(value): String(value)
-    case let .string(value): value
-    case let .array(value): value.map(\.displayText).joined(separator: " ")
-    case let .object(value): value.sorted { $0.key < $1.key }
-      .map { "\($0.key): \($0.value.displayText)" }.joined(separator: "\n")
+    case .null:
+      return ""
+    case let .bool(value):
+      return String(value)
+    case let .number(value):
+      return String(value)
+    case let .string(value):
+      return value
+    case let .array(value):
+      return value.map(\.displayText).joined(separator: " ")
+    case let .object(value):
+      let items = value.sorted { $0.key < $1.key }
+      return items.map { "\($0.key): \($0.value.displayText)" }.joined(separator: "\n")
     }
   }
 }
