@@ -77,7 +77,8 @@ final class LocalAgentBridgeTests: XCTestCase {
       return output
     }
     try await bridge.send("Summarize the note")
-    XCTAssertEqual(await result.value, "mock answer")
+    let output = await result.value
+    XCTAssertEqual(output, "mock answer")
     await bridge.stop()
   }
 
@@ -110,7 +111,8 @@ final class LocalAgentBridgeTests: XCTestCase {
       return output
     }
     try await bridge.send("Summarize the resource")
-    XCTAssertEqual(await result.value, "mock claude answer")
+    let output = await result.value
+    XCTAssertEqual(output, "mock claude answer")
     await bridge.stop()
   }
 }
