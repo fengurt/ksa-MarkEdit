@@ -91,6 +91,8 @@ jobs:
           npm run lint
           npm test
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
 
       - name: Build ksamint MarkEdit
         run: |
@@ -150,6 +152,8 @@ jobs:
         run: |
           npm ci
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
       - name: Build deployment-target release
         run: |
           xcodebuild build \
@@ -185,6 +189,8 @@ jobs:
         run: |
           npm ci
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
       - name: Build universal app
         run: |
           xcodebuild build \
@@ -212,8 +218,11 @@ jobs:
             "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg"
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
           dmg_size="$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")"
-          echo "Universal UDBZ size: $dmg_size bytes (limit: 6291456)"
-          test "$dmg_size" -le 6291456
+          release_limit=6291456
+          required_margin=102400
+          ci_limit="$((release_limit - required_margin))"
+          echo "Universal UDBZ size: $dmg_size bytes (CI limit: $ci_limit; release limit: $release_limit)"
+          test "$dmg_size" -le "$ci_limit"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

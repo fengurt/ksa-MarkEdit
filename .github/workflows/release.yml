@@ -65,6 +65,8 @@ jobs:
           npm run lint
           npm test
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
 
       - name: Validate private cloud and recovery
         working-directory: Cloud

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:mac": "tsc -b && vite build --config vite.mac.config.ts",
+    "validate:mac-bundle": "node ../Scripts/validate-mac-web-bundle.mjs",
     "test": "vitest run",
     "lint": "eslint ."
   },
