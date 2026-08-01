@@ -86,7 +86,12 @@ final class AgentPanelView: NSView {
     statusLabel.frame = CGRect(x: padding, y: providerControl.frame.minY - statusHeight - 5, width: bounds.width - padding * 2, height: statusHeight)
 
     referenceButton.frame = CGRect(x: bounds.width - padding - 104, y: bottom, width: 104, height: actionHeight)
-    saveButton.frame = CGRect(x: referenceButton.frame.minX - 92, y: bottom, width: 84, height: actionHeight)
+    saveButton.frame = CGRect(
+      x: referenceButton.frame.minX - CGFloat(92),
+      y: bottom,
+      width: 84,
+      height: actionHeight
+    )
     insertButton.frame = CGRect(x: padding, y: bottom, width: max(80, saveButton.frame.minX - padding - 8), height: actionHeight)
 
     let promptY = bottom + actionHeight + 8
