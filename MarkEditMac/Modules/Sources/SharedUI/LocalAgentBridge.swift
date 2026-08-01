@@ -456,7 +456,10 @@ private extension LocalAgentBridge {
   }
 
   static func jsonString(_ value: Any) throws -> String {
-    let data = try JSONSerialization.data(withJSONObject: value, options: [.withoutEscapingSlashes])
+    let data = try JSONSerialization.data(
+      withJSONObject: value,
+      options: [.fragmentsAllowed, .withoutEscapingSlashes]
+    )
     guard let string = String(data: data, encoding: .utf8) else {
       throw BridgeFailure.invalidResponse
     }
