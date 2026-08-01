@@ -149,7 +149,7 @@ private extension LocalAgentBridgeTests {
     printf '%s\n' '{"id":3,"result":{"turn":{"id":"turn-test","status":"inProgress"}}}'
     printf '%s\n' '{"method":"item/agentMessage/delta","params":{"delta":"mock answer"}}'
     printf '%s\n' '{"method":"turn/completed","params":{"turn":{"id":"turn-test","status":"completed"}}}'
-    exit 0
+    while read rest; do :; done
     """#
     try script.write(to: executable, atomically: true, encoding: .utf8)
     try FileManager.default.setAttributes(
