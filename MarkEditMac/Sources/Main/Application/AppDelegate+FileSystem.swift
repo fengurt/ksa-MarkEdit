@@ -7,6 +7,7 @@
 
 import AppKit
 import MarkEditKit
+import ResourceCore
 
 extension AppDelegate {
   func configureResourceMenu() {
@@ -28,6 +29,7 @@ extension AppDelegate {
   }
 
   @IBAction func openResource(_ sender: Any?) {
+    let tabbingWindow = NSApp.keyWindow
     let openPanel = NSOpenPanel()
     openPanel.prompt = Localized.Resource.open
     openPanel.message = Localized.Resource.openDescription
@@ -41,7 +43,7 @@ extension AppDelegate {
         return
       }
       do {
-        try await resourceModuleHost.open(url)
+        try await resourceModuleHost.open(url, tabbingWindow: tabbingWindow)
       } catch {
         let alert = NSAlert()
         alert.alertStyle = .warning
@@ -55,6 +57,30 @@ extension AppDelegate {
         }
       }
     }
+  }
+
+  func confirmResourceModuleInstallation(_ entry: ResourceModuleCatalogEntryV1) async -> Bool {
+    let formatter = ByteCountFormatter()
+    formatter.countStyle = .file
+    let alert = NSAlert()
+    alert.alertStyle = .informational
+    alert.messageText = Localized.Resource.installModule
+    alert.informativeText = String(
+      format: Localized.Resource.installModuleDescription,
+      locale: .current,
+      entry.displayName,
+      entry.version,
+      formatter.string(fromByteCount: Int64(entry.downloadBytes))
+    )
+    alert.addButton(withTitle: Localized.Resource.install)
+    alert.addButton(withTitle: Localized.General.cancel)
+    let response: NSApplication.ModalResponse
+    if let window = NSApp.keyWindow {
+      response = await alert.beginSheetModal(for: window)
+    } else {
+      response = alert.runModal()
+    }
+    return response == .alertFirstButtonReturn
   }
 
   func saveGrantedFolderAsBookmark() async {

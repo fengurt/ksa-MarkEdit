@@ -85,6 +85,13 @@ jobs:
           npm run build
           npm pack --pack-destination "$RUNNER_TEMP"
 
+      - name: Verify and package signed resource modules
+        working-directory: ResourceModules
+        run: |
+          npm run verify
+          version="${RELEASE_TAG#v}"
+          ditto -c -k --keepParent dist "$RUNNER_TEMP/ksamint-resource-modules-$version.zip"
+
       - name: Import Developer ID certificate
         run: |
           keychain="$RUNNER_TEMP/release.keychain-db"
@@ -177,6 +184,7 @@ jobs:
             "$dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
             "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
+            "$RUNNER_TEMP/ksamint-resource-modules-$version.zip" \
             > "$RUNNER_TEMP/SHA256SUMS"
 
       - name: Publish GitHub release
@@ -188,6 +196,7 @@ jobs:
             "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
             "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
+            "$RUNNER_TEMP/ksamint-resource-modules-$version.zip" \
             "$RUNNER_TEMP/ReleaseInfo.json" \
             "$RUNNER_TEMP/SHA256SUMS" \
             --repo "$GITHUB_REPOSITORY" \

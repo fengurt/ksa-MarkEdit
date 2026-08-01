@@ -8197,6 +8197,64 @@
         }
       }
     },
+    "Install Preview Module?": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装预览模块？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝預覽模組？"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューモジュールをインストールしますか？"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installer le module d’aperçu ?"
+          }
+        }
+      }
+    },
+    "“%@” (%@) is required to preview this resource. Download and install it now? Download size: %@.": {
+      "comment": "Resource preview",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览此资源需要“%1$@”（%2$@）。现在下载并安装吗？下载大小：%3$@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預覽此資源需要「%1$@」（%2$@）。現在下載並安裝嗎？下載大小：%3$@。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このリソースのプレビューには「%1$@」（%2$@）が必要です。今すぐダウンロードしてインストールしますか？ダウンロードサイズ：%3$@。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %1$@ » (%2$@) est requis pour prévisualiser cette ressource. Le télécharger et l’installer maintenant ? Taille : %3$@."
+          }
+        }
+      }
+    },
     "Preview module failed": {
       "comment": "Resource preview",
       "localizations": {

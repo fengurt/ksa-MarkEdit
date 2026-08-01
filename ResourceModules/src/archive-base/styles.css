@@ -1,0 +1,27 @@
+.resource-sidebar {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.archive-note {
+  color: var(--muted);
+  padding: 10px;
+}
+
+.preview-image {
+  display: block;
+  margin: auto;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.preview-code {
+  box-sizing: border-box;
+  margin: 0;
+  min-height: 100%;
+  overflow: auto;
+  padding: 20px;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@ksamint/resource-modules",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "generate-key": "node scripts/generate-key.mjs",
+    "sign": "node scripts/sign.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "node scripts/verify.mjs && npm test"
+  }
+}

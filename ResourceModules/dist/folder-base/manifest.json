@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "folder-base",
+  "version": "1.0.0",
+  "displayName": "Folder and File Preview",
+  "entrypoint": "index.js",
+  "files": [
+    {
+      "path": "base.css",
+      "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
+      "size": 2664,
+      "mediaType": "text/css"
+    },
+    {
+      "path": "index.js",
+      "sha256": "ac257db8d657cc2e966fa69aa951956a98b1433e43e4ad6f4638953d5b5252cd",
+      "size": 6237,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "runtime.js",
+      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
+      "size": 5186,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "4ae456de30aba5eb1812ba05d2678be7b02d1e2e400d8536dff401aaeb5bc86c",
+      "size": 722,
+      "mediaType": "text/css"
+    }
+  ],
+  "probes": [
+    {
+      "fileExtensions": [
+        "md",
+        "markdown",
+        "txt",
+        "json",
+        "yaml",
+        "yml",
+        "csv",
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+        "webp",
+        "avif",
+        "svg",
+        "pdf"
+      ],
+      "directoryMarkers": [],
+      "mediaTypes": [
+        "public.folder",
+        "public.plain-text",
+        "public.image",
+        "com.adobe.pdf"
+      ],
+      "priority": 20
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [],
+      "mediaTypes": [],
+      "priority": 1
+    }
+  ],
+  "signingKeyID": "official-v1",
+  "signature": "MEUCIAPLqwvsxUXJSbWS8dPuzmRj/Xh++A1lrkj/QaYAl3LTAiEA57yA84yhHj0UOhfKaC36pqlUmSXCFBbmTajlbPc0dR8="
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "html-safe",
+  "version": "1.0.0",
+  "displayName": "Safe HTML Preview",
+  "entrypoint": "index.js",
+  "files": [
+    {
+      "path": "base.css",
+      "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
+      "size": 2664,
+      "mediaType": "text/css"
+    },
+    {
+      "path": "index.js",
+      "sha256": "19ed3b528f48be0cb9c5fcff50b58e9cda6ff112010b34af98edd6c3526d658a",
+      "size": 5081,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "runtime.js",
+      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
+      "size": 5186,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "f59def82a28876413b6f924f0ff6bc35efb86592e32b1be9a20c15f94eca1944",
+      "size": 327,
+      "mediaType": "text/css"
+    }
+  ],
+  "probes": [
+    {
+      "fileExtensions": [
+        "html",
+        "htm"
+      ],
+      "directoryMarkers": [],
+      "mediaTypes": [
+        "public.html"
+      ],
+      "priority": 250
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "index.html"
+      ],
+      "mediaTypes": [],
+      "priority": 250
+    }
+  ],
+  "signingKeyID": "official-v1",
+  "signature": "MEYCIQC0fhjhubWWFdZCPcQaANkoj7jfJcFvVVIRNzVn/easFgIhAMAb9lAXKwjcp0+W7j28ASV3hY8FH/I4lpje0LJt05+9"
+}

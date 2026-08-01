@@ -166,6 +166,12 @@ enum Localized {
       comment: "Resource module crash message"
     )
     static let moduleFailed = String(localized: "Preview module failed", comment: "Resource module failure prefix")
+    static let installModule = String(localized: "Install Preview Module?", comment: "Resource module install prompt title")
+    static let installModuleDescription = String(
+      localized: "“%@” (%@) is required to preview this resource. Download and install it now? Download size: %@.",
+      comment: "Resource module install prompt details: name, version, size"
+    )
+    static let install = String(localized: "Install", comment: "Button title, install a resource module")
   }
 
   enum Document {

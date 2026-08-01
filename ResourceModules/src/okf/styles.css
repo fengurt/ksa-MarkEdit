@@ -1,0 +1,13 @@
+.catalog-version { margin-left: auto; color: GrayText; font-size: 11px; }
+.synthetic-index { margin: 4px 6px 10px; color: #b45309; font-size: 11px; line-height: 1.4; }
+.okf-record { max-width: 980px; margin: 0 auto; }
+.okf-record h1 { margin-top: 0; }
+.record-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.record-badges span { border: 1px solid color-mix(in srgb, AccentColor 35%, transparent); border-radius: 999px; padding: 3px 8px; font-size: 11px; }
+.record-summary { white-space: pre-wrap; font: inherit; line-height: 1.6; color: GrayText; }
+.relations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.relation-group { min-width: 0; }
+.relation-group h2 { font-size: 13px; }
+.relation-row { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 0; }
+.okf-graph { width: 100%; height: 360px; margin-top: 20px; }
+@media (max-width: 900px) { .relations { grid-template-columns: 1fr; } }

@@ -1,0 +1,4 @@
+.safe-html { max-width: 1100px; min-height: 420px; margin: 0 auto; overflow-wrap: anywhere; }
+.safe-html img { max-width: 100%; height: auto; }
+.safe-html table { max-width: 100%; border-collapse: collapse; }
+.safe-html td, .safe-html th { border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); padding: 5px 7px; }

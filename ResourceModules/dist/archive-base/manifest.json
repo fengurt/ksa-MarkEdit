@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "archive-base",
+  "version": "1.0.0",
+  "displayName": "ZIP, TAR, and TGZ Preview",
+  "entrypoint": "index.js",
+  "files": [
+    {
+      "path": "base.css",
+      "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
+      "size": 2664,
+      "mediaType": "text/css"
+    },
+    {
+      "path": "index.js",
+      "sha256": "46727702abdee1d7e221fb1e8df031f95f6cf99065cbadc857d8c90fd9f15d9b",
+      "size": 17938,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "runtime.js",
+      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
+      "size": 5186,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "7cb1c5bef2ab1f82a1e568e70590bb5c74d9b64f309dc1af0574051162c87a7f",
+      "size": 439,
+      "mediaType": "text/css"
+    }
+  ],
+  "probes": [
+    {
+      "fileExtensions": [
+        "zip",
+        "tar",
+        "tgz",
+        "gz"
+      ],
+      "directoryMarkers": [],
+      "mediaTypes": [
+        "public.zip-archive",
+        "org.gnu.gnu-zip-archive"
+      ],
+      "priority": 500
+    }
+  ],
+  "signingKeyID": "official-v1",
+  "signature": "MEYCIQCke/DgoUdjLDqWqKqM+pSbvU7rkpOEbqwI1PENbJAMNAIhAKqzodv9lX1VaXpCRgDr556VFumbDIEbg00PlzsxFspf"
+}

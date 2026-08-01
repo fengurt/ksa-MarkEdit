@@ -1,0 +1,11 @@
+.artifact-toolbar { display: flex; gap: 6px; margin-left: auto; }
+.artifact-toolbar button, .load-more { border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: 6px; background: transparent; padding: 5px 8px; }
+.sidebar-heading { margin: 16px 7px 6px; font-size: 11px; color: GrayText; }
+.outline-row { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 7px; }
+.outline-row.level-2 { padding-left: 16px; } .outline-row.level-3 { padding-left: 25px; }
+.mineru-blocks { max-width: 920px; margin: 0 auto; display: grid; gap: 12px; }
+.mineru-block { border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); border-radius: 8px; padding: 12px; }
+.block-heading { display: flex; justify-content: space-between; color: GrayText; font-size: 11px; }
+.block-text { white-space: pre-wrap; line-height: 1.55; }
+.block-image { display: block; max-width: 100%; max-height: 720px; margin: 10px auto 0; object-fit: contain; }
+.bbox { color: GrayText; font-size: 10px; }
