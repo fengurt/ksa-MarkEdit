@@ -200,18 +200,26 @@ public actor LocalAgentBridge {
       }
     }
     outputTask = Task.detached(priority: .userInitiated) { [weak self] in
+      guard let bridge = self else {
+        return
+      }
       do {
-        for try await line in output.fileHandleForReading.bytes.lines {
-          await self?.handleOutputLine(line)
+        try await Self.readLines(from: output.fileHandleForReading) { line in
+          await bridge.handleOutputLine(line)
         }
       } catch {
-        await self?.emit(.error("Agent output stream failed."))
+        if !Task.isCancelled {
+          await bridge.emit(.error("Agent output stream failed."))
+        }
       }
     }
     errorTask = Task.detached(priority: .utility) { [weak self] in
+      guard let bridge = self else {
+        return
+      }
       do {
-        for try await line in error.fileHandleForReading.bytes.lines {
-          await self?.recordStandardError(line)
+        try await Self.readLines(from: error.fileHandleForReading) { line in
+          await bridge.recordStandardError(line)
         }
       } catch {
         // The pipe normally closes when the provider exits.
@@ -464,6 +472,36 @@ private extension LocalAgentBridge {
       throw BridgeFailure.invalidResponse
     }
     return string
+  }
+
+  static func readLines(
+    from handle: FileHandle,
+    consume: @escaping @Sendable (String) async -> Void
+  ) async throws {
+    var pending = Data()
+    while !Task.isCancelled {
+      guard let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty else {
+        break
+      }
+      pending.append(chunk)
+      while let newline = pending.firstIndex(of: 0x0A) {
+        var line = Data(pending[..<newline])
+        pending.removeSubrange(...newline)
+        if line.last == 0x0D {
+          line.removeLast()
+        }
+        guard let value = String(data: line, encoding: .utf8) else {
+          throw BridgeFailure.invalidResponse
+        }
+        await consume(value)
+      }
+    }
+    if !Task.isCancelled, !pending.isEmpty {
+      guard let value = String(data: pending, encoding: .utf8) else {
+        throw BridgeFailure.invalidResponse
+      }
+      await consume(value)
+    }
   }
 
   func request(method: String, params: JSONValue) async throws -> JSONValue {
