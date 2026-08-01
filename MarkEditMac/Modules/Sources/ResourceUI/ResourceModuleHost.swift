@@ -48,6 +48,7 @@ public final class ResourceModuleHost {
     tabbingWindow: NSWindow? = nil
   ) async throws -> ResourceViewerWindowController {
     let session = try ResourceSession(url: url)
+    await LiveResourceRegistry.shared.register(session)
     let selected: InstalledModule?
     if let installed = try await selectInstalledModule(for: url, session: session) {
       selected = installed
@@ -65,6 +66,9 @@ public final class ResourceModuleHost {
     )
     controller.onClose = { [weak self] identifier in
       self?.windows[identifier] = nil
+      Task {
+        await LiveResourceRegistry.shared.unregister(session.id)
+      }
     }
     windows[controller.identifier] = controller
     controller.showWindow(nil)

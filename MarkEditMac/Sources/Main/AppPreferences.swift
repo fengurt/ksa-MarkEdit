@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 import MarkEditCore
 import MarkEditKit
 import FontPicker
+import SharedUI
 
 /**
  UserDefaults wrapper with handy getters and setters.
@@ -249,6 +250,12 @@ enum AppPreferences {
 
     @Storage(key: "window.workspace-preview-sync", defaultValue: true)
     static var workspacePreviewSync: Bool
+
+    @Storage(key: "window.agent-panel-width", defaultValue: 360.0)
+    static var agentPanelWidth: Double
+
+    @Storage(key: "window.agent-provider", defaultValue: LocalAgentProviderID.codex.rawValue)
+    static var agentProvider: String
 
     @Storage(key: "window.toolbar-mode", defaultValue: .normal)
     static var toolbarMode: ToolbarMode {
