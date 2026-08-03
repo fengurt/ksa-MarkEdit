@@ -4,6 +4,7 @@
 //  Created by ksamint on 8/3/26.
 //
 
+import CryptoKit
 import Foundation
 import ResourceCore
 @testable import ResourceUI
@@ -68,13 +69,13 @@ private extension ResourceModuleWebKitTests {
       files: [
         ResourceModuleFileV1(
           path: "index.js",
-          sha256: String(repeating: "0", count: 64),
+          sha256: sha256(entrypoint),
           size: entrypoint.utf8.count,
           mediaType: "text/javascript"
         ),
         ResourceModuleFileV1(
           path: "dependency.js",
-          sha256: String(repeating: "0", count: 64),
+          sha256: sha256(dependency),
           size: dependency.utf8.count,
           mediaType: "text/javascript"
         ),
@@ -97,6 +98,10 @@ private extension ResourceModuleWebKitTests {
   func jsonString(_ value: String) throws -> String {
     let data = try JSONEncoder().encode(value)
     return try XCTUnwrap(String(data: data, encoding: .utf8))
+  }
+
+  func sha256(_ value: String) -> String {
+    SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
   }
 }
 

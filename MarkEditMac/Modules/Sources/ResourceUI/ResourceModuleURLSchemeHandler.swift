@@ -4,6 +4,7 @@
 //  Created by ksamint on 8/3/26.
 //
 
+import CryptoKit
 import Foundation
 import ResourceCore
 import WebKit
@@ -106,9 +107,16 @@ private extension ResourceModuleURLSchemeHandler {
       throw ResourceModuleError.unsafePath(path)
     }
     let data = try Data(contentsOf: fileURL, options: [.mappedIfSafe])
-    guard data.count == file.size else {
+    guard data.count == file.size,
+          data.sha256 == file.sha256 else {
       throw ResourceModuleError.integrityMismatch(path)
     }
     return Payload(data: data, mediaType: file.mediaType)
+  }
+}
+
+private extension Data {
+  var sha256: String {
+    SHA256.hash(data: self).map { String(format: "%02x", $0) }.joined()
   }
 }
