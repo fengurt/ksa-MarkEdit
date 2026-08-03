@@ -70,8 +70,8 @@ interrupt the other applications on the instance.
 
 Deployment is executed through Tencent Automation Tools (`tccli tat
 RunCommand`). On the host, run `Cloud/deploy-tencent-host.sh` from the checked
-out release commit. It creates the database password on the server, builds the
-PWA with account support enabled, validates the Caddy and Nginx configurations,
+out release commit. It creates the database password on the server, serves the
+already tested and committed PWA artifact, validates the Caddy and Nginx configurations,
 and saves recoverable edge configuration backups under
 `/opt/ksamint/backups/`.
 

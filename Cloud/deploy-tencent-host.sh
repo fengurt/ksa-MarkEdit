@@ -22,24 +22,8 @@ KSAMINT_ALLOW_REGISTRATION=true
 EOF
 fi
 
-docker run --rm \
-    -v "$repo_root:/work" \
-    -w /work/WebApp \
-    node:22-alpine \
-    npm ci
-
-# CoreEditor is intentionally consumed as source by the PWA. Mount the WebApp
-# dependency tree at the source package's resolution boundary so a clean host
-# build does not depend on a developer's pre-existing CoreEditor/node_modules.
-docker run --rm \
-    -v "$repo_root:/work" \
-    -v "$web_dir/node_modules:/work/CoreEditor/node_modules:ro" \
-    -w /work/WebApp \
-    -e VITE_API_BASE=https://api.notes.apuch.cn \
-    -e VITE_ACCOUNT_ENABLED=true \
-    -e VITE_BASE_PATH=/ \
-    node:22-alpine \
-    npm run build
+test -f "$web_dir/dist/index.html"
+test -f "$web_dir/dist/sw.js"
 
 docker compose \
     --env-file "$env_file" \
