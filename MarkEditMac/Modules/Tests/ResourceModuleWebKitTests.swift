@@ -70,13 +70,13 @@ private extension ResourceModuleWebKitTests {
         ResourceModuleFileV1(
           path: "index.js",
           sha256: sha256(entrypoint),
-          size: entrypoint.utf8.count,
+          size: UInt64(entrypoint.utf8.count),
           mediaType: "text/javascript"
         ),
         ResourceModuleFileV1(
           path: "dependency.js",
           sha256: sha256(dependency),
-          size: dependency.utf8.count,
+          size: UInt64(dependency.utf8.count),
           mediaType: "text/javascript"
         ),
       ],
