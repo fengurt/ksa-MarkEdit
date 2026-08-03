@@ -118,7 +118,7 @@ actor AccountServiceMonitor {
   private(set) var currentStatus = "checking"
 
   func refresh() async {
-    guard let url = URL(string: "https://api.notes.apuch.art/healthz") else {
+    guard let url = URL(string: "https://api.notes.apuch.cn/healthz") else {
       currentStatus = "offline"
       return
     }

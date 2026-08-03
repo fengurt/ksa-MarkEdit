@@ -35,7 +35,7 @@ secrets. They must never be copied into the Mac app, PWA, repository, build
 artifact, or recovery package.
 
 The bucket CORS rule accepts `GET`, `PUT`, and `HEAD` only from
-`https://notes.apuch.art`, with the authorization, content-type, and temporary
+`https://notes.apuch.cn`, with the authorization, content-type, and temporary
 COS token headers needed by encrypted browser sync.
 
 ## Local validation
@@ -59,6 +59,21 @@ npm run build
 cd ../Cloud
 docker compose up --build
 ```
+
+## Tencent Lighthouse deployment
+
+The production PWA and account API run at `notes.apuch.cn` and
+`api.notes.apuch.cn`. The Lighthouse compose file keeps PostgreSQL, the Rust
+API, and the static Web server on an internal Docker network. TLS is terminated
+by the host's shared Caddy edge, so this stack does not claim public ports or
+interrupt the other applications on the instance.
+
+Deployment is executed through Tencent Automation Tools (`tccli tat
+RunCommand`). On the host, run `Cloud/deploy-tencent-host.sh` from the checked
+out release commit. It creates the database password on the server, builds the
+PWA with account support enabled, validates the Caddy and Nginx configurations,
+and saves recoverable edge configuration backups under
+`/opt/ksamint/backups/`.
 
 `KSAMINT_ALLOW_REGISTRATION=true` is only needed for first-device enrollment.
 After the first Passkey is registered, turn it off and restart the API.

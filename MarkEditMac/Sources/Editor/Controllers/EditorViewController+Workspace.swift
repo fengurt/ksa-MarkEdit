@@ -410,7 +410,7 @@ extension EditorViewController {
           workspaceHubWindowController = nil
           showWorkspaceHub()
         case "signIn":
-          if let url = URL(string: "https://notes.apuch.art") {
+          if let url = URL(string: "https://notes.apuch.cn") {
             NSWorkspace.shared.open(url)
           }
         default:

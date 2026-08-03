@@ -1,7 +1,7 @@
 {
     email {$ACME_EMAIL}
 }
-api.notes.apuch.art {
+api.notes.apuch.cn {
     encode zstd gzip
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -12,11 +12,11 @@ api.notes.apuch.art {
     reverse_proxy api:8080
 }
 
-notes.apuch.art {
+notes.apuch.cn {
     encode zstd gzip
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.notes.apuch.art; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.notes.apuch.cn; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "no-referrer"
         -Server

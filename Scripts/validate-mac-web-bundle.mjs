@@ -15,7 +15,7 @@ const forbiddenNames = new Set([
 const forbiddenContent = [
   "CoreEditor",
   "VaultSyncClient",
-  "api.notes.apuch.art",
+  "api.notes.apuch.cn",
   "codemirror",
   "manifest.webmanifest",
   "serviceWorker",

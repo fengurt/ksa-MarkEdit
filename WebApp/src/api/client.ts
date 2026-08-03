@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.notes.apuch.art';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.notes.apuch.cn';
 
 export type VaultSummary = {
   id: string;
