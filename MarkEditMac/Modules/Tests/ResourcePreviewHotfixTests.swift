@@ -164,10 +164,8 @@ private extension ResourcePreviewHotfixTests {
   }
 
   func markersExist(_ markers: [String], broker: ResourceAccessBroker) async -> Bool {
-    for marker in markers {
-      if (try? await broker.entry(id: marker)) == nil {
-        return false
-      }
+    for marker in markers where (try? await broker.entry(id: marker)) == nil {
+      return false
     }
     return true
   }
