@@ -62,15 +62,17 @@ final class ResourcePreviewHotfixTests: XCTestCase {
     defer { try? FileManager.default.removeItem(at: root) }
     try Data("---\nokf_version: 0.2\n---\n# Index".utf8).write(to: root.appending(path: "index.md"))
     let broker = try ResourceAccessBroker(rootURL: root)
-    XCTAssertTrue(try await broker.matchesFrontMatter(ResourceFrontMatterProbeV2(
+    let matchesIndex = try await broker.matchesFrontMatter(ResourceFrontMatterProbeV2(
       paths: ["index.md"],
       requiredKeys: ["okf_version"],
       allowedValues: ["okf_version": ["0.1", "0.2"]]
-    )))
-    XCTAssertFalse(try await broker.matchesFrontMatter(ResourceFrontMatterProbeV2(
+    ))
+    let matchesMissing = try await broker.matchesFrontMatter(ResourceFrontMatterProbeV2(
       paths: ["missing.md"],
       requiredKeys: ["type"]
-    )))
+    ))
+    XCTAssertTrue(matchesIndex)
+    XCTAssertFalse(matchesMissing)
   }
 
   func testEntrypointResolvesToAbsoluteFileURLWithinModule() throws {
@@ -162,8 +164,10 @@ private extension ResourcePreviewHotfixTests {
   }
 
   func markersExist(_ markers: [String], broker: ResourceAccessBroker) async -> Bool {
-    for marker in markers where (try? await broker.entry(id: marker)) == nil {
-      return false
+    for marker in markers {
+      if (try? await broker.entry(id: marker)) == nil {
+        return false
+      }
     }
     return true
   }
