@@ -462,6 +462,7 @@ private extension EditorViewController {
 private final class WorkspaceHubViewController: NSViewController {
   private let webView: WKWebView
   private let messageHandler: WorkspaceHubMessageHandler
+  private let schemeHandler: WorkspaceHubSchemeHandler
 
   init(snapshot: WorkspaceHubSnapshot, onAction: @escaping (String, String?) -> Void) {
     let contentController = WKUserContentController()
@@ -488,6 +489,9 @@ private final class WorkspaceHubViewController: NSViewController {
     let configuration = WKWebViewConfiguration()
     configuration.userContentController = contentController
     configuration.websiteDataStore = .nonPersistent()
+    let schemeHandler = WorkspaceHubSchemeHandler()
+    configuration.setURLSchemeHandler(schemeHandler, forURLScheme: WorkspaceHubSchemeHandler.scheme)
+    self.schemeHandler = schemeHandler
     self.webView = WKWebView(frame: .zero, configuration: configuration)
     super.init(nibName: nil, bundle: nil)
   }
@@ -503,17 +507,72 @@ private final class WorkspaceHubViewController: NSViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    guard let indexURL = Bundle.main.url(
-      forResource: "mac-index",
-      withExtension: "html",
-      subdirectory: "dist-mac"
-    ) else {
+    guard let indexURL = URL(string: "\(WorkspaceHubSchemeHandler.scheme)://app/mac-index.html") else {
       return
     }
-    webView.loadFileURL(
-      indexURL,
-      allowingReadAccessTo: indexURL.deletingLastPathComponent()
-    )
+    webView.load(URLRequest(url: indexURL))
+  }
+}
+
+private final class WorkspaceHubSchemeHandler: NSObject, WKURLSchemeHandler {
+  static let scheme = "ksamint-hub"
+
+  private let rootURL = Bundle.main.resourceURL?
+    .appending(path: "dist-mac", directoryHint: .isDirectory)
+    .standardizedFileURL
+
+  func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+    guard let requestURL = urlSchemeTask.request.url,
+          requestURL.scheme == Self.scheme,
+          let rootURL else {
+      urlSchemeTask.didFailWithError(URLError(.badURL))
+      return
+    }
+
+    let relativePath = requestURL.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    guard !relativePath.isEmpty,
+          !relativePath.split(separator: "/").contains("..") else {
+      urlSchemeTask.didFailWithError(URLError(.noPermissionsToReadFile))
+      return
+    }
+
+    let fileURL = rootURL.appending(path: relativePath).standardizedFileURL
+    guard fileURL.path.hasPrefix(rootURL.path + "/") else {
+      urlSchemeTask.didFailWithError(URLError(.noPermissionsToReadFile))
+      return
+    }
+
+    do {
+      let data = try Data(contentsOf: fileURL, options: .mappedIfSafe)
+      let response = URLResponse(
+        url: requestURL,
+        mimeType: mimeType(for: fileURL.pathExtension),
+        expectedContentLength: data.count,
+        textEncodingName: fileURL.pathExtension == "html" ? "utf-8" : nil
+      )
+      urlSchemeTask.didReceive(response)
+      urlSchemeTask.didReceive(data)
+      urlSchemeTask.didFinish()
+    } catch {
+      urlSchemeTask.didFailWithError(error)
+    }
+  }
+
+  func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
+
+  private func mimeType(for pathExtension: String) -> String {
+    switch pathExtension.lowercased() {
+    case "html": return "text/html"
+    case "js", "mjs": return "text/javascript"
+    case "css": return "text/css"
+    case "json": return "application/json"
+    case "svg": return "image/svg+xml"
+    case "png": return "image/png"
+    case "jpg", "jpeg": return "image/jpeg"
+    case "webp": return "image/webp"
+    case "woff2": return "font/woff2"
+    default: return "application/octet-stream"
+    }
   }
 }
 
