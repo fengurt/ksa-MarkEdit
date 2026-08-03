@@ -254,11 +254,13 @@ private extension ResourceAccessBroker {
     if let snapshot = directorySnapshots[relativePath], snapshot.modifiedAt == modifiedAt {
       return snapshot.urls
     }
-    let urls = try FileManager.default.contentsOfDirectory(
-      at: url,
-      includingPropertiesForKeys: Self.resourceKeys,
-      options: []
-    ).sorted(by: Self.resourceOrder)
+    let urls = try FileManager.default
+      .contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: Self.resourceKeys,
+        options: []
+      )
+      .sorted(by: Self.resourceOrder)
     directorySnapshots[relativePath] = DirectorySnapshot(modifiedAt: modifiedAt, urls: urls)
     return urls
   }

@@ -181,13 +181,14 @@ private extension ResourceModuleViewController {
   ) -> String {
     let prefixData = try? JSONEncoder().encode(failurePrefix)
     let prefix = prefixData.flatMap { String(data: $0, encoding: .utf8) } ?? "\"Preview failed\""
+    let policy = Self.contentSecurityPolicy(nonce: nonce)
     return """
     <!doctype html>
     <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ksamint-resource:; media-src 'self' blob: ksamint-resource:; frame-src ksamint-resource:; connect-src ksamint-resource:; font-src 'self' data: ksamint-resource:; worker-src 'self' blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
+        <meta http-equiv="Content-Security-Policy" content="\(policy)">
         <style>html,body,#resource-root{height:100%;margin:0}body{font:13px system-ui;color:CanvasText;background:Canvas}</style>
       </head>
       <body>
@@ -205,6 +206,23 @@ private extension ResourceModuleViewController {
       </body>
     </html>
     """
+  }
+
+  static func contentSecurityPolicy(nonce: String) -> String {
+    [
+      "default-src 'none'",
+      "script-src 'self' 'nonce-\(nonce)'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: ksamint-resource:",
+      "media-src 'self' blob: ksamint-resource:",
+      "frame-src ksamint-resource:",
+      "connect-src ksamint-resource:",
+      "font-src 'self' data: ksamint-resource:",
+      "worker-src 'self' blob:",
+      "form-action 'none'",
+      "base-uri 'none'",
+      "object-src 'none'",
+    ].joined(separator: "; ")
   }
 
   static let bridgeScript = """
