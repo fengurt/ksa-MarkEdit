@@ -25,6 +25,7 @@ extension EditorViewController {
     agentPanelVisible = true
     ensureAgentPanel()
     agentPanelView?.isHidden = false
+    layoutRenderedPreview()
     layoutAgentPanel()
     layoutWebView()
     layoutStatusView()

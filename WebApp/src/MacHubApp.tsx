@@ -6,6 +6,8 @@ const MindmapStation = lazy(() => import('./graph/MindmapStation').then(module =
 })));
 
 export type MacHubSnapshot = {
+  version: number;
+  hasWorkspace: boolean;
   workspaceName: string;
   rootPath: string;
   recentFiles: Array<{
@@ -13,6 +15,15 @@ export type MacHubSnapshot = {
     modifiedAt: number;
     category?: string;
     tags: string[];
+  }>;
+  recentDocuments: Array<{ path: string; title: string; lastOpenedAt: number }>;
+  activities: Array<{
+    id: string;
+    path: string;
+    title: string;
+    kind: 'opened' | 'edited' | 'saved' | 'renamed';
+    timestamp: number;
+    count: number;
   }>;
   tags: Array<{ identity: string; displayName: string; fileCount: number }>;
   categories: Array<{ path: string; fileCount: number }>;
@@ -23,6 +34,7 @@ export type MacHubSnapshot = {
   accountEnabled: boolean;
   syncEnabled: boolean;
   backupEnabled: boolean;
+  accountServiceStatus: 'checking' | 'online' | 'offline';
 };
 
 declare global {
@@ -51,6 +63,9 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
   const open = (path: string) => {
     window.webkit?.messageHandlers.ksamintHub?.postMessage({ action: 'open', path });
   };
+  const send = (action: string, path?: string) => {
+    window.webkit?.messageHandlers.ksamintHub?.postMessage({ action, path });
+  };
 
   if (mindmapVisible) {
     return (
@@ -71,31 +86,66 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
           <h1>{snapshot.workspaceName}</h1>
           <p>{snapshot.rootPath}</p>
         </div>
-        <span className="account-state">
-          {snapshot.syncEnabled
-            ? t('syncOn')
-            : snapshot.accountEnabled
-              ? t('accountOn')
-              : t('accountOff')}
-        </span>
+        <div className="account-actions">
+          <span className="account-state">
+            {snapshot.syncEnabled
+              ? t('syncOn')
+              : snapshot.accountEnabled
+                ? t('accountOn')
+                : snapshot.accountServiceStatus === 'offline'
+                  ? t('loginServiceOffline')
+                  : t('accountOff')}
+          </span>
+          <button
+            type="button"
+            disabled={snapshot.accountServiceStatus !== 'online'}
+            onClick={() => send('signIn')}
+          >
+            {snapshot.accountServiceStatus === 'online' ? t('signIn') : t('continueOffline')}
+          </button>
+        </div>
       </header>
       <section className="hub-grid">
         <article className="hub-panel recent-panel">
           <div className="panel-heading">
             <h2>{t('recentDocuments')}</h2>
-            <span>{snapshot.recentFiles.length}</span>
+            <span>{snapshot.recentDocuments.length}</span>
           </div>
           <ul className="recent-list">
-            {snapshot.recentFiles.map(file => (
+            {snapshot.recentDocuments.map(file => (
               <li key={file.path}>
-                <button type="button" onClick={() => open(file.path)}>
-                  <strong>{file.path.split('/').at(-1)}</strong>
+                <button type="button" onClick={() => send('openRecent', file.path)}>
+                  <strong>{file.title}</strong>
                   <span>{file.path}</span>
                 </button>
               </li>
             ))}
           </ul>
         </article>
+        <article className="hub-panel recent-panel">
+          <div className="panel-heading">
+            <h2>{t('activityHistory')}</h2>
+            <button type="button" onClick={() => send('clearHistory')}>{t('clearHistory')}</button>
+          </div>
+          <ul className="recent-list activity-list">
+            {snapshot.activities.slice(0, 30).map(item => (
+              <li key={item.id}>
+                <button type="button" onClick={() => send('openRecent', item.path)}>
+                  <strong>{item.title}</strong>
+                  <span>{t(item.kind)} · {new Date(item.timestamp).toLocaleString()}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </article>
+        {!snapshot.hasWorkspace && (
+          <article className="hub-panel action-panel">
+            <p className="eyebrow">{t('workspace')}</p>
+            <h2>{t('recentWorkspace')}</h2>
+            <p>{snapshot.rootPath}</p>
+            <button type="button" onClick={() => send('chooseWorkspace')}>{t('chooseWorkspace')}</button>
+          </article>
+        )}
         <article className="hub-panel">
           <div className="panel-heading"><h2>{t('categories')}</h2><span>{snapshot.categories.length}</span></div>
           <ul className="taxonomy-summary">

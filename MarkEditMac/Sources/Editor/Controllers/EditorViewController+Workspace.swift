@@ -11,12 +11,14 @@ import WebKit
 
 extension EditorViewController {
   var workspaceContentInset: Double {
-    guard workspaceSidebarVisible, view.bounds.width >= 760 else {
+    guard workspaceSidebarVisible, view.bounds.width >= 700 else {
       return 0
     }
 
     let preferredWidth: Double = {
       switch workspaceSidebarMode {
+      case .outline:
+        return workspaceOutlineWidth
       case .files:
         return workspaceSidebarWidth
       case .search:
@@ -24,17 +26,29 @@ extension EditorViewController {
       case .tags:
         return workspaceTagsWidth
       case .preview:
-        return workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
+        return workspaceOutlineWidth
       }
     }()
 
     return min(max(preferredWidth, 200), max(200, view.bounds.width - 420))
   }
 
+  var workspacePreviewInset: Double {
+    guard workspacePreviewVisible, view.bounds.width >= 900 else {
+      return 0
+    }
+
+    let preferredWidth = workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
+    let maximumWidth = view.bounds.width - workspaceContentInset - agentPanelInset - 420
+    guard maximumWidth >= 240 else {
+      return 0
+    }
+    return min(max(preferredWidth, 240), maximumWidth)
+  }
+
   var isRenderedPreviewActive: Bool {
-    workspaceSidebarVisible
-      && workspaceSidebarMode == .preview
-      && workspaceContentInset > 0
+    workspacePreviewVisible
+      && workspacePreviewInset > 0
       && workspacePreviewView != nil
   }
 
@@ -71,6 +85,10 @@ extension EditorViewController {
     if workspaceSidebarVisible {
       ensureWorkspaceSidebar()
     }
+    if workspacePreviewVisible {
+      showRenderedPreview()
+    }
+    scheduleDocumentOutlineUpdate()
   }
 
   func toggleWorkspaceSidebar(_ mode: WorkspaceSidebarMode) {
@@ -89,8 +107,6 @@ extension EditorViewController {
 
     if workspaceSidebarVisible && mode == .search {
       workspaceSidebarView?.focusSearch()
-    } else if workspaceSidebarVisible && mode == .preview {
-      showRenderedPreview()
     } else if !workspaceSidebarVisible {
       startTextEditing()
     }
@@ -105,6 +121,21 @@ extension EditorViewController {
     workspaceSidebarView.isHidden = width == 0
     workspaceSidebarView.frame = CGRect(
       x: 0,
+      y: 0,
+      width: width,
+      height: view.bounds.height - view.safeAreaInsets.top
+    )
+  }
+
+  func layoutRenderedPreview() {
+    guard let workspacePreviewPaneView else {
+      return
+    }
+
+    let width = workspacePreviewInset
+    workspacePreviewPaneView.isHidden = width == 0
+    workspacePreviewPaneView.frame = CGRect(
+      x: view.bounds.width - agentPanelInset - width,
       y: 0,
       width: width,
       height: view.bounds.height - view.safeAreaInsets.top
@@ -156,6 +187,10 @@ extension EditorViewController {
     sidebar.onVisualEditingChanged = { [weak self] enabled in
       self?.changeVisualEditingPreference(enabled)
     }
+    sidebar.onHeadingSelected = { [weak self] heading in
+      self?.startTextEditing()
+      self?.bridge.toc.gotoHeader(headingInfo: heading)
+    }
 
     view.addSubview(sidebar, positioned: .above, relativeTo: webView)
     workspaceSidebarView = sidebar
@@ -204,11 +239,19 @@ private extension EditorViewController {
       editor.workspaceSidebarView?.session = session
     }
     session.persist(for: editors.compactMap { $0.document?.fileURL })
+    if workspaceHubWindowController?.window?.isVisible == true {
+      workspaceHubWindowController?.close()
+      workspaceHubWindowController = nil
+      showWorkspaceHub()
+    }
   }
 
   func resizeWorkspaceSidebar(by delta: Double) {
     let maximumWidth = max(200, view.bounds.width - 420)
     switch workspaceSidebarMode {
+    case .outline:
+      workspaceOutlineWidth = min(max(workspaceOutlineWidth + delta, 200), maximumWidth)
+      AppPreferences.Window.workspaceOutlineWidth = workspaceOutlineWidth
     case .files:
       workspaceSidebarWidth = min(max(workspaceSidebarWidth + delta, 200), maximumWidth)
       AppPreferences.Window.workspaceFilesWidth = workspaceSidebarWidth
@@ -219,9 +262,7 @@ private extension EditorViewController {
       workspaceTagsWidth = min(max(workspaceTagsWidth + delta, 200), maximumWidth)
       AppPreferences.Window.workspaceTagsWidth = workspaceTagsWidth
     case .preview:
-      let currentWidth = workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
-      workspacePreviewWidth = min(max(currentWidth + delta, 200), maximumWidth)
-      AppPreferences.Window.workspacePreviewWidth = workspacePreviewWidth
+      break
     }
     view.needsLayout = true
   }
@@ -230,8 +271,32 @@ private extension EditorViewController {
 // MARK: - Rendered Preview
 
 extension EditorViewController {
+  func toggleRenderedPreview() {
+    workspacePreviewVisible.toggle()
+    AppPreferences.Window.workspacePreviewVisible = workspacePreviewVisible
+    if workspacePreviewVisible {
+      showRenderedPreview()
+    } else {
+      workspacePreviewPaneView?.isHidden = true
+      startTextEditing()
+    }
+    view.needsLayout = true
+  }
+
   func showRenderedPreview() {
-    ensureWorkspaceSidebar()
+    workspacePreviewVisible = true
+    AppPreferences.Window.workspacePreviewVisible = true
+
+    if workspacePreviewPaneView == nil {
+      let pane = WorkspacePreviewPaneView(frame: .zero)
+      pane.onClose = { [weak self] in self?.toggleRenderedPreview() }
+      pane.onResize = { [weak self] delta in self?.resizeRenderedPreview(by: delta) }
+      pane.onSyncChanged = { enabled in
+        AppPreferences.Window.workspacePreviewSync = enabled
+      }
+      view.addSubview(pane, positioned: .above, relativeTo: webView)
+      workspacePreviewPaneView = pane
+    }
 
     if workspacePreviewView == nil {
       let previewView = WorkspacePreviewView(frame: .zero)
@@ -247,13 +312,32 @@ extension EditorViewController {
         self?.resetRenderedPreview()
       }
       workspacePreviewView = previewView
-      workspaceSidebarView?.setPreviewView(previewView)
+      workspacePreviewPaneView?.setPreviewView(previewView)
     }
 
     workspacePreviewView?.baseURL = document?.baseURL
-    workspaceSidebarView?.setPreviewSyncEnabled(AppPreferences.Window.workspacePreviewSync)
-    workspaceSidebarView?.setVisualEditingEnabled(AppPreferences.Editor.visualEditingMode)
+    workspacePreviewPaneView?.setSyncEnabled(AppPreferences.Window.workspacePreviewSync)
+    layoutRenderedPreview()
     resetRenderedPreview()
+  }
+
+  func resizeRenderedPreview(by delta: Double) {
+    let maximum = max(240, view.bounds.width - workspaceContentInset - agentPanelInset - 420)
+    let current = workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
+    workspacePreviewWidth = min(max(current - delta, 240), maximum)
+    AppPreferences.Window.workspacePreviewWidth = workspacePreviewWidth
+    view.needsLayout = true
+  }
+
+  func scheduleDocumentOutlineUpdate() {
+    documentOutlineTask?.cancel()
+    documentOutlineTask = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: .milliseconds(100))
+      guard let self, !Task.isCancelled else { return }
+      await waitUntilEditorReset()
+      guard !Task.isCancelled else { return }
+      workspaceSidebarView?.updateDocumentOutline(await tableOfContents ?? [])
+    }
   }
 
   func changeVisualEditingPreference(_ enabled: Bool) {
@@ -284,31 +368,54 @@ extension EditorViewController {
   }
 
   func showWorkspaceHub() {
-    if let window = workspaceHubWindowController?.window {
+    if let window = workspaceHubWindowController?.window, window.isVisible {
       window.makeKeyAndOrderFront(nil)
       return
     }
+    workspaceHubWindowController = nil
 
     Task { @MainActor [weak self] in
       guard let self else {
         return
       }
-      guard let session = self.workspaceSession else {
-        self.toggleWorkspaceSidebar(.files)
-        return
+      let snapshot = if let session = self.workspaceSession {
+        await session.hubSnapshot()
+      } else {
+        await WorkspaceHubSnapshot.local()
       }
-
-      let snapshot = await session.hubSnapshot()
-      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] path in
-        guard let self, let session = self.workspaceSession else {
-          return
+      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] action, path in
+        guard let self else { return }
+        switch action {
+        case "open":
+          guard let path, let session = self.workspaceSession else { return }
+          let url = session.rootURL.appending(path: path).standardizedFileURL
+          guard session.contains(url) else {
+            showWorkspaceError(Localized.Workspace.outsideWorkspace)
+            return
+          }
+          openWorkspaceFile(url, lineNumber: nil)
+        case "openRecent":
+          guard let path else { return }
+          NSDocumentController.shared.openDocument(
+            withContentsOf: URL(filePath: path).standardizedFileURL,
+            display: true
+          ) { _, _, error in
+            if let error { self.showWorkspaceError(error.localizedDescription) }
+          }
+        case "chooseWorkspace":
+          chooseWorkspaceFolder()
+        case "clearHistory":
+          ActivityHistoryStore.shared.clear()
+          workspaceHubWindowController?.close()
+          workspaceHubWindowController = nil
+          showWorkspaceHub()
+        case "signIn":
+          if let url = URL(string: "https://notes.apuch.art") {
+            NSWorkspace.shared.open(url)
+          }
+        default:
+          break
         }
-        let url = session.rootURL.appending(path: path).standardizedFileURL
-        guard session.contains(url) else {
-          showWorkspaceError(Localized.Workspace.outsideWorkspace)
-          return
-        }
-        openWorkspaceFile(url, lineNumber: nil)
       }
       let window = NSWindow(contentViewController: contentViewController)
       window.title = Localized.Workspace.hub
@@ -356,9 +463,9 @@ private final class WorkspaceHubViewController: NSViewController {
   private let webView: WKWebView
   private let messageHandler: WorkspaceHubMessageHandler
 
-  init(snapshot: WorkspaceHubSnapshot, onOpen: @escaping (String) -> Void) {
+  init(snapshot: WorkspaceHubSnapshot, onAction: @escaping (String, String?) -> Void) {
     let contentController = WKUserContentController()
-    self.messageHandler = WorkspaceHubMessageHandler(onOpen: onOpen)
+    self.messageHandler = WorkspaceHubMessageHandler(onAction: onAction)
     contentController.add(messageHandler, name: "ksamintHub")
 
     if let data = try? JSONEncoder().encode(snapshot) {
@@ -412,10 +519,10 @@ private final class WorkspaceHubViewController: NSViewController {
 
 @MainActor
 private final class WorkspaceHubMessageHandler: NSObject, WKScriptMessageHandler {
-  private let onOpen: (String) -> Void
+  private let onAction: (String, String?) -> Void
 
-  init(onOpen: @escaping (String) -> Void) {
-    self.onOpen = onOpen
+  init(onAction: @escaping (String, String?) -> Void) {
+    self.onAction = onAction
   }
 
   func userContentController(
@@ -424,11 +531,10 @@ private final class WorkspaceHubMessageHandler: NSObject, WKScriptMessageHandler
   ) {
     guard message.name == "ksamintHub",
           let payload = message.body as? [String: Any],
-          payload["action"] as? String == "open",
-          let path = payload["path"] as? String else {
+          let action = payload["action"] as? String else {
       return
     }
-    onOpen(path)
+    onAction(action, payload["path"] as? String)
   }
 }
 

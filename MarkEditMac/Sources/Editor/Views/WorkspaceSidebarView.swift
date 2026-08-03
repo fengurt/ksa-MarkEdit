@@ -7,6 +7,7 @@
 //
 
 import AppKit
+import MarkEditKit
 import SharedUI
 
 @MainActor
@@ -23,14 +24,16 @@ final class WorkspaceSidebarView: NSView {
   var onResize: ((Double) -> Void)?
   var onPreviewSyncChanged: ((Bool) -> Void)?
   var onVisualEditingChanged: ((Bool) -> Void)?
+  var onHeadingSelected: ((HeadingInfo) -> Void)?
 
   var mode: WorkspaceSidebarMode = .files {
     didSet {
-      modeControl.selectedSegment = mode.rawValue
+      modeControl.selectedSegment = segment(for: mode)
+      documentOutlineContainer.isHidden = mode != .outline
       filesContainer.isHidden = mode != .files
       searchContainer.isHidden = mode != .search
       taxonomyContainer.isHidden = mode != .tags
-      previewContainer.isHidden = mode != .preview
+      previewContainer.isHidden = true
       if mode == .search {
         window?.makeFirstResponder(searchField)
       } else if mode == .tags {
@@ -57,6 +60,8 @@ final class WorkspaceSidebarView: NSView {
   }
 
   private let modeControl = NSSegmentedControl()
+  private let documentOutlineContainer = NSView()
+  private let documentOutlineView = DocumentOutlineView()
   private let filesContainer = NSView()
   private let searchContainer = NSView()
   private let taxonomyContainer = NSView()
@@ -162,6 +167,10 @@ final class WorkspaceSidebarView: NSView {
   func setVisualEditingEnabled(_ enabled: Bool) {
     previewEditorModeControl.selectedSegment = enabled ? 1 : 0
   }
+
+  func updateDocumentOutline(_ headings: [HeadingInfo]) {
+    documentOutlineView.update(headings: headings)
+  }
 }
 
 // MARK: - Setup
@@ -172,25 +181,21 @@ private extension WorkspaceSidebarView {
     layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
     modeControl.segmentCount = 4
+    setModeSegment(0, symbol: "list.bullet.indent", accessibilityDescription: Localized.Toolbar.tableOfContents)
     setModeSegment(
-      0,
+      1,
       symbol: "folder",
       accessibilityDescription: Localized.Workspace.files
     )
     setModeSegment(
-      1,
+      2,
       symbol: "magnifyingglass",
       accessibilityDescription: Localized.Workspace.search
     )
     setModeSegment(
-      2,
+      3,
       symbol: "tag",
       accessibilityDescription: Localized.Workspace.tags
-    )
-    setModeSegment(
-      3,
-      symbol: "doc.richtext",
-      accessibilityDescription: Localized.Editor.previewButtonTitle
     )
     modeControl.segmentStyle = .texturedRounded
     modeControl.trackingMode = .selectOne
@@ -207,6 +212,9 @@ private extension WorkspaceSidebarView {
     configureTaxonomyView()
     configurePreviewView()
     configureAuthorizationView()
+    documentOutlineView.onSelect = { [weak self] heading in
+      self?.onHeadingSelected?(heading)
+    }
 
     addButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: Localized.Workspace.newFile)
     addButton.bezelStyle = .accessoryBarAction
@@ -227,6 +235,7 @@ private extension WorkspaceSidebarView {
 
     [
       modeControl,
+      documentOutlineContainer,
       filesContainer,
       searchContainer,
       taxonomyContainer,
@@ -236,6 +245,8 @@ private extension WorkspaceSidebarView {
       $0.translatesAutoresizingMaskIntoConstraints = false
       addSubview($0)
     }
+    documentOutlineView.translatesAutoresizingMaskIntoConstraints = false
+    documentOutlineContainer.addSubview(documentOutlineView)
     [rootLabel, outlineScrollView, authorizationLabel, authorizeButton, addButton, refreshButton].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       filesContainer.addSubview($0)
@@ -268,6 +279,15 @@ private extension WorkspaceSidebarView {
       filesContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
       filesContainer.trailingAnchor.constraint(equalTo: resizeHandle.leadingAnchor),
       filesContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+      documentOutlineContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
+      documentOutlineContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
+      documentOutlineContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
+      documentOutlineContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
+      documentOutlineView.topAnchor.constraint(equalTo: documentOutlineContainer.topAnchor),
+      documentOutlineView.leadingAnchor.constraint(equalTo: documentOutlineContainer.leadingAnchor),
+      documentOutlineView.trailingAnchor.constraint(equalTo: documentOutlineContainer.trailingAnchor),
+      documentOutlineView.bottomAnchor.constraint(equalTo: documentOutlineContainer.bottomAnchor),
 
       searchContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
       searchContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
@@ -362,7 +382,28 @@ private extension WorkspaceSidebarView {
     searchContainer.isHidden = true
     taxonomyContainer.isHidden = true
     previewContainer.isHidden = true
+    documentOutlineContainer.isHidden = mode != .outline
     updateAuthorizationState()
+  }
+
+  func segment(for mode: WorkspaceSidebarMode) -> Int {
+    switch mode {
+    case .outline: return 0
+    case .files: return 1
+    case .search: return 2
+    case .tags: return 3
+    case .preview: return 0
+    }
+  }
+
+  func mode(for segment: Int) -> WorkspaceSidebarMode? {
+    switch segment {
+    case 0: return .outline
+    case 1: return .files
+    case 2: return .search
+    case 3: return .tags
+    default: return nil
+    }
   }
 
   func setModeSegment(
@@ -594,7 +635,7 @@ private extension WorkspaceSidebarView {
 
 private extension WorkspaceSidebarView {
   @objc func selectMode(_ sender: NSSegmentedControl) {
-    guard let mode = WorkspaceSidebarMode(rawValue: sender.selectedSegment) else {
+    guard let mode = mode(for: sender.selectedSegment) else {
       return
     }
     onModeSelected?(mode)

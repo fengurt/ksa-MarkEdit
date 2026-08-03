@@ -18,6 +18,8 @@
 		AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200023000000000000001 /* EditorViewController+Agent.swift */; };
 		AB2200033000000000000001 /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200043000000000000001 /* AgentPanelView.swift */; };
 		AB2300013000000000000001 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB2300023000000000000001 /* Icon.png */; };
+		AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400023000000000000001 /* DocumentOutlineView.swift */; };
+		AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -176,6 +178,8 @@
 		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
 		AB1200023000000000000001 /* WorkspacePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewView.swift; sourceTree = "<group>"; };
 		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
+		AB2400023000000000000001 /* DocumentOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutlineView.swift; sourceTree = "<group>"; };
+		AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewPaneView.swift; sourceTree = "<group>"; };
 		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
 		AB2200023000000000000001 /* EditorViewController+Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Agent.swift"; sourceTree = "<group>"; };
 		AB2200043000000000000001 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
@@ -685,6 +689,8 @@
 			children = (
 				AB1100043000000000000001 /* WorkspaceSidebarView.swift */,
 				AB1200023000000000000001 /* WorkspacePreviewView.swift */,
+				AB2400023000000000000001 /* DocumentOutlineView.swift */,
+				AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */,
 				AB2200043000000000000001 /* AgentPanelView.swift */,
 				87091B992A963C6B00F5EF0D /* EditorTextInput.swift */,
 				8752CEB5295B2F8800BA9D5B /* EditorPanelView.swift */,
@@ -925,6 +931,8 @@
 				AB2200033000000000000001 /* AgentPanelView.swift in Sources */,
 				AB1100013000000000000001 /* WorkspaceSession.swift in Sources */,
 				AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */,
+				AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */,
+				AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */,
 				AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */,
 				AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */,
 				8725E0822977EF46006A4961 /* EditorViewController+Toolbar.swift in Sources */,

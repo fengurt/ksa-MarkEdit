@@ -120,6 +120,9 @@ final class EditorDocument: NSDocument {
 
     NSApplication.shared.closeOpenPanels()
     addWindowController(windowController)
+    if let fileURL {
+      ActivityHistoryStore.shared.record(.opened, url: fileURL)
+    }
 
     #if DEBUG
       if ProcessInfo.processInfo.environment["DEBUG_TAKING_SCREENSHOTS"] == "YES" {
@@ -150,6 +153,9 @@ final class EditorDocument: NSDocument {
     Task { @MainActor in
       let saveAction = {
         super.save(sender)
+        if let fileURL = self.fileURL {
+          ActivityHistoryStore.shared.record(.saved, url: fileURL)
+        }
         completion?()
       }
 
@@ -239,8 +245,16 @@ extension EditorDocument {
       super.fileURL
     }
     set {
+      let previousURL = super.fileURL
       let wasDraft = super.fileURL == nil && newValue != nil
       super.fileURL = newValue
+
+      if let previousURL, let newValue,
+         previousURL.standardizedFileURL != newValue.standardizedFileURL {
+        ActivityHistoryStore.shared.record(.renamed, url: newValue)
+      } else if wasDraft, let newValue {
+        ActivityHistoryStore.shared.record(.saved, url: newValue)
+      }
 
       // Newly created files should have a clean state
       if wasDraft {

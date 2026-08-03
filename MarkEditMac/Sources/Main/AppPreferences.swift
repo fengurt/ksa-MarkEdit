@@ -21,8 +21,11 @@ enum AppPreferences {
     @Storage(key: "general.appearance", defaultValue: .system)
     static var appearance: Appearance
 
-    @Storage(key: "general.new-window-behavior", defaultValue: .openDocument)
+    @Storage(key: "general.new-window-behavior", defaultValue: .newDocument)
     static var newWindowBehavior: NewWindowBehavior
+
+    @Storage(key: "general.blank-document-startup-migrated", defaultValue: false)
+    static var blankDocumentStartupMigrated: Bool
 
     @Storage(key: "general.new-filename-extension", defaultValue: .md)
     static var newFilenameExtension: NewFilenameExtension
@@ -230,11 +233,14 @@ enum AppPreferences {
   }
 
   enum Window {
-    @Storage(key: "window.workspace-sidebar-visible", defaultValue: false)
+    @Storage(key: "window.workspace-sidebar-visible", defaultValue: true)
     static var workspaceSidebarVisible: Bool
 
-    @Storage(key: "window.workspace-sidebar-mode", defaultValue: WorkspaceSidebarMode.files.rawValue)
+    @Storage(key: "window.workspace-sidebar-mode", defaultValue: WorkspaceSidebarMode.outline.rawValue)
     static var workspaceSidebarMode: Int
+
+    @Storage(key: "window.workspace-outline-width", defaultValue: 240.0)
+    static var workspaceOutlineWidth: Double
 
     @Storage(key: "window.workspace-files-width", defaultValue: 280.0)
     static var workspaceFilesWidth: Double
@@ -248,8 +254,14 @@ enum AppPreferences {
     @Storage(key: "window.workspace-preview-width", defaultValue: 0.0)
     static var workspacePreviewWidth: Double
 
+    @Storage(key: "window.workspace-preview-visible", defaultValue: true)
+    static var workspacePreviewVisible: Bool
+
     @Storage(key: "window.workspace-preview-sync", defaultValue: true)
     static var workspacePreviewSync: Bool
+
+    @Storage(key: "window.workspace-experience-v2-migrated", defaultValue: false)
+    static var workspaceExperienceV2Migrated: Bool
 
     @Storage(key: "window.agent-panel-width", defaultValue: 360.0)
     static var agentPanelWidth: Double

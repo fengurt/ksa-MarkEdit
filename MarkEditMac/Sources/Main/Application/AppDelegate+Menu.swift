@@ -49,9 +49,126 @@ extension AppDelegate: NSMenuItemValidation {
       return NSPasteboard.general.hasText
     case #selector(reopenClosedTab(_:)):
       return EditorClosedTabHistory.shared.hasEntries
+    case #selector(toggleDocumentOutline(_:)):
+      menuItem.setOn(currentEditor?.workspaceSidebarVisible == true
+        && currentEditor?.workspaceSidebarMode == .outline)
+      return currentEditor != nil
+    case #selector(toggleWorkspaceFiles(_:)):
+      menuItem.setOn(currentEditor?.workspaceSidebarVisible == true
+        && currentEditor?.workspaceSidebarMode == .files)
+      return currentEditor != nil
+    case #selector(toggleWorkspaceSearch(_:)):
+      menuItem.setOn(currentEditor?.workspaceSidebarVisible == true
+        && currentEditor?.workspaceSidebarMode == .search)
+      return currentEditor != nil
+    case #selector(toggleWorkspaceTags(_:)):
+      menuItem.setOn(currentEditor?.workspaceSidebarVisible == true
+        && currentEditor?.workspaceSidebarMode == .tags)
+      return currentEditor != nil
+    case #selector(toggleRenderedPreview(_:)):
+      menuItem.setOn(currentEditor?.workspacePreviewVisible == true)
+      return currentEditor != nil
+    case #selector(showWorkspaceHub(_:)):
+      return currentEditor != nil
     default:
       return true
     }
+  }
+}
+
+// MARK: - Workspace View Menu
+
+extension AppDelegate {
+  func configureWorkspaceViewMenu() {
+    let customizeToolbarAction = NSSelectorFromString("runToolbarCustomizationPalette:")
+    guard let viewMenu = NSApp.mainMenu?.items
+      .compactMap(\.submenu)
+      .first(where: { menu in
+        menu.items.contains { $0.action == customizeToolbarAction }
+      }),
+      !viewMenu.items.contains(where: { $0.action == #selector(toggleDocumentOutline(_:)) }) else {
+      return
+    }
+
+    let items = [
+      workspaceViewMenuItem(
+        title: String(localized: "Document Outline"),
+        action: #selector(toggleDocumentOutline(_:)),
+        key: "o",
+        modifiers: [.command, .shift]
+      ),
+      workspaceViewMenuItem(
+        title: Localized.Workspace.files,
+        action: #selector(toggleWorkspaceFiles(_:)),
+        key: "e",
+        modifiers: [.command, .shift]
+      ),
+      workspaceViewMenuItem(
+        title: Localized.Workspace.search,
+        action: #selector(toggleWorkspaceSearch(_:)),
+        key: "f",
+        modifiers: [.command, .shift]
+      ),
+      workspaceViewMenuItem(
+        title: Localized.Workspace.tags,
+        action: #selector(toggleWorkspaceTags(_:)),
+        key: "t",
+        modifiers: [.command, .shift]
+      ),
+      workspaceViewMenuItem(
+        title: Localized.Editor.previewButtonTitle,
+        action: #selector(toggleRenderedPreview(_:)),
+        key: "p",
+        modifiers: [.command, .option]
+      ),
+      workspaceViewMenuItem(
+        title: Localized.Workspace.hub,
+        action: #selector(showWorkspaceHub(_:)),
+        key: "h",
+        modifiers: [.command, .shift]
+      ),
+      NSMenuItem.separator(),
+    ]
+
+    for item in items.reversed() {
+      viewMenu.insertItem(item, at: 0)
+    }
+  }
+
+  @IBAction func toggleDocumentOutline(_ sender: Any?) {
+    currentEditor?.toggleWorkspaceSidebar(.outline)
+  }
+
+  @IBAction func toggleWorkspaceFiles(_ sender: Any?) {
+    currentEditor?.toggleWorkspaceSidebar(.files)
+  }
+
+  @IBAction func toggleWorkspaceSearch(_ sender: Any?) {
+    currentEditor?.toggleWorkspaceSidebar(.search)
+  }
+
+  @IBAction func toggleWorkspaceTags(_ sender: Any?) {
+    currentEditor?.toggleWorkspaceSidebar(.tags)
+  }
+
+  @IBAction func toggleRenderedPreview(_ sender: Any?) {
+    currentEditor?.toggleRenderedPreview()
+  }
+
+  @IBAction func showWorkspaceHub(_ sender: Any?) {
+    currentEditor?.showWorkspaceHub()
+  }
+
+  private func workspaceViewMenuItem(
+    title: String,
+    action: Selector,
+    key: String,
+    modifiers: NSEvent.ModifierFlags
+  ) -> NSMenuItem {
+    let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+    item.keyEquivalentModifierMask = modifiers
+    item.target = self
+    return item
   }
 }
 

@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Add a heading to build the document outline." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajoutez un titre pour créer le plan du document." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "見出しを追加すると文書アウトラインが作成されます。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加标题以生成文档大纲。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "新增標題以產生文件大綱。" } }
+      }
+    },
+    "Document Outline" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plan du document" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "文書アウトライン" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文档大纲" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "文件大綱" } }
+      }
+    },
+    "Hide Preview" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Masquer l’aperçu" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プレビューを隠す" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "隐藏预览" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "隱藏預覽" } }
+      }
+    },
     "**Author:** %@" : {
       "comment" : "Extension author line (format) in the install confirmation",
       "localizations" : {
