@@ -20,6 +20,7 @@
 		AB2300013000000000000001 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB2300023000000000000001 /* Icon.png */; };
 		AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400023000000000000001 /* DocumentOutlineView.swift */; };
 		AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */; };
+		AB2500013000000000000001 /* WorkspaceHubSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -180,6 +181,7 @@
 		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
 		AB2400023000000000000001 /* DocumentOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutlineView.swift; sourceTree = "<group>"; };
 		AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewPaneView.swift; sourceTree = "<group>"; };
+		AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceHubSchemeHandler.swift; sourceTree = "<group>"; };
 		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
 		AB2200023000000000000001 /* EditorViewController+Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Agent.swift"; sourceTree = "<group>"; };
 		AB2200043000000000000001 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
@@ -603,6 +605,7 @@
 			children = (
 				870A51B4294702AF0095C7EB /* EditorViewController.swift */,
 				AB1100063000000000000001 /* EditorViewController+Workspace.swift */,
+				AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */,
 				AB2200023000000000000001 /* EditorViewController+Agent.swift */,
 				8767BBAE295A8BA500BFACAE /* EditorViewController+UI.swift */,
 				874065782BB505F500B5CE5A /* EditorViewController+Events.swift */,
@@ -934,6 +937,7 @@
 				AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */,
 				AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */,
 				AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */,
+				AB2500013000000000000001 /* WorkspaceHubSchemeHandler.swift in Sources */,
 				AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */,
 				8725E0822977EF46006A4961 /* EditorViewController+Toolbar.swift in Sources */,
 				874BE6F429BB37FA002F83BA /* IntentProvider.swift in Sources */,
