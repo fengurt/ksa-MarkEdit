@@ -2,13 +2,13 @@
   "name": "ksamint Notes",
   "short_name": "ksamint",
   "description": "Private, local-first Markdown knowledge workspace.",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#f6f6f4",
   "theme_color": "#f6f6f4",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

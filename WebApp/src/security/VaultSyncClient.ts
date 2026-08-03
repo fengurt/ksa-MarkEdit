@@ -12,7 +12,7 @@ import {
   type VaultObjectSummary,
 } from '../api/client';
 import { parseMetadata } from '../markdown/metadata';
-import type { NoteFile } from '../types';
+import type { ConflictRecord, NoteFile } from '../types';
 import {
   decodeAndVerifySignedManifest,
   decodeVaultObject,
@@ -43,6 +43,7 @@ export type VaultSyncReport = {
   unchangedObjects: number;
   tombstones: number;
   conflicts: number;
+  conflictRecords: ConflictRecord[];
   files: NoteFile[];
 };
 
@@ -83,6 +84,7 @@ export async function syncWorkspaceToPrivateCloud({
     let parentState = state;
     let downloadedObjects = 0;
     let conflicts = 0;
+    let conflictRecords: ConflictRecord[] = [];
     let grant: TemporaryCosGrant | undefined;
     if (remoteManifest && remoteManifest.digest !== state.previousDigest) {
       grant = await requestTemporaryCosGrant(vaultId);
@@ -109,9 +111,11 @@ export async function syncWorkspaceToPrivateCloud({
         base: base.files,
         local: files,
         remote: remote.files,
+        remoteLabel: `Remote manifest #${remoteManifest.sequence}`,
       });
       workingFiles = merged.files;
       conflicts = merged.conflicts;
+      conflictRecords = merged.conflictRecords;
       parentState = remote.state;
       if (sameWorkspace(workingFiles, remote.files)) {
         await saveVaultSyncState(workspaceId, remote.state);
@@ -123,6 +127,7 @@ export async function syncWorkspaceToPrivateCloud({
           unchangedObjects: workingFiles.length,
           tombstones: 0,
           conflicts,
+          conflictRecords,
           files: workingFiles,
         };
       }
@@ -225,6 +230,7 @@ export async function syncWorkspaceToPrivateCloud({
       unchangedObjects: workingFiles.length - uploadedObjects,
       tombstones: tombstones.length,
       conflicts,
+      conflictRecords,
       files: workingFiles,
     };
   } finally {

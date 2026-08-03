@@ -22,6 +22,35 @@ export type NoteFile = VaultFile & {
   metadata: NoteMetadata;
 };
 
+export type ConflictVersionSource = 'base' | 'local' | 'remote';
+
+export type ConflictVersion = {
+  source: ConflictVersionSource;
+  label: string;
+  fileId?: string;
+  path?: string;
+  content?: string;
+  modifiedAt?: number;
+};
+
+export type ConflictResolution = {
+  resolvedAt: number;
+  strategy: 'local' | 'remote' | 'combined' | 'manual';
+  resultFileId: string;
+};
+
+export type ConflictRecord = {
+  version: 1;
+  id: string;
+  fileId: string;
+  path: string;
+  reason: 'content' | 'path' | 'delete' | 'duplicate';
+  createdAt: number;
+  versions: ConflictVersion[];
+  preservedFileIds: string[];
+  resolution?: ConflictResolution;
+};
+
 export type SearchHit = {
   fileId: string;
   path: string;
