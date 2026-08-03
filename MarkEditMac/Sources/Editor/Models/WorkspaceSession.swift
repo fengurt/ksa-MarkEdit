@@ -62,9 +62,9 @@ struct WorkspaceHubSnapshot: Codable {
   let accountServiceStatus: String
 
   @MainActor
-  static func local() async -> WorkspaceHubSnapshot {
+  static func local() async -> Self {
     let history = ActivityHistoryStore.shared
-    return WorkspaceHubSnapshot(
+    return Self(
       version: 2,
       hasWorkspace: false,
       workspaceName: "ksamint MarkEdit",

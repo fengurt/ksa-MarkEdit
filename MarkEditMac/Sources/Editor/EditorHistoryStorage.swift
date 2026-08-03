@@ -114,11 +114,13 @@ final class ActivityHistoryStore {
 
   func recentDocuments(limit: Int = 20) -> [EditorHistory.Activity] {
     var seen = Set<String>()
-    return entries(limit: maximumEntries).filter { entry in
-      guard !seen.contains(entry.path) else { return false }
-      seen.insert(entry.path)
-      return FileManager.default.fileExists(atPath: entry.path)
-    }.prefix(limit).map { $0 }
+    let documents = entries(limit: maximumEntries)
+      .filter { entry in
+        guard !seen.contains(entry.path) else { return false }
+        seen.insert(entry.path)
+        return FileManager.default.fileExists(atPath: entry.path)
+      }
+    return Array(documents.prefix(limit))
   }
 
   func clear() {
