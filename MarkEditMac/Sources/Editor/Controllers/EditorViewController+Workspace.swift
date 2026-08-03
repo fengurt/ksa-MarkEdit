@@ -544,9 +544,18 @@ private final class WorkspaceHubSchemeHandler: NSObject, WKURLSchemeHandler {
 
     do {
       let data = try Data(contentsOf: fileURL, options: .mappedIfSafe)
-      let response = URLResponse(
+      let contentType = mimeType(for: fileURL.pathExtension)
+      let response = HTTPURLResponse(
         url: requestURL,
-        mimeType: mimeType(for: fileURL.pathExtension),
+        statusCode: 200,
+        httpVersion: nil,
+        headerFields: [
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": contentType,
+        ]
+      ) ?? URLResponse(
+        url: requestURL,
+        mimeType: contentType,
         expectedContentLength: data.count,
         textEncodingName: fileURL.pathExtension == "html" ? "utf-8" : nil
       )
@@ -558,7 +567,9 @@ private final class WorkspaceHubSchemeHandler: NSObject, WKURLSchemeHandler {
     }
   }
 
-  func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
+  func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    // no-op
+  }
 
   private func mimeType(for pathExtension: String) -> String {
     switch pathExtension.lowercased() {
