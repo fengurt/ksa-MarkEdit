@@ -178,4 +178,5 @@ private extension ResourcePreviewHotfixTests {
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
   }
+
 }

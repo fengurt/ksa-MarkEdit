@@ -244,6 +244,7 @@ let package = Package(
         "ExtensionCore",
         "FileDrop",
         "ResourceCore",
+        "ResourceUI",
         "Statistics",
         "TextBundle",
         "MarkEditKit",

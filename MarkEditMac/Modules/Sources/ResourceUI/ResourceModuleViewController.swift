@@ -20,6 +20,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   private var webView: WKWebView?
   private var messageHandler: ResourceModuleMessageHandler?
   private var schemeHandler: ResourceURLSchemeHandler?
+  private var moduleSchemeHandler: ResourceModuleURLSchemeHandler?
   private let statusLabel = NSTextField(wrappingLabelWithString: "")
 
   public init(
@@ -89,7 +90,11 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
       }
       return decisionHandler(.allow)
     }
-    decisionHandler(["about", ResourceURLSchemeHandler.scheme].contains(scheme) ? .allow : .cancel)
+    decisionHandler([
+      "about",
+      ResourceURLSchemeHandler.scheme,
+      ResourceModuleURLSchemeHandler.scheme,
+    ].contains(scheme) ? .allow : .cancel)
   }
 
   public func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
@@ -117,7 +122,12 @@ private extension ResourceModuleViewController {
 
     let configuration = WKWebViewConfiguration()
     let schemeHandler = ResourceURLSchemeHandler(session: session)
+    let moduleSchemeHandler = ResourceModuleURLSchemeHandler(moduleURL: moduleURL, manifest: manifest)
     configuration.setURLSchemeHandler(schemeHandler, forURLScheme: ResourceURLSchemeHandler.scheme)
+    configuration.setURLSchemeHandler(
+      moduleSchemeHandler,
+      forURLScheme: ResourceModuleURLSchemeHandler.scheme
+    )
     configuration.userContentController = contentController
     configuration.websiteDataStore = .nonPersistent()
     configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
@@ -135,6 +145,7 @@ private extension ResourceModuleViewController {
     statusLabel.isHidden = true
     self.messageHandler = messageHandler
     self.schemeHandler = schemeHandler
+    self.moduleSchemeHandler = moduleSchemeHandler
     self.webView = webView
 
     Task { @MainActor [weak self] in
@@ -149,20 +160,20 @@ private extension ResourceModuleViewController {
         guard let descriptorJSON = String(data: descriptorData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
-        let entrypointURL = try manifest.entrypointURL(in: moduleURL)
+        let entrypointURL = try moduleSchemeHandler.moduleURL(path: manifest.entrypoint)
         let entrypointData = try JSONEncoder().encode(entrypointURL.absoluteString)
         guard let entrypointJSON = String(data: entrypointData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
         let nonce = UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        webView.loadHTMLString(
-          Self.shell(
-            entrypoint: entrypointJSON,
-            descriptor: descriptorJSON,
-            nonce: nonce,
-            failurePrefix: messages.moduleFailedPrefix
-          ),
-          baseURL: moduleURL
+        moduleSchemeHandler.setShell(Self.shell(
+          entrypoint: entrypointJSON,
+          descriptor: descriptorJSON,
+          nonce: nonce,
+          failurePrefix: messages.moduleFailedPrefix
+        ))
+        webView.load(
+          URLRequest(url: try moduleSchemeHandler.shellURL())
         )
       } catch {
         webView.removeFromSuperview()
