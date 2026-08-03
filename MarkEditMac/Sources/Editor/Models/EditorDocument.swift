@@ -251,9 +251,13 @@ extension EditorDocument {
 
       if let previousURL, let newValue,
          previousURL.standardizedFileURL != newValue.standardizedFileURL {
-        ActivityHistoryStore.shared.record(.renamed, url: newValue)
+        Task { @MainActor in
+          ActivityHistoryStore.shared.record(.renamed, url: newValue)
+        }
       } else if wasDraft, let newValue {
-        ActivityHistoryStore.shared.record(.saved, url: newValue)
+        Task { @MainActor in
+          ActivityHistoryStore.shared.record(.saved, url: newValue)
+        }
       }
 
       // Newly created files should have a clean state
