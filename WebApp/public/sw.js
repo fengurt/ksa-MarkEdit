@@ -1,4 +1,4 @@
-const CACHE = 'ksamint-shell-v2';
+const CACHE = 'ksamint-shell-v3';
 const BASE = new URL('./', self.location.href).pathname;
 const SHELL = [BASE, `${BASE}manifest.webmanifest`, `${BASE}icon.svg`];
 
