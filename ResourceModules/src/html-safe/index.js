@@ -4,12 +4,12 @@ import {
   installStyles,
   joinPath,
   layout,
-  listAll,
   readAll,
   renderInfo,
   request,
   showMetadata,
   text,
+  walkFiles,
 } from './runtime.js';
 
 installStyles('styles.css');
@@ -35,7 +35,7 @@ async function findHTML(resource) {
       mediaType: resource.mediaType,
     };
   }
-  const entries = await listAll(undefined);
+  const entries = await walkFiles(undefined, 50000);
   return entries.find(entry => entry.name.toLowerCase() === 'index.html')
     ?? entries.find(entry => /\.html?$/i.test(entry.name));
 }
@@ -58,15 +58,14 @@ async function renderHTML(entry, view) {
       if (name.startsWith('on') || ['srcdoc', 'formaction', 'action', 'ping'].includes(name)) {
         node.removeAttribute(attribute.name);
         report.removedAttributes += 1;
-      } else if (name === 'style' && /url\s*\(|expression\s*\(/i.test(value)) {
-        node.removeAttribute(attribute.name);
-        report.blockedRequests += 1;
+      } else if (name === 'style') {
+        node.setAttribute(attribute.name, await sanitizeCSS(value, report, basePath));
       }
     }
   }
 
   for (const style of documentValue.querySelectorAll('style')) {
-    style.textContent = sanitizeCSS(style.textContent ?? '', report);
+    style.textContent = await sanitizeCSS(style.textContent ?? '', report, basePath);
   }
   for (const link of [...documentValue.querySelectorAll('link[rel="stylesheet"][href]')]) {
     const href = link.getAttribute('href') ?? '';
@@ -78,7 +77,7 @@ async function renderHTML(entry, view) {
       const info = await renderInfo(id);
       const css = text(await readAll(id, Number(info.metadata.byteCount), 5 * 1024 * 1024));
       const style = documentValue.createElement('style');
-      style.textContent = sanitizeCSS(css, report);
+      style.textContent = await sanitizeCSS(css, report, id.includes('/') ? id.slice(0, id.lastIndexOf('/')) : '');
       link.replaceWith(style);
     } catch {
       link.remove(); report.blockedRequests += 1;
@@ -106,6 +105,10 @@ async function renderHTML(entry, view) {
       anchor.href = '#';
       anchor.title = 'Remote navigation blocked';
       report.blockedRequests += 1;
+    } else if (isLocal(href)) {
+      const targetID = joinPath(basePath, stripQuery(href));
+      anchor.href = '#';
+      anchor.dataset.resourceEntry = targetID;
     }
   }
 
@@ -113,6 +116,12 @@ async function renderHTML(entry, view) {
   toolbar.append(button('Open in external browser', () => request('openExternally', { entryID: entry.id })));
   const frame = element('section', 'safe-html');
   for (const child of [...documentValue.body.childNodes]) frame.append(document.importNode(child, true));
+  frame.addEventListener('click', event => {
+    const anchor = event.target.closest?.('a[data-resource-entry]');
+    if (!anchor) return;
+    event.preventDefault();
+    void navigateLocalHTML(anchor.dataset.resourceEntry, view);
+  });
   view.preview.replaceChildren(toolbar, frame);
   showMetadata(view.metadata, {
     Source: entry.id,
@@ -125,11 +134,48 @@ async function renderHTML(entry, view) {
   });
 }
 
-function sanitizeCSS(source, report) {
-  return source
+async function navigateLocalHTML(entryID, view) {
+  try {
+    const info = await renderInfo(entryID);
+    await renderHTML({
+      id: entryID,
+      name: info.title,
+      byteCount: Number(info.metadata.byteCount),
+      mediaType: info.metadata.mediaType,
+    }, view);
+  } catch (error) {
+    view.preview.replaceChildren(element('div', 'empty-state warning', `Unable to open local HTML: ${String(error)}`));
+  }
+}
+
+async function sanitizeCSS(source, report, basePath = '') {
+  const stripped = source
     .replace(/@import[^;]+;?/gi, () => { report.blockedRequests += 1; return ''; })
-    .replace(/url\s*\([^)]*\)/gi, () => { report.blockedRequests += 1; return 'none'; })
     .replace(/expression\s*\([^)]*\)/gi, '');
+  const pattern = /url\s*\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
+  let output = '';
+  let cursor = 0;
+  for (const match of stripped.matchAll(pattern)) {
+    output += stripped.slice(cursor, match.index);
+    const value = match[2].trim();
+    if (value.startsWith('data:')) {
+      output += /^data:(?:image|font)\//i.test(value) ? match[0] : 'none';
+      if (!/^(?:data:(?:image|font)\/)/i.test(value)) report.blockedRequests += 1;
+    } else if (isLocal(value)) {
+      try {
+        const info = await renderInfo(joinPath(basePath, stripQuery(value)));
+        output += `url("${String(info.resourceURL).replaceAll('"', '%22')}")`;
+      } catch {
+        output += 'none';
+        report.blockedRequests += 1;
+      }
+    } else {
+      output += 'none';
+      report.blockedRequests += 1;
+    }
+    cursor = match.index + match[0].length;
+  }
+  return output + stripped.slice(cursor);
 }
 
 function isLocal(value) {
@@ -140,3 +186,9 @@ function isLocal(value) {
 function stripQuery(value) {
   return value.split(/[?#]/, 1)[0];
 }
+
+export const testing = Object.freeze({
+  isLocal,
+  sanitizeCSS,
+  stripQuery,
+});

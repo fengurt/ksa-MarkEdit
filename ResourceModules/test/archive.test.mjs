@@ -25,6 +25,14 @@ test('rejects Zip Slip paths', async () => {
   await assert.rejects(testing.readZipDirectory(memoryReader(archive)), /Unsafe archive path/);
 });
 
+test('rejects a stored ZIP entry whose CRC no longer matches', async () => {
+  const archive = zip('note.md', new TextEncoder().encode('trusted'));
+  archive[30 + 'note.md'.length] ^= 0xff;
+  const reader = memoryReader(archive);
+  const [entry] = await testing.readZipDirectory(reader);
+  await assert.rejects(testing.extractZipEntry(reader, entry), /CRC32 mismatch/);
+});
+
 test('reads a Unicode TAR entry without extracting it', async () => {
   const archive = tar('资料/笔记.md', new TextEncoder().encode('内容'));
   const entries = await testing.readTarDirectory(memoryReader(archive));
@@ -44,10 +52,12 @@ function memoryReader(bytes) {
 
 function zip(path, content) {
   const name = new TextEncoder().encode(path);
+  const checksum = crc32(content);
   const local = new Uint8Array(30 + name.length + content.length);
   write32(local, 0, 0x04034b50);
   write16(local, 4, 20);
   write16(local, 6, 0x0800);
+  write32(local, 14, checksum);
   write32(local, 18, content.length);
   write32(local, 22, content.length);
   write16(local, 26, name.length);
@@ -59,6 +69,7 @@ function zip(path, content) {
   write16(central, 4, 20);
   write16(central, 6, 20);
   write16(central, 8, 0x0800);
+  write32(central, 16, checksum);
   write32(central, 20, content.length);
   write32(central, 24, content.length);
   write16(central, 28, name.length);
@@ -71,6 +82,15 @@ function zip(path, content) {
   write32(end, 12, central.length);
   write32(end, 16, local.length);
   return concat(local, central, end);
+}
+
+function crc32(bytes) {
+  let value = 0xffffffff;
+  for (const byte of bytes) {
+    value ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) value = value >>> 1 ^ (value & 1 ? 0xedb88320 : 0);
+  }
+  return (value ^ 0xffffffff) >>> 0;
 }
 
 function tar(path, content) {

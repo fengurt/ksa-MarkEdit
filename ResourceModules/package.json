@@ -8,5 +8,11 @@
     "sign": "node scripts/sign.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "node scripts/verify.mjs && npm test"
+  },
+  "dependencies": {
+    "js-yaml": "5.2.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "okf",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Google OKF Catalog",
   "entrypoint": "index.js",
   "files": [
@@ -13,14 +13,14 @@
     },
     {
       "path": "index.js",
-      "sha256": "bcca943b044e8bc1e37b39df3bd01e20ac266ca73685b8b31b32b9631be2fbbb",
-      "size": 8023,
+      "sha256": "2263ccb4c273d595100937954d291c180343c317e02285af1cc54f4e9fb88566",
+      "size": 12572,
       "mediaType": "text/javascript"
     },
     {
       "path": "runtime.js",
-      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
-      "size": 5186,
+      "sha256": "284444c0df18fd9a0089ebef32ae58483127c1d2de54cd2d8309c6db59bab9f1",
+      "size": 6580,
       "mediaType": "text/javascript"
     },
     {
@@ -28,6 +28,18 @@
       "sha256": "c477598acfd0bb42b52f5195afab8daeccb80a477d0b0b2d61e83b9086bfddc9",
       "size": 952,
       "mediaType": "text/css"
+    },
+    {
+      "path": "vendor/YAML-LICENSE.txt",
+      "sha256": "a07bc24468b9654ce76a547d47a2db282d07733b715db4c73a98bd63961f9550",
+      "size": 1084,
+      "mediaType": "application/octet-stream"
+    },
+    {
+      "path": "vendor/yaml/index.js",
+      "sha256": "718115efcda478585c81c8197b4d7316061483420b53eb9a8178a1d3d238af89",
+      "size": 42166,
+      "mediaType": "text/javascript"
     }
   ],
   "probes": [
@@ -54,8 +66,54 @@
       ],
       "mediaTypes": [],
       "priority": 450
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [],
+      "mediaTypes": [],
+      "priority": 900,
+      "frontMatter": {
+        "paths": [
+          "index.md"
+        ],
+        "fileExtensions": [],
+        "excludedFileNames": [],
+        "requiredKeys": [
+          "okf_version"
+        ],
+        "allowedValues": {
+          "okf_version": [
+            "0.1",
+            "0.2"
+          ]
+        },
+        "maximumFiles": 1,
+        "maximumBytesPerFile": 65536
+      }
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [],
+      "mediaTypes": [],
+      "priority": 700,
+      "frontMatter": {
+        "paths": [],
+        "fileExtensions": [
+          "md"
+        ],
+        "excludedFileNames": [
+          "index.md",
+          "log.md"
+        ],
+        "requiredKeys": [
+          "type"
+        ],
+        "allowedValues": {},
+        "maximumFiles": 32,
+        "maximumBytesPerFile": 65536
+      }
     }
   ],
-  "signingKeyID": "official-v1",
-  "signature": "MEYCIQDGHGRAmJIOwaUXRmvKPe0ndDlDlFKHUFfBl7LYYn+DvgIhAPC+DWNnFlJXq/Uyz2LeD9iAsNhmwsEhTwZeWEm/n49Z"
+  "signingKeyID": "official-v2",
+  "signature": "MEYCIQCUDMTtPbckmpPANIYTaBfE+MeDkRUytm43yAzWb91+dQIhANxVb9GIsCeoShEEkURXJdbAEMkpR3YMwrYeyeP6vr/F"
 }

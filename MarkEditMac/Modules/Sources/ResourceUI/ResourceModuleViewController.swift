@@ -13,6 +13,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   private let session: ResourceSession
   private let moduleURL: URL?
   private let manifest: ResourceModuleManifestV1?
+  private let catalogUnavailable: Bool
   private let messages: ResourceUIMessages
   private let openInEditor: @MainActor (URL) -> Void
   private let openExternally: @MainActor (URL) -> Void
@@ -25,6 +26,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     session: ResourceSession,
     moduleURL: URL?,
     manifest: ResourceModuleManifestV1?,
+    catalogUnavailable: Bool,
     messages: ResourceUIMessages,
     openInEditor: @escaping @MainActor (URL) -> Void,
     openExternally: @escaping @MainActor (URL) -> Void
@@ -32,6 +34,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     self.session = session
     self.moduleURL = moduleURL
     self.manifest = manifest
+    self.catalogUnavailable = catalogUnavailable
     self.messages = messages
     self.openInEditor = openInEditor
     self.openExternally = openExternally
@@ -62,7 +65,9 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   override public func viewDidLoad() {
     super.viewDidLoad()
     guard let moduleURL, let manifest else {
-      statusLabel.stringValue = messages.noCompatibleModule
+      statusLabel.stringValue = catalogUnavailable
+        ? "\(messages.noCompatibleModule)\n\(messages.catalogUnavailable)"
+        : messages.noCompatibleModule
       return
     }
     load(moduleURL: moduleURL, manifest: manifest)
@@ -144,7 +149,8 @@ private extension ResourceModuleViewController {
         guard let descriptorJSON = String(data: descriptorData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
-        let entrypointData = try JSONEncoder().encode(manifest.entrypoint)
+        let entrypointURL = try manifest.entrypointURL(in: moduleURL)
+        let entrypointData = try JSONEncoder().encode(entrypointURL.absoluteString)
         guard let entrypointJSON = String(data: entrypointData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
@@ -181,7 +187,7 @@ private extension ResourceModuleViewController {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ksamint-resource:; media-src 'self' blob: ksamint-resource:; frame-src ksamint-resource:; connect-src ksamint-resource:; font-src 'self'; worker-src 'self' blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ksamint-resource:; media-src 'self' blob: ksamint-resource:; frame-src ksamint-resource:; connect-src ksamint-resource:; font-src 'self' data: ksamint-resource:; worker-src 'self' blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
         <style>html,body,#resource-root{height:100%;margin:0}body{font:13px system-ui;color:CanvasText;background:Canvas}</style>
       </head>
       <body>
@@ -216,15 +222,18 @@ private extension ResourceModuleViewController {
 
 public struct ResourceUIMessages: Sendable {
   public let noCompatibleModule: String
+  public let catalogUnavailable: String
   public let moduleStopped: String
   public let moduleFailedPrefix: String
 
   public init(
     noCompatibleModule: String,
+    catalogUnavailable: String,
     moduleStopped: String,
     moduleFailedPrefix: String
   ) {
     self.noCompatibleModule = noCompatibleModule
+    self.catalogUnavailable = catalogUnavailable
     self.moduleStopped = moduleStopped
     self.moduleFailedPrefix = moduleFailedPrefix
   }

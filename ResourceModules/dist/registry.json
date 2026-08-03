@@ -1,13 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "modules": [
     {
       "id": "folder-base",
       "displayName": "Folder and File Preview",
       "version": "1.0.0",
-      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/folder-base/manifest.json",
-      "manifestSHA256": "44a68e4cc0d58cb5ffb8a7e8101b48f314830c74c6b2b3a1e681b132055a95c3",
-      "downloadBytes": 16423,
+      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/folder-base/manifest.json",
+      "manifestSHA256": "a6838fc5f0d59ad9d5a5fa39fe501f0b47cc1a7110a4db96c49e42176d843c99",
+      "downloadBytes": 17817,
       "minAppVersion": "2.1.0",
       "probes": [
         {
@@ -48,10 +48,10 @@
     {
       "id": "html-safe",
       "displayName": "Safe HTML Preview",
-      "version": "1.0.0",
-      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/html-safe/manifest.json",
-      "manifestSHA256": "41daa14a48cb5a5b14ee1116e30da10fe63cd3d99a8351cc23881338e45d0aff",
-      "downloadBytes": 14612,
+      "version": "1.1.0",
+      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/html-safe/manifest.json",
+      "manifestSHA256": "04d09c2b4d17463cd438131555d3ec9ff29db4e923933409a52078c6652b1477",
+      "downloadBytes": 17792,
       "minAppVersion": "2.1.0",
       "probes": [
         {
@@ -78,10 +78,10 @@
     {
       "id": "okf",
       "displayName": "Google OKF Catalog",
-      "version": "1.0.0",
-      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/okf/manifest.json",
-      "manifestSHA256": "0e23396c01ca439ba8f95e649d1dab02dac21da7bae362303964f7d8142508c1",
-      "downloadBytes": 18280,
+      "version": "1.1.0",
+      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/okf/manifest.json",
+      "manifestSHA256": "01223e85613d6923262ae746a5aedb43ed19aa4e5dfda3e0faed90c86ebde68e",
+      "downloadBytes": 68828,
       "minAppVersion": "2.1.0",
       "probes": [
         {
@@ -107,6 +107,52 @@
           ],
           "mediaTypes": [],
           "priority": 450
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 900,
+          "frontMatter": {
+            "paths": [
+              "index.md"
+            ],
+            "fileExtensions": [],
+            "excludedFileNames": [],
+            "requiredKeys": [
+              "okf_version"
+            ],
+            "allowedValues": {
+              "okf_version": [
+                "0.1",
+                "0.2"
+              ]
+            },
+            "maximumFiles": 1,
+            "maximumBytesPerFile": 65536
+          }
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 700,
+          "frontMatter": {
+            "paths": [],
+            "fileExtensions": [
+              "md"
+            ],
+            "excludedFileNames": [
+              "index.md",
+              "log.md"
+            ],
+            "requiredKeys": [
+              "type"
+            ],
+            "allowedValues": {},
+            "maximumFiles": 32,
+            "maximumBytesPerFile": 65536
+          }
         }
       ]
     },
@@ -114,9 +160,9 @@
       "id": "mineru",
       "displayName": "MinerU OCR Result",
       "version": "1.0.0",
-      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/mineru/manifest.json",
-      "manifestSHA256": "7f9963acebda5a3f1ad2aa0f2faacbea800878a8e2b81b6b91f378ba52979ce9",
-      "downloadBytes": 16654,
+      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/mineru/manifest.json",
+      "manifestSHA256": "3eb22a83169446047dd624bb2874b1b9f2518294d66f6f7b403cb7ff734ab6d2",
+      "downloadBytes": 18048,
       "minAppVersion": "2.1.0",
       "probes": [
         {
@@ -149,10 +195,10 @@
     {
       "id": "archive-base",
       "displayName": "ZIP, TAR, and TGZ Preview",
-      "version": "1.0.0",
-      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/archive-base/manifest.json",
-      "manifestSHA256": "554b89805c65b985765af3892d99327ea199440205fbc58afb9e78d0237eba52",
-      "downloadBytes": 27518,
+      "version": "1.1.0",
+      "manifestURL": "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/archive-base/manifest.json",
+      "manifestSHA256": "3d10274b310c9b3ee4af7616232678075e9f49839f12d44cfa7e8fede49e65c4",
+      "downloadBytes": 34289,
       "minAppVersion": "2.1.0",
       "probes": [
         {
@@ -171,5 +217,7 @@
         }
       ]
     }
-  ]
+  ],
+  "signingKeyID": "official-v2",
+  "signature": "MEUCIEY1yd3LC2nJlv0VEvE9JxsrNjuonaQPR89FSRadO7EMAiEAhftkHkv0nj59Oz+yfjw5nEZq/rzrMUhXR9PA7JQpQV4="
 }

@@ -1,10 +1,22 @@
 {
   "schemaVersion": 1,
   "id": "archive-base",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "ZIP, TAR, and TGZ Preview",
   "entrypoint": "index.js",
   "files": [
+    {
+      "path": "archive-format.js",
+      "sha256": "def0985b6c577ec74c001f802a70313acf60bb8aa3ec91780003405f1714ddeb",
+      "size": 1654,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "archive-worker.js",
+      "sha256": "41fd8fe059118b4c3abd41b92dac69ed889fb5f84ca6003ad6f0bd137cea5a91",
+      "size": 1366,
+      "mediaType": "text/javascript"
+    },
     {
       "path": "base.css",
       "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
@@ -13,14 +25,14 @@
     },
     {
       "path": "index.js",
-      "sha256": "46727702abdee1d7e221fb1e8df031f95f6cf99065cbadc857d8c90fd9f15d9b",
-      "size": 17938,
+      "sha256": "bce5d446b11cdd20673e665022d5e9698e5b8c93fc7627ef43062ca5785eb297",
+      "size": 19917,
       "mediaType": "text/javascript"
     },
     {
       "path": "runtime.js",
-      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
-      "size": 5186,
+      "sha256": "284444c0df18fd9a0089ebef32ae58483127c1d2de54cd2d8309c6db59bab9f1",
+      "size": 6580,
       "mediaType": "text/javascript"
     },
     {
@@ -46,6 +58,6 @@
       "priority": 500
     }
   ],
-  "signingKeyID": "official-v1",
-  "signature": "MEYCIQCke/DgoUdjLDqWqKqM+pSbvU7rkpOEbqwI1PENbJAMNAIhAKqzodv9lX1VaXpCRgDr556VFumbDIEbg00PlzsxFspf"
+  "signingKeyID": "official-v2",
+  "signature": "MEUCIEx3qQTavM+r7bzNKi7QwIdZTcoQAsJI402aw9yu2b64AiEAyV4yxbzq7qO2g76X30F3SStQdNrB3YMnQMJ5hzFY3Hw="
 }

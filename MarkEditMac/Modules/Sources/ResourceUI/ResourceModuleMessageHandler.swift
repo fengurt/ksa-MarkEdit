@@ -25,6 +25,12 @@ final class ResourceModuleMessageHandler: NSObject, WKScriptMessageHandlerWithRe
     self.openExternally = openExternally
   }
 
+  deinit {
+    for operation in operations.values {
+      operation.cancel()
+    }
+  }
+
   func userContentController(
     _ userContentController: WKUserContentController,
     didReceive message: WKScriptMessage
@@ -93,6 +99,11 @@ private extension ResourceModuleMessageHandler {
         "base64": data.base64EncodedString(),
         "byteCount": data.count,
       ]
+    case .readBatch:
+      guard let reads = request.reads else {
+        throw ResourceModuleError.invalidManifest
+      }
+      return try Self.jsonObject(await session.broker.readBatch(reads))
     case .search:
       let results = try await session.broker.searchFileNames(
         query: request.query ?? "",

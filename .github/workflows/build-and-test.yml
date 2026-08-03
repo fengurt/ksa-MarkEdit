@@ -20,9 +20,14 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22.x
+          cache: npm
+          cache-dependency-path: ResourceModules/package-lock.json
       - name: Verify signatures, hashes, sandbox policy, and archive parsers
         working-directory: ResourceModules
-        run: npm run verify
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm run verify
 
   agent-sdk:
     name: Read-only Agent SDK

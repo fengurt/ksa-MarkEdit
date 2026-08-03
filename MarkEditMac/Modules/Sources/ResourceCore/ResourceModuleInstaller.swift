@@ -98,12 +98,25 @@ public actor ResourceModuleInstaller {
     guard ResourcePathPolicy.isDescendant(standardized, of: installationRoot) else {
       throw ResourceModuleError.outsideRoot(moduleURL.lastPathComponent)
     }
-    let data = try Data(contentsOf: standardized.appending(path: "manifest.json"))
+    return try Self.validateModule(at: standardized, trustStore: trustStore)
+  }
+
+  public func validateBundledModule(at moduleURL: URL) throws -> ResourceModuleManifestV1 {
+    try Self.validateModule(at: moduleURL.standardizedFileURL, trustStore: trustStore)
+  }
+
+  public static func validateModule(
+    at moduleURL: URL,
+    trustStore: ResourceModuleTrustStore
+  ) throws -> ResourceModuleManifestV1 {
+    let data = try Data(contentsOf: moduleURL.appending(path: "manifest.json"))
     let manifest = try JSONDecoder().decode(ResourceModuleManifestV1.self, from: data)
     try manifest.verifySignature(using: trustStore)
+    let resolvedRoot = moduleURL.resolvingSymlinksInPath()
     for file in manifest.files {
-      let url = standardized.appending(path: file.path)
-      guard ResourcePathPolicy.isDescendant(url, of: standardized),
+      let url = moduleURL.appending(path: file.path)
+      let resolvedURL = url.resolvingSymlinksInPath()
+      guard ResourcePathPolicy.isDescendant(resolvedURL, of: resolvedRoot),
             let data = try? Data(contentsOf: url, options: [.mappedIfSafe]),
             UInt64(data.count) == file.size,
             data.sha256 == file.sha256.lowercased() else {

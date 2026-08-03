@@ -21,6 +21,9 @@
 		AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400023000000000000001 /* DocumentOutlineView.swift */; };
 		AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */; };
 		AB2500013000000000000001 /* WorkspaceHubSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */; };
+		AB2600013000000000000001 /* okf in Resources */ = {isa = PBXBuildFile; fileRef = AB2600023000000000000001 /* okf */; };
+		AB2600033000000000000001 /* html-safe in Resources */ = {isa = PBXBuildFile; fileRef = AB2600043000000000000001 /* html-safe */; };
+		AB2600053000000000000001 /* archive-base in Resources */ = {isa = PBXBuildFile; fileRef = AB2600063000000000000001 /* archive-base */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -182,6 +185,9 @@
 		AB2400023000000000000001 /* DocumentOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutlineView.swift; sourceTree = "<group>"; };
 		AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewPaneView.swift; sourceTree = "<group>"; };
 		AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceHubSchemeHandler.swift; sourceTree = "<group>"; };
+		AB2600023000000000000001 /* okf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = okf; path = ResourceModules/dist/okf; sourceTree = SOURCE_ROOT; };
+		AB2600043000000000000001 /* html-safe */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "html-safe"; path = "ResourceModules/dist/html-safe"; sourceTree = SOURCE_ROOT; };
+		AB2600063000000000000001 /* archive-base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "archive-base"; path = "ResourceModules/dist/archive-base"; sourceTree = SOURCE_ROOT; };
 		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
 		AB2200023000000000000001 /* EditorViewController+Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Agent.swift"; sourceTree = "<group>"; };
 		AB2200043000000000000001 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
@@ -409,6 +415,9 @@
 			children = (
 				AB1200043000000000000001 /* rendered-preview.html */,
 				AB1300023000000000000001 /* KnowledgeHub */,
+				AB2600023000000000000001 /* okf */,
+				AB2600043000000000000001 /* html-safe */,
+				AB2600063000000000000001 /* archive-base */,
 				87ACA65B2C858AF4008E24BA /* chunks */,
 				870A51C8294752530095C7EB /* index.html */,
 				870A51A9294700E00095C7EB /* Assets.xcassets */,
@@ -849,6 +858,9 @@
 			files = (
 				AB1200033000000000000001 /* rendered-preview.html in Resources */,
 				AB1300013000000000000001 /* KnowledgeHub in Resources */,
+				AB2600013000000000000001 /* okf in Resources */,
+				AB2600033000000000000001 /* html-safe in Resources */,
+				AB2600053000000000000001 /* archive-base in Resources */,
 				87ACA65C2C858AF4008E24BA /* chunks in Resources */,
 				870A51C9294752530095C7EB /* index.html in Resources */,
 				AA0000100000000000000001 /* InfoPlist.strings in Resources */,

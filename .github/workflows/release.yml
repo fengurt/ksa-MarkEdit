@@ -88,6 +88,8 @@ jobs:
       - name: Verify and package signed resource modules
         working-directory: ResourceModules
         run: |
+          npm ci
+          npm audit --audit-level=high
           npm run verify
           version="${RELEASE_TAG#v}"
           ditto -c -k --keepParent dist "$RUNNER_TEMP/ksamint-resource-modules-$version.zip"

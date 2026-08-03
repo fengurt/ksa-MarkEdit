@@ -5,14 +5,23 @@ import { join, relative, resolve, sep } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const sourceRoot = join(root, 'src');
 const distRoot = join(root, 'dist');
-const publicKey = await readFile(join(root, 'keys', 'official-v1-public.pem'), 'utf8');
 const config = JSON.parse(await readFile(join(root, 'modules.json'), 'utf8'));
 const registryData = await readFile(join(distRoot, 'registry.json'));
 const registry = JSON.parse(registryData);
+const publicKey = await readFile(join(root, 'keys', `${registry.signingKeyID}-public.pem`), 'utf8');
 const failures = [];
 
-if (registry.schemaVersion !== 1 || registry.modules.length !== config.modules.length) {
+if (registry.schemaVersion !== 2 || registry.modules.length !== config.modules.length) {
   failures.push('registry schema or module count is invalid');
+}
+const { signature: registrySignature, ...unsignedRegistry } = registry;
+if (!verify(
+  'sha256',
+  Buffer.from(canonicalJSON(unsignedRegistry)),
+  publicKey,
+  Buffer.from(registrySignature ?? '', 'base64')
+)) {
+  failures.push('registry signature is invalid');
 }
 
 for (const definition of config.modules) {
@@ -35,7 +44,8 @@ for (const definition of config.modules) {
       failures.push(`${definition.id}/${file.path}: size or hash mismatch`);
     }
     const text = /\.(?:css|html|js|json)$/.test(path) ? data.toString('utf8') : '';
-    if (/https?:\/\/|new\s+WebSocket|eval\s*\(|new\s+Function/.test(text)) {
+    const policyText = text.replace(/\/\*[\s\S]*?\*\/|(^|[^:])\/\/.*$/gm, '$1');
+    if (/https?:\/\/|new\s+WebSocket|eval\s*\(|new\s+Function/.test(policyText)) {
       failures.push(`${definition.id}/${file.path}: forbidden network or dynamic-code primitive`);
     }
   }

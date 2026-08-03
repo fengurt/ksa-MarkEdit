@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "html-safe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Safe HTML Preview",
   "entrypoint": "index.js",
   "files": [
@@ -13,14 +13,14 @@
     },
     {
       "path": "index.js",
-      "sha256": "19ed3b528f48be0cb9c5fcff50b58e9cda6ff112010b34af98edd6c3526d658a",
-      "size": 5081,
+      "sha256": "38599d371536ecc637b09577b589dc5f4c54a53f4db0485f5f8d81a253ea51cc",
+      "size": 6867,
       "mediaType": "text/javascript"
     },
     {
       "path": "runtime.js",
-      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
-      "size": 5186,
+      "sha256": "284444c0df18fd9a0089ebef32ae58483127c1d2de54cd2d8309c6db59bab9f1",
+      "size": 6580,
       "mediaType": "text/javascript"
     },
     {
@@ -51,6 +51,6 @@
       "priority": 250
     }
   ],
-  "signingKeyID": "official-v1",
-  "signature": "MEYCIQC0fhjhubWWFdZCPcQaANkoj7jfJcFvVVIRNzVn/easFgIhAMAb9lAXKwjcp0+W7j28ASV3hY8FH/I4lpje0LJt05+9"
+  "signingKeyID": "official-v2",
+  "signature": "MEUCIAxkpdzPCgxVPo8m2+KXPrZh7LETFtQ51iFPVK8qoDFQAiEA+j0KJ/IKeftuaPrtgGWmAJ8Q80ZvFKe3Vh7TdQUD2Gs="
 }
