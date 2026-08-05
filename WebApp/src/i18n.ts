@@ -2,6 +2,7 @@ const translations = {
   en: {
     continueOffline: 'Continue offline',
     signIn: 'Sign in with Passkey',
+    passkeyUnsupported: 'Passkeys are unavailable in this browser. Open notes.apuch.cn in Safari, Chrome, Edge, or Firefox to sign in.',
     recentWorkspace: 'Recent workspace',
     recentDocuments: 'Recent documents',
     activityHistory: 'Activity history',
@@ -111,6 +112,7 @@ const translations = {
   'zh-Hans': {
     continueOffline: '继续离线',
     signIn: '使用 Passkey 登录',
+    passkeyUnsupported: '此浏览器不支持 Passkey。请使用 Safari、Chrome、Edge 或 Firefox 打开 notes.apuch.cn 登录。',
     recentWorkspace: '最近工作区',
     recentDocuments: '最近文档',
     activityHistory: '打开与编辑历史',
@@ -220,6 +222,7 @@ const translations = {
   'zh-Hant': {
     continueOffline: '繼續離線',
     signIn: '使用 Passkey 登入',
+    passkeyUnsupported: '此瀏覽器不支援 Passkey。請使用 Safari、Chrome、Edge 或 Firefox 開啟 notes.apuch.cn 登入。',
     recentWorkspace: '最近工作區',
     recentDocuments: '最近文件',
     activityHistory: '開啟與編輯記錄',
@@ -329,6 +332,7 @@ const translations = {
   ja: {
     continueOffline: 'オフラインで続ける',
     signIn: 'Passkey でサインイン',
+    passkeyUnsupported: 'このブラウザでは Passkey を利用できません。Safari、Chrome、Edge、または Firefox で notes.apuch.cn を開いてください。',
     recentWorkspace: '最近のワークスペース',
     recentDocuments: '最近の書類',
     activityHistory: '開いたファイルと編集履歴',
@@ -438,6 +442,7 @@ const translations = {
   fr: {
     continueOffline: 'Continuer hors ligne',
     signIn: 'Se connecter avec une clé d’accès',
+    passkeyUnsupported: 'Les clés d’accès ne sont pas disponibles dans ce navigateur. Ouvrez notes.apuch.cn dans Safari, Chrome, Edge ou Firefox.',
     recentWorkspace: 'Espace récent',
     recentDocuments: 'Documents récents',
     activityHistory: 'Historique d’ouverture et de modification',

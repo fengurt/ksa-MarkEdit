@@ -501,6 +501,14 @@ export default function App() {
         notice={notice}
         onContinue={continueOffline}
         onSignIn={async () => {
+          setNotice(undefined);
+          if (
+            typeof window.PublicKeyCredential === 'undefined'
+            || !window.navigator.credentials
+          ) {
+            setNotice(t('passkeyUnsupported'));
+            return;
+          }
           localStorage.setItem('ksamint-cloud-enabled', 'true');
           setCloudEnabled(true);
           try {
