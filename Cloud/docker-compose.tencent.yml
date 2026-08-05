@@ -38,7 +38,7 @@ services:
       TENCENT_STS_ROLE_ARN: ${TENCENT_STS_ROLE_ARN:?TENCENT_STS_ROLE_ARN is required}
       TENCENT_COS_BUCKET: ${TENCENT_COS_BUCKET:?TENCENT_COS_BUCKET is required}
       TENCENT_COS_REGION: ${TENCENT_COS_REGION:-ap-singapore}
-      TENCENT_OWNER_UIN: ${TENCENT_OWNER_UIN:?TENCENT_OWNER_UIN is required}
+      TENCENT_APP_ID: ${TENCENT_APP_ID:?TENCENT_APP_ID is required}
       RUST_LOG: ksamint_api=info,tower_http=info
     expose:
       - "8080"

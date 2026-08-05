@@ -727,7 +727,7 @@ async function downloadCosObject(
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function cosAuthorization({
+export async function cosAuthorization({
   method,
   host,
   path,
@@ -749,8 +749,8 @@ async function cosAuthorization({
     + `&x-cos-security-token=${percentEncode(token)}`;
   const httpString = `${method.toLowerCase()}\n${path}\n\n${canonicalHeaders}\n`;
   const stringToSign = `sha1\n${keyTime}\n${await sha1Hex(new TextEncoder().encode(httpString))}\n`;
-  const signKey = await hmacSha1(new TextEncoder().encode(secretKey), keyTime);
-  const signature = hex(await hmacSha1(signKey, stringToSign));
+  const signKey = hex(await hmacSha1(new TextEncoder().encode(secretKey), keyTime));
+  const signature = hex(await hmacSha1(new TextEncoder().encode(signKey), stringToSign));
   return `q-sign-algorithm=sha1&q-ak=${percentEncode(secretId)}`
     + `&q-sign-time=${keyTime}&q-key-time=${keyTime}`
     + `&q-header-list=${headerList}&q-url-param-list=&q-signature=${signature}`;

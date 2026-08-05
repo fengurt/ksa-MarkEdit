@@ -262,7 +262,7 @@ fn cos_policy(config: &CosConfig, vault_id: Uuid, read_only: bool) -> Value {
             "resource": [
                 format!(
                     "qcs::cos:{}:uid/{}:{}/vaults/{}/*",
-                    config.region, config.owner_uin, config.bucket, vault_id
+                    config.region, config.app_id, config.bucket, vault_id
                 )
             ]
         }]
@@ -316,7 +316,7 @@ mod tests {
             role_arn: "role".to_owned(),
             bucket: "bucket-123".to_owned(),
             region: "ap-singapore".to_owned(),
-            owner_uin: "123".to_owned(),
+            app_id: "123".to_owned(),
             duration_seconds: 900,
         }
     }
