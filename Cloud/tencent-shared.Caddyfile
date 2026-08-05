@@ -36,7 +36,7 @@ notes.apuch.cn {
 	}
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.notes.apuch.cn; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.notes.apuch.cn https://ksamint-vault-1308586823.cos.ap-singapore.myqcloud.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
 		-Server
