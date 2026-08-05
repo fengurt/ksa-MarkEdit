@@ -23,6 +23,8 @@ export type VaultSyncState = {
     contentDigest: string;
     objectDigest: string;
     byteSize: number;
+    kind?: 'markdown' | 'attachment';
+    mimeType?: string;
   }>;
 };
 

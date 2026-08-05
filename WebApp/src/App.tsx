@@ -26,6 +26,12 @@ import {
   suggestedConflictContent,
 } from './security/VaultMerge';
 import { VaultStorage } from './storage/VaultStorage';
+import type { ConversationInbox as ConversationInboxModule } from './conversation/ConversationInbox';
+import type {
+  ConversationImportDecision,
+  ConversationImportPlan,
+  ConversationImportSource,
+} from './conversation/types';
 import type {
   ConflictRecord,
   ConflictResolution,
@@ -44,6 +50,9 @@ const CoreEditor = lazy(() => import('./editor/CoreEditor').then(module => ({
 })));
 const MindmapStation = lazy(() => import('./graph/MindmapStation').then(module => ({
   default: module.MindmapStation,
+})));
+const ConversationImportDialog = lazy(() => import('./conversation/ConversationImportDialog').then(module => ({
+  default: module.ConversationImportDialog,
 })));
 
 export default function App() {
@@ -64,6 +73,9 @@ export default function App() {
   const [importing, setImporting] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictRecord[]>([]);
   const [conflictManagerOpen, setConflictManagerOpen] = useState(false);
+  const [conversationPlan, setConversationPlan] = useState<ConversationImportPlan>();
+  const [conversationUndo, setConversationUndo] = useState<string>();
+  const conversationInbox = useRef<ConversationInboxModule | undefined>(undefined);
   const saveTimer = useRef<number | undefined>(undefined);
   const selected = files.find(file => file.id === selectedId);
   const graph = useMemo(() => buildGraph(files), [files]);
@@ -129,12 +141,19 @@ export default function App() {
     setSyncing(true);
     try {
       const { syncWorkspaceToPrivateCloud } = await import('./security/VaultSyncClient');
+      const attachments = await Promise.all(
+        storage.listAllFiles()
+          .filter(file => file.kind === 'attachment')
+          .map(file => storage.readAttachment(file.id)),
+      );
       const report = await syncWorkspaceToPrivateCloud({
         workspaceId: storage.workspace().id,
         workspaceName: storage.workspace().name,
         files,
+        attachments,
       });
       const synchronized = await storage.replaceFiles(report.files);
+      await storage.replaceAttachments(report.attachments);
       const conflictHistory = await storage.appendConflicts(report.conflictRecords);
       setFiles(synchronized);
       setConflicts(conflictHistory);
@@ -251,6 +270,93 @@ export default function App() {
     } finally {
       setImporting(false);
     }
+  }
+
+  async function planConversationImport(sources: ConversationImportSource[]) {
+    if (!storage || !sources.length || importing) return;
+    setImporting(true);
+    try {
+      const [{ ConversationInbox }, { VaultConversationWorkspace }] = await Promise.all([
+        import('./conversation/ConversationInbox'),
+        import('./conversation/VaultConversationWorkspace'),
+      ]);
+      const inbox = new ConversationInbox(new VaultConversationWorkspace(storage));
+      conversationInbox.current = inbox;
+      const plan = await inbox.plan(sources);
+      if (!plan.items.length && plan.failures.length) {
+        throw new Error(plan.failures.map(failure => `${failure.sourceName}: ${failure.reason}`).join('\n'));
+      }
+      setConversationPlan(plan);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  function chooseConversationImport(kind: 'files' | 'folder' = 'files') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.zip,.json,.md,.markdown,.txt,.text,.html,.htm,.rtf,application/zip,application/json,text/plain,text/markdown,text/html,application/rtf';
+    if (kind === 'folder') {
+      input.setAttribute('webkitdirectory', '');
+      input.setAttribute('directory', '');
+    }
+    input.addEventListener('change', () => {
+      void planConversationImport(conversationSources([...input.files ?? []]));
+    }, { once: true });
+    input.click();
+  }
+
+  function conversationSources(files: File[]): ConversationImportSource[] {
+    return files.map(file => ({
+      kind: 'file',
+      name: file.webkitRelativePath || file.name,
+      mimeType: file.type,
+      lastModified: file.lastModified,
+      read: async () => new Uint8Array(await file.arrayBuffer()),
+    }));
+  }
+
+  async function pasteConversation(text?: string) {
+    try {
+      const content = text ?? await navigator.clipboard.readText();
+      if (!content.trim()) throw new Error(t('conversationClipboardEmpty'));
+      const bytes = new TextEncoder().encode(content);
+      await planConversationImport([{
+        kind: 'clipboard',
+        name: 'Clipboard.md',
+        mimeType: 'text/markdown',
+        read: async () => bytes,
+      }]);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function applyConversationImport(decisions: ConversationImportDecision[]) {
+    if (!storage || !conversationPlan || !conversationInbox.current) return;
+    const report = await conversationInbox.current.apply(conversationPlan, decisions);
+    const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
+    setFiles(loaded);
+    setConversationPlan(undefined);
+    setConversationUndo(report.transactionId);
+    if (report.files[0]) {
+      setSelectedId(report.files[0].id);
+      setRoute('editor');
+    }
+    setNotice(`${report.created} ${t('conversationNew')} · ${report.updated} ${t('conversationUpdates')} · ${report.skipped} ${t('conversationDuplicates')}`);
+  }
+
+  async function undoConversationImport() {
+    if (!storage || !conversationUndo || !conversationInbox.current) return;
+    await conversationInbox.current.undo(conversationUndo);
+    const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
+    setFiles(loaded);
+    setSelectedId(current => current && loaded.some(file => file.id === current) ? current : loaded[0]?.id);
+    setConversationUndo(undefined);
+    setNotice(t('conversationUndoComplete'));
   }
 
   async function resolveConflict(
@@ -495,6 +601,9 @@ export default function App() {
             onMindmap={() => setRoute('mindmap')}
             onChooseImport={chooseImport}
             onImportURL={importURL}
+            onChooseConversation={chooseConversationImport}
+            onDropConversation={files => planConversationImport(conversationSources(files))}
+            onPasteConversation={pasteConversation}
             onOpenConflicts={() => setConflictManagerOpen(true)}
           />
         ) : route === 'mindmap' ? (
@@ -575,6 +684,11 @@ export default function App() {
           {t('undo')} · {taxonomyUndo.length} {t('affectedFiles').toLocaleLowerCase()}
         </button>
       )}
+      {conversationUndo && (
+        <button className="undo-toast conversation-undo" type="button" onClick={() => void undoConversationImport()}>
+          {t('undo')} · {t('conversationImport')}
+        </button>
+      )}
       {tagManagerOpen && (
         <TagManagerDialog
           files={files}
@@ -588,6 +702,15 @@ export default function App() {
           onClose={() => setConflictManagerOpen(false)}
           onResolve={resolveConflict}
         />
+      )}
+      {conversationPlan && (
+        <Suspense fallback={<RouteLoading />}>
+          <ConversationImportDialog
+            plan={conversationPlan}
+            onClose={() => setConversationPlan(undefined)}
+            onApply={applyConversationImport}
+          />
+        </Suspense>
       )}
     </div>
   );
@@ -634,6 +757,9 @@ function Hub({
   onMindmap,
   onChooseImport,
   onImportURL,
+  onChooseConversation,
+  onDropConversation,
+  onPasteConversation,
   onOpenConflicts,
 }: {
   files: NoteFile[];
@@ -644,6 +770,9 @@ function Hub({
   onMindmap: () => void;
   onChooseImport: (kind: 'files' | 'folder') => void;
   onImportURL: (url: string) => Promise<void>;
+  onChooseConversation: (kind?: 'files' | 'folder') => void;
+  onDropConversation: (files: File[]) => Promise<void>;
+  onPasteConversation: (text?: string) => Promise<void>;
   onOpenConflicts: () => void;
 }) {
   const tags = taxonomy(files);
@@ -704,6 +833,12 @@ function Hub({
           onChoose={onChooseImport}
           onImportURL={onImportURL}
         />
+        <ConversationInboxPanel
+          importing={importing}
+          onChoose={onChooseConversation}
+          onDrop={onDropConversation}
+          onPaste={onPasteConversation}
+        />
         <article className="hub-panel action-panel conflict-summary">
           <p className="eyebrow">{t('versionHistory')}</p>
           <h2>{conflicts.filter(record => !record.resolution).length} {t('unresolvedConflicts')}</h2>
@@ -712,6 +847,59 @@ function Hub({
         </article>
       </section>
     </main>
+  );
+}
+
+function ConversationInboxPanel({
+  importing,
+  onChoose,
+  onDrop,
+  onPaste,
+}: {
+  importing: boolean;
+  onChoose: (kind?: 'files' | 'folder') => void;
+  onDrop: (files: File[]) => Promise<void>;
+  onPaste: (text?: string) => Promise<void>;
+}) {
+  const [draft, setDraft] = useState('');
+  return (
+    <article
+      className="hub-panel conversation-inbox-panel"
+      onDragOver={event => {
+        if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+      }}
+      onDrop={event => {
+        if (!event.dataTransfer.files.length) return;
+        event.preventDefault();
+        void onDrop([...event.dataTransfer.files]);
+      }}
+    >
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Claude · ChatGPT · Markdown</p>
+          <h2>{t('conversationInbox')}</h2>
+        </div>
+      </div>
+      <p>{t('conversationDescription')}</p>
+      <textarea
+        value={draft}
+        rows={4}
+        placeholder={t('conversationPastePlaceholder')}
+        onChange={event => setDraft(event.target.value)}
+        onPaste={event => {
+          if (!draft && event.clipboardData.getData('text/plain')) {
+            event.currentTarget.dataset.pasted = 'true';
+          }
+        }}
+      />
+      <div className="import-actions">
+        <button type="button" disabled={importing} onClick={() => onChoose('files')}>{t('conversationImportExport')}</button>
+        <button type="button" disabled={importing} onClick={() => onChoose('folder')}>{t('importFolder')}</button>
+        <button type="button" disabled={importing} onClick={() => {
+          void onPaste(draft || undefined).then(() => setDraft(''));
+        }}>{draft ? t('conversationPreview') : t('conversationReadClipboard')}</button>
+      </div>
+    </article>
   );
 }
 

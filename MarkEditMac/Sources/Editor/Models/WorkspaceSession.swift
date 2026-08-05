@@ -60,6 +60,7 @@ struct WorkspaceHubSnapshot: Codable {
   let syncEnabled: Bool
   let backupEnabled: Bool
   let accountServiceStatus: String
+  let conversationPendingCount: Int
 
   @MainActor
   static func local() async -> Self {
@@ -78,7 +79,8 @@ struct WorkspaceHubSnapshot: Codable {
       accountEnabled: false,
       syncEnabled: false,
       backupEnabled: false,
-      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus
+      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus,
+      conversationPendingCount: ConversationCaptureCoordinator.shared.pendingCount
     )
   }
 }
@@ -327,7 +329,8 @@ final class WorkspaceSession {
       accountEnabled: sync?.accountEnabled == true,
       syncEnabled: sync?.syncEnabled == true,
       backupEnabled: sync?.cosBackupEnabled == true || sync?.githubBackupEnabled == true,
-      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus
+      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus,
+      conversationPendingCount: ConversationCaptureCoordinator.shared.pendingCount
     )
   }
 

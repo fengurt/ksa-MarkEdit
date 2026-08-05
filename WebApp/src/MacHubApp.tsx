@@ -35,6 +35,7 @@ export type MacHubSnapshot = {
   syncEnabled: boolean;
   backupEnabled: boolean;
   accountServiceStatus: 'checking' | 'online' | 'offline';
+  conversationPendingCount?: number;
 };
 
 declare global {
@@ -106,6 +107,12 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
         </div>
       </header>
       <section className="hub-grid">
+        <article className="hub-panel action-panel conversation-inbox-panel">
+          <p className="eyebrow">Claude · ChatGPT · Clipboard</p>
+          <h2>{t('conversationInbox')}</h2>
+          <p>{snapshot.conversationPendingCount ?? 0} {t('needsReview').toLocaleLowerCase()}</p>
+          <button type="button" onClick={() => send('openConversationInbox')}>{t('open')}</button>
+        </article>
         <article className="hub-panel recent-panel">
           <div className="panel-heading">
             <h2>{t('recentDocuments')}</h2>

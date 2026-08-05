@@ -17,6 +17,7 @@ struct GeneralSettingsView: View {
   @State private var newFilenameExtension = AppPreferences.General.newFilenameExtension
   @State private var defaultTextEncoding = AppPreferences.General.defaultTextEncoding
   @State private var defaultLineEndings = AppPreferences.General.defaultLineEndings
+  @State private var conversationCaptureEnabled = AppPreferences.General.conversationCaptureEnabled
 
   var body: some View {
     SettingsForm {
@@ -84,6 +85,19 @@ struct GeneralSettingsView: View {
           AppPreferences.General.defaultLineEndings = defaultLineEndings
         }
         .formMenuPicker()
+      }
+
+      Section {
+        Toggle("Capture conversations from clipboard", isOn: $conversationCaptureEnabled)
+          .onChange(of: conversationCaptureEnabled) {
+            ConversationCaptureCoordinator.shared.setEnabled(conversationCaptureEnabled)
+          }
+          .formLabel(String(localized: "Conversation Inbox"))
+          .formBreathingInset()
+
+        Text("High-confidence Claude and ChatGPT transcripts are saved to Conversations. Other text stays encrypted for 30 days until reviewed.")
+          .font(.caption)
+          .foregroundStyle(.secondary)
       }
     }
   }
