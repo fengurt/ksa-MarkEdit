@@ -33,6 +33,12 @@ services:
       KSAMINT_PUBLIC_ORIGIN: https://notes.apuch.cn
       KSAMINT_RP_ID: notes.apuch.cn
       KSAMINT_ALLOW_REGISTRATION: ${KSAMINT_ALLOW_REGISTRATION:-true}
+      TENCENT_SECRET_ID: ${TENCENT_SECRET_ID:?TENCENT_SECRET_ID is required}
+      TENCENT_SECRET_KEY: ${TENCENT_SECRET_KEY:?TENCENT_SECRET_KEY is required}
+      TENCENT_STS_ROLE_ARN: ${TENCENT_STS_ROLE_ARN:?TENCENT_STS_ROLE_ARN is required}
+      TENCENT_COS_BUCKET: ${TENCENT_COS_BUCKET:?TENCENT_COS_BUCKET is required}
+      TENCENT_COS_REGION: ${TENCENT_COS_REGION:-ap-singapore}
+      TENCENT_OWNER_UIN: ${TENCENT_OWNER_UIN:?TENCENT_OWNER_UIN is required}
       RUST_LOG: ksamint_api=info,tower_http=info
     expose:
       - "8080"
