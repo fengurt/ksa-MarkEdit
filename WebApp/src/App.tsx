@@ -20,6 +20,12 @@ import {
 import { t } from './i18n';
 import { canonicalTag } from './markdown/metadata';
 import { renderMarkdown } from './markdown/preview';
+import {
+  planWorkspaceReplace,
+  type ReplaceOptions,
+  type ReplaceScope,
+  type WorkspaceReplacePlan,
+} from './search/replace';
 import { searchNotes } from './search/search';
 import {
   combineConflictContent,
@@ -62,6 +68,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>('hub');
   const [sidebar, setSidebar] = useState<SidebarMode>('files');
   const [query, setQuery] = useState('');
+  const [replacePlan, setReplacePlan] = useState<WorkspaceReplacePlan>();
+  const [replaceUndo, setReplaceUndo] = useState<NoteFile[]>();
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
@@ -495,6 +503,73 @@ export default function App() {
     }
   }
 
+  function previewReplace(options: ReplaceOptions, scope: ReplaceScope) {
+    try {
+      const plan = planWorkspaceReplace(files, options, scope, selectedId);
+      if (!plan.changes.length) {
+        setNotice(t('noReplaceMatches'));
+        return;
+      }
+      setReplacePlan(plan);
+      setNotice(undefined);
+    } catch {
+      setNotice(t('replaceInvalid'));
+    }
+  }
+
+  async function applyReplace(plan: WorkspaceReplacePlan, selectedFileIds: string[]) {
+    if (!storage || !selectedFileIds.length) return;
+    const selectedIds = new Set(selectedFileIds);
+    const changes = plan.changes.filter(change => selectedIds.has(change.fileId));
+    const originals = changes.map(change => files.find(file => file.id === change.fileId));
+    if (originals.some(file => !file) || changes.some(change => (
+      files.find(file => file.id === change.fileId)?.modifiedAt !== change.sourceModifiedAt
+    ))) {
+      setReplacePlan(undefined);
+      setNotice(t('replacePlanStale'));
+      return;
+    }
+    const snapshots = originals.filter((file): file is NoteFile => Boolean(file)).map(file => structuredClone(file));
+    const updated: NoteFile[] = [];
+    window.clearTimeout(saveTimer.current);
+    setSaving(true);
+    try {
+      for (const change of changes) {
+        updated.push(await storage.writeFile(change.fileId, change.content));
+      }
+      const byId = new Map(updated.map(file => [file.id, file]));
+      setFiles(current => current.map(file => byId.get(file.id) ?? file));
+      setReplaceUndo(snapshots);
+      setReplacePlan(undefined);
+      const replacements = changes.reduce((total, change) => total + change.occurrences, 0);
+      setNotice(`${replacements} ${t('replacementsApplied')} · ${changes.length} ${t('affectedFiles').toLocaleLowerCase()}`);
+    } catch (error) {
+      for (const snapshot of snapshots) {
+        await storage.writeFile(snapshot.id, snapshot.content);
+      }
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function undoReplace() {
+    if (!storage || !replaceUndo) return;
+    const restored: NoteFile[] = [];
+    setSaving(true);
+    try {
+      for (const snapshot of replaceUndo) {
+        restored.push(await storage.writeFile(snapshot.id, snapshot.content));
+      }
+      const byId = new Map(restored.map(file => [file.id, file]));
+      setFiles(current => current.map(file => byId.get(file.id) ?? file));
+      setReplaceUndo(undefined);
+      setNotice(t('replaceUndoComplete'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (!storage) {
     return (
       <Welcome
@@ -636,8 +711,12 @@ export default function App() {
                 <SearchPanel
                   query={query}
                   hits={hits}
+                  hasCurrentFile={Boolean(selectedId)}
+                  canUndo={Boolean(replaceUndo)}
                   onQuery={setQuery}
                   onOpen={hit => openFile(hit.fileId)}
+                  onPreview={previewReplace}
+                  onUndo={() => void undoReplace()}
                 />
               )}
               {sidebar === 'tags' && (
@@ -697,6 +776,11 @@ export default function App() {
           {t('undo')} · {t('conversationImport')}
         </button>
       )}
+      {replaceUndo && (
+        <button className="undo-toast replace-undo" type="button" onClick={() => void undoReplace()}>
+          {t('undo')} · {t('replace')}
+        </button>
+      )}
       {tagManagerOpen && (
         <TagManagerDialog
           files={files}
@@ -719,6 +803,14 @@ export default function App() {
             onApply={applyConversationImport}
           />
         </Suspense>
+      )}
+      {replacePlan && (
+        <ReplacePreviewDialog
+          key={`${replacePlan.scope}-${replacePlan.occurrenceCount}-${replacePlan.options.replacement}`}
+          plan={replacePlan}
+          onClose={() => setReplacePlan(undefined)}
+          onApply={selectedIds => void applyReplace(replacePlan, selectedIds)}
+        />
       )}
     </div>
   );
@@ -1183,14 +1275,26 @@ function FilesPanel({
 function SearchPanel({
   query,
   hits,
+  hasCurrentFile,
+  canUndo,
   onQuery,
   onOpen,
+  onPreview,
+  onUndo,
 }: {
   query: string;
   hits: SearchHit[];
+  hasCurrentFile: boolean;
+  canUndo: boolean;
   onQuery: (value: string) => void;
   onOpen: (hit: SearchHit) => void;
+  onPreview: (options: ReplaceOptions, scope: ReplaceScope) => void;
+  onUndo: () => void;
 }) {
+  const [replacement, setReplacement] = useState('');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [regularExpression, setRegularExpression] = useState(false);
+  const options = { find: query, replacement, caseSensitive, regularExpression };
   return (
     <section className="sidebar-panel">
       <header className="sidebar-header"><h2>{t('search')}</h2><span>{hits.length}</span></header>
@@ -1198,6 +1302,23 @@ function SearchPanel({
         <span className="sr-only">{t('searchWorkspace')}</span>
         <input autoFocus value={query} onChange={event => onQuery(event.target.value)} placeholder={t('searchWorkspace')} />
       </label>
+      <section className="replace-controls" aria-label={t('replace')}>
+        <input
+          value={replacement}
+          onChange={event => setReplacement(event.target.value)}
+          placeholder={t('replaceWith')}
+          aria-label={t('replaceWith')}
+        />
+        <div className="replace-options">
+          <label><input type="checkbox" checked={caseSensitive} onChange={event => setCaseSensitive(event.target.checked)} />{t('matchCase')}</label>
+          <label><input type="checkbox" checked={regularExpression} onChange={event => setRegularExpression(event.target.checked)} />{t('regularExpression')}</label>
+        </div>
+        <div className="replace-actions">
+          <button type="button" disabled={!query || !hasCurrentFile} onClick={() => onPreview(options, 'current')}>{t('replaceCurrent')}</button>
+          <button type="button" disabled={!query} onClick={() => onPreview(options, 'workspace')}>{t('replaceWorkspace')}</button>
+        </div>
+        {canUndo && <button className="replace-undo-inline" type="button" onClick={onUndo}>{t('undoReplace')}</button>}
+      </section>
       {query && !hits.length ? <p className="empty-copy">{t('noResults')}</p> : (
         <ul className="search-list">
           {hits.map(hit => (
@@ -1211,6 +1332,65 @@ function SearchPanel({
         </ul>
       )}
     </section>
+  );
+}
+
+function ReplacePreviewDialog({
+  plan,
+  onClose,
+  onApply,
+}: {
+  plan: WorkspaceReplacePlan;
+  onClose: () => void;
+  onApply: (selectedFileIds: string[]) => void;
+}) {
+  const [selected, setSelected] = useState(() => new Set(plan.changes.map(change => change.fileId)));
+  const selectedOccurrences = plan.changes.reduce((total, change) => (
+    selected.has(change.fileId) ? total + change.occurrences : total
+  ), 0);
+  return (
+    <div className="dialog-backdrop">
+      <section className="taxonomy-dialog replace-dialog" role="dialog" aria-modal="true" aria-label={t('replacePreview')}>
+        <header>
+          <div><p className="eyebrow">{t('replace')}</p><h2>{t('replacePreview')}</h2></div>
+          <button type="button" onClick={onClose}>×</button>
+        </header>
+        <div className="replace-summary">
+          <strong>{selectedOccurrences}</strong>
+          <span>{t('occurrences')} · {selected.size} {t('affectedFiles').toLocaleLowerCase()}</span>
+          <code>{plan.options.find} → {plan.options.replacement || '∅'}</code>
+          <div>
+            <button type="button" onClick={() => setSelected(new Set(plan.changes.map(change => change.fileId)))}>{t('selectAll')}</button>
+            <button type="button" onClick={() => setSelected(new Set())}>{t('clearAll')}</button>
+          </div>
+        </div>
+        <ul className="replace-preview-list">
+          {plan.changes.map(change => (
+            <li key={change.fileId}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.has(change.fileId)}
+                  onChange={event => setSelected(current => {
+                    const next = new Set(current);
+                    if (event.target.checked) next.add(change.fileId);
+                    else next.delete(change.fileId);
+                    return next;
+                  })}
+                />
+                <span><strong>{change.path}</strong><small>{change.occurrences} {t('occurrences')}</small></span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <footer>
+          <button type="button" onClick={onClose}>{t('cancel')}</button>
+          <button className="primary-button" type="button" disabled={!selected.size} onClick={() => onApply([...selected])}>
+            {t('replaceSelected')}
+          </button>
+        </footer>
+      </section>
+    </div>
   );
 }
 
