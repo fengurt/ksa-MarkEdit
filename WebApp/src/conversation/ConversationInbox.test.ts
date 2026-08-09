@@ -172,6 +172,19 @@ describe('ConversationInbox interface', () => {
     expect(workspace.files).toEqual([]);
   });
 
+  it('decodes signed RTF Unicode and Windows-1252 escapes without losing CJK text', async () => {
+    const workspace = new MemoryWorkspace();
+    const inbox = new ConversationInbox(workspace);
+    const rtf = String.raw`{\rtf1\ansi\uc1 User: \u-29705?\u-30237?\u-28214?\par Assistant: \u26085?\u26412?\u-30050? Caf\'e9}`;
+    const plan = await inbox.plan([source('multilingual.rtf', rtf)]);
+
+    expect(plan.failures).toEqual([]);
+    expect(plan.items[0].conversation.messages.map(message => message.content)).toEqual([
+      '请解释',
+      '日本語 Café',
+    ]);
+  });
+
   it('persists undo transactions across inbox instances', async () => {
     const workspace = new MemoryWorkspace();
     const first = new ConversationInbox(workspace);

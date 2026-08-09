@@ -305,11 +305,106 @@ function htmlToText(html: string): string {
 }
 
 function rtfToText(value: string): string {
-  return value
-    .replaceAll(/\\par[d]?\b/gu, '\n')
-    .replaceAll(/\\'[0-9a-f]{2}/giu, match => String.fromCharCode(Number.parseInt(match.slice(2), 16)))
-    .replaceAll(/\\[a-z]+-?\d*\s?/giu, '')
-    .replaceAll(/[{}]/gu, '');
+  type RTFState = { ignorable: boolean; unicodeFallbackLength: number };
+  const destinations = new Set([
+    'colortbl', 'datastore', 'filetbl', 'fonttbl', 'footer', 'footerf', 'footerl',
+    'footerr', 'header', 'headerf', 'headerl', 'headerr', 'info', 'listtable',
+    'listoverridetable', 'object', 'pict', 'revtbl', 'stylesheet', 'themedata',
+  ]);
+  const states: RTFState[] = [];
+  let state: RTFState = { ignorable: false, unicodeFallbackLength: 1 };
+  let output = '';
+  let index = 0;
+
+  while (index < value.length) {
+    const character = value[index];
+    if (character === '{') {
+      states.push({ ...state });
+      index += 1;
+      continue;
+    }
+    if (character === '}') {
+      state = states.pop() ?? state;
+      index += 1;
+      continue;
+    }
+    if (character !== '\\') {
+      if (!state.ignorable && character !== '\r' && character !== '\n') output += character;
+      index += 1;
+      continue;
+    }
+
+    const symbol = value[index + 1];
+    if (symbol === '\\' || symbol === '{' || symbol === '}') {
+      if (!state.ignorable) output += symbol;
+      index += 2;
+      continue;
+    }
+    if (symbol === '*') {
+      state.ignorable = true;
+      index += 2;
+      continue;
+    }
+    if (symbol === "'" && /^[0-9a-f]{2}$/iu.test(value.slice(index + 2, index + 4))) {
+      if (!state.ignorable) output += decodeRTFByte(Number.parseInt(value.slice(index + 2, index + 4), 16));
+      index += 4;
+      continue;
+    }
+    if (symbol === '~') {
+      if (!state.ignorable) output += '\u00a0';
+      index += 2;
+      continue;
+    }
+    if (symbol === '_') {
+      if (!state.ignorable) output += '\u2011';
+      index += 2;
+      continue;
+    }
+    if (symbol === '-') {
+      index += 2;
+      continue;
+    }
+
+    const control = /^\\([a-z]+)(-?\d+)? ?/iu.exec(value.slice(index));
+    if (!control) {
+      index += 2;
+      continue;
+    }
+    const word = control[1].toLocaleLowerCase('en-US');
+    const parameter = control[2] === undefined ? undefined : Number.parseInt(control[2], 10);
+    index += control[0].length;
+    if (destinations.has(word)) {
+      state.ignorable = true;
+    } else if (word === 'uc' && parameter !== undefined) {
+      state.unicodeFallbackLength = Math.max(0, parameter);
+    } else if (word === 'u' && parameter !== undefined) {
+      if (!state.ignorable) output += String.fromCharCode(parameter < 0 ? parameter + 65_536 : parameter);
+      index = skipRTFFallback(value, index, state.unicodeFallbackLength);
+    } else if (!state.ignorable && (word === 'par' || word === 'line')) {
+      output += '\n';
+    } else if (!state.ignorable && word === 'tab') {
+      output += '\t';
+    }
+  }
+  return output;
+}
+
+function decodeRTFByte(byte: number): string {
+  return new TextDecoder('windows-1252').decode(Uint8Array.of(byte));
+}
+
+function skipRTFFallback(value: string, start: number, count: number): number {
+  let index = start;
+  for (let skipped = 0; skipped < count && index < value.length; skipped += 1) {
+    if (value[index] === '\\' && value[index + 1] === "'") {
+      index += 4;
+    } else if (value[index] === '\\' && ['\\', '{', '}'].includes(value[index + 1] ?? '')) {
+      index += 2;
+    } else {
+      index += 1;
+    }
+  }
+  return index;
 }
 
 function role(value: unknown): ConversationMessageV1['role'] {

@@ -360,26 +360,60 @@ pub async fn put_device(
             "device keys must be uncompressed P-256 public points".to_owned(),
         ));
     }
-    let result = sqlx::query(
+    let mut transaction = state.pool.begin().await?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(vault_id.to_string())
+        .execute(&mut *transaction)
+        .await?;
+    let existing = sqlx::query_as::<_, (Uuid, Vec<u8>, Vec<u8>, bool)>(
+        "SELECT vault_id, hpke_public_key, signing_public_key, revoked_at IS NOT NULL \
+         FROM devices WHERE id = $1",
+    )
+    .bind(device_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some((existing_vault, existing_hpke, existing_signing, revoked)) = existing {
+        if existing_vault != vault_id
+            || revoked
+            || existing_hpke != hpke
+            || existing_signing != signing
+        {
+            return Err(ApiError::Conflict(
+                "device identity belongs to another Vault, is revoked, or changed its keys"
+                    .to_owned(),
+            ));
+        }
+        sqlx::query("UPDATE devices SET wrapped_grant = $1, updated_at = now() WHERE id = $2")
+            .bind(wrapped)
+            .bind(device_id)
+            .execute(&mut *transaction)
+            .await?;
+        transaction.commit().await?;
+        return Ok(Json(json!({"id": device_id})));
+    }
+    let vault_has_device =
+        sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM devices WHERE vault_id = $1)")
+            .bind(vault_id)
+            .fetch_one(&mut *transaction)
+            .await?;
+    if vault_has_device {
+        return Err(ApiError::Conflict(
+            "a new device requires a grant from an authorized Vault device".to_owned(),
+        ));
+    }
+    sqlx::query(
         "INSERT INTO devices \
          (id, vault_id, hpke_public_key, signing_public_key, wrapped_grant) \
-         VALUES ($1, $2, $3, $4, $5) \
-         ON CONFLICT (id) DO UPDATE SET wrapped_grant = EXCLUDED.wrapped_grant, \
-         updated_at = now() WHERE devices.vault_id = EXCLUDED.vault_id \
-         AND devices.revoked_at IS NULL",
+         VALUES ($1, $2, $3, $4, $5)",
     )
     .bind(device_id)
     .bind(vault_id)
     .bind(hpke)
     .bind(signing)
     .bind(wrapped)
-    .execute(&state.pool)
+    .execute(&mut *transaction)
     .await?;
-    if result.rows_affected() == 0 {
-        return Err(ApiError::Conflict(
-            "device identity belongs to another Vault or is revoked".to_owned(),
-        ));
-    }
+    transaction.commit().await?;
     Ok(Json(json!({"id": device_id})))
 }
 

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { cosAuthorization } from './VaultSyncClient';
+import { assertDeviceAuthorized, cosAuthorization } from './VaultSyncClient';
 
 describe('COS request signing', () => {
   afterEach(() => {
@@ -24,5 +24,24 @@ describe('COS request signing', () => {
       + '&q-header-list=host;x-cos-security-token&q-url-param-list='
       + '&q-signature=4437e6b65aae7c0d7d657c89dbe332f9b24b8d4c',
     );
+  });
+});
+
+describe('Vault device authorization', () => {
+  it('fails closed when a new local key encounters an existing remote Vault', () => {
+    expect(() => assertDeviceAuthorized(false, {
+      sequence: 1,
+      digest: '00'.repeat(32),
+      signedCbor: '',
+    })).toThrow(/Authorize this device/u);
+  });
+
+  it('allows the first device or an existing local identity to continue', () => {
+    expect(() => assertDeviceAuthorized(false, undefined)).not.toThrow();
+    expect(() => assertDeviceAuthorized(true, {
+      sequence: 1,
+      digest: '00'.repeat(32),
+      signedCbor: '',
+    })).not.toThrow();
   });
 });

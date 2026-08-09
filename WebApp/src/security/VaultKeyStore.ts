@@ -4,6 +4,7 @@ const MASTER_KEY_AAD = new TextEncoder().encode('ksamint/web-master-key/v1');
 
 export type VaultDeviceIdentity = {
   deviceId: string;
+  syncAuthorized: boolean;
   masterKey: Uint8Array;
   signingPrivateKey: CryptoKey;
   signingPublicKey: CryptoKey;
@@ -30,6 +31,7 @@ export type VaultSyncState = {
 
 type StoredIdentity = {
   deviceId: string;
+  syncAuthorized?: boolean;
   wrappingKey: CryptoKey;
   masterKeyNonce: Uint8Array;
   wrappedMasterKey: ArrayBuffer;
@@ -72,6 +74,7 @@ export async function loadOrCreateVaultIdentity(
   const agreement = await persistentKeyPair('ECDH', ['deriveBits']);
   const stored: StoredIdentity = {
     deviceId: crypto.randomUUID(),
+    syncAuthorized: false,
     wrappingKey,
     masterKeyNonce,
     wrappedMasterKey,
@@ -112,6 +115,12 @@ export async function saveVaultSyncState(
   });
 }
 
+export async function markVaultIdentityAuthorized(workspaceId: string): Promise<void> {
+  const identity = await readIdentity(workspaceId);
+  if (!identity || identity.syncAuthorized) return;
+  await writeIdentity(workspaceId, { ...identity, syncAuthorized: true });
+}
+
 async function openIdentity(
   identity: StoredIdentity,
   workspaceId: string,
@@ -131,6 +140,7 @@ async function openIdentity(
   }
   return {
     deviceId: identity.deviceId,
+    syncAuthorized: identity.syncAuthorized ?? true,
     masterKey,
     signingPrivateKey: identity.signingPrivateKey,
     signingPublicKey: identity.signingPublicKey,

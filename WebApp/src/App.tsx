@@ -32,6 +32,7 @@ import {
   suggestedConflictContent,
 } from './security/VaultMerge';
 import { VaultStorage } from './storage/VaultStorage';
+import { PendingFileSave } from './storage/PendingFileSave';
 import type { ConversationInbox as ConversationInboxModule } from './conversation/ConversationInbox';
 import type {
   ConversationImportDecision,
@@ -84,7 +85,8 @@ export default function App() {
   const [conversationPlan, setConversationPlan] = useState<ConversationImportPlan>();
   const [conversationUndo, setConversationUndo] = useState<string>();
   const conversationInbox = useRef<ConversationInboxModule | undefined>(undefined);
-  const saveTimer = useRef<number | undefined>(undefined);
+  const pendingFileSave = useRef<PendingFileSave<NoteFile> | undefined>(undefined);
+  const openFileRequest = useRef(0);
   const selected = files.find(file => file.id === selectedId);
   const graph = useMemo(() => buildGraph(files), [files]);
   const hits = useMemo(() => searchNotes(files, query), [files, query]);
@@ -124,6 +126,24 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!storage) return;
+    const coordinator = new PendingFileSave(
+      (fileId, content) => storage.writeFile(fileId, content),
+      (saved, edit) => {
+        setFiles(current => current.map(file => (
+          file.id === saved.id && file.content === edit.content ? saved : file
+        )));
+      },
+      setSaving,
+      error => setNotice(error instanceof Error ? error.message : String(error)),
+    );
+    pendingFileSave.current = coordinator;
+    return () => {
+      if (pendingFileSave.current === coordinator) pendingFileSave.current = undefined;
+    };
+  }, [storage]);
+
   async function continueOffline() {
     try {
       const opened = await VaultStorage.open();
@@ -144,10 +164,9 @@ export default function App() {
     if (!storage || syncing) {
       return;
     }
-    window.clearTimeout(saveTimer.current);
-    setSaving(false);
     setSyncing(true);
     try {
+      await flushPendingEdit();
       const { syncWorkspaceToPrivateCloud } = await import('./security/VaultSyncClient');
       const attachments = await Promise.all(
         storage.listAllFiles()
@@ -182,8 +201,15 @@ export default function App() {
   }
 
   async function openFile(id: string) {
+    const request = ++openFileRequest.current;
+    await flushPendingEdit();
+    if (request !== openFileRequest.current) return;
     setSelectedId(id);
     setRoute('editor');
+  }
+
+  async function flushPendingEdit() {
+    await pendingFileSave.current?.flush();
   }
 
   function changeContent(content: string) {
@@ -195,13 +221,7 @@ export default function App() {
         ? { ...file, content, metadata: parseMetadataLazy(content), modifiedAt: Date.now() }
         : file
     )));
-    setSaving(true);
-    window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(async () => {
-      const saved = await storage.writeFile(selected.id, content);
-      setFiles(current => current.map(file => file.id === saved.id ? saved : file));
-      setSaving(false);
-    }, 450);
+    pendingFileSave.current?.queue(selected.id, content);
   }
 
   async function createNote() {
@@ -345,6 +365,7 @@ export default function App() {
 
   async function applyConversationImport(decisions: ConversationImportDecision[]) {
     if (!storage || !conversationPlan || !conversationInbox.current) return;
+    await flushPendingEdit();
     const report = await conversationInbox.current.apply(conversationPlan, decisions);
     const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
     setFiles(loaded);
@@ -359,6 +380,7 @@ export default function App() {
 
   async function undoConversationImport() {
     if (!storage || !conversationUndo || !conversationInbox.current) return;
+    await flushPendingEdit();
     await conversationInbox.current.undo(conversationUndo);
     const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
     setFiles(loaded);
@@ -375,6 +397,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const target = files.find(file => file.id === record.fileId)
       ?? files.find(file => record.preservedFileIds.includes(file.id));
     if (!target) {
@@ -395,6 +418,7 @@ export default function App() {
     if (!storage || !selected || !tag.trim()) {
       return;
     }
+    await flushPendingEdit();
     const tags = [...selected.metadata.tags, tag.trim()];
     const updated = await storage.setMetadata(selected.id, {
       ...selected.metadata,
@@ -407,6 +431,7 @@ export default function App() {
     if (!storage || !selected) {
       return;
     }
+    await flushPendingEdit();
     const identity = canonicalTag(tag);
     const updated = await storage.setMetadata(selected.id, {
       ...selected.metadata,
@@ -419,6 +444,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const file = files.find(value => value.id === fileId);
     if (!file) {
       return;
@@ -441,6 +467,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const sourceIdentity = canonicalTag(source);
     const affected = files.filter(file => (
       kind === 'tag'
@@ -489,6 +516,7 @@ export default function App() {
     if (!storage || !taxonomyUndo) {
       return;
     }
+    await flushPendingEdit();
     const restored: NoteFile[] = [];
     setSaving(true);
     try {
@@ -519,6 +547,7 @@ export default function App() {
 
   async function applyReplace(plan: WorkspaceReplacePlan, selectedFileIds: string[]) {
     if (!storage || !selectedFileIds.length) return;
+    await flushPendingEdit();
     const selectedIds = new Set(selectedFileIds);
     const changes = plan.changes.filter(change => selectedIds.has(change.fileId));
     const originals = changes.map(change => files.find(file => file.id === change.fileId));
@@ -531,7 +560,6 @@ export default function App() {
     }
     const snapshots = originals.filter((file): file is NoteFile => Boolean(file)).map(file => structuredClone(file));
     const updated: NoteFile[] = [];
-    window.clearTimeout(saveTimer.current);
     setSaving(true);
     try {
       for (const change of changes) {
@@ -555,6 +583,7 @@ export default function App() {
 
   async function undoReplace() {
     if (!storage || !replaceUndo) return;
+    await flushPendingEdit();
     const restored: NoteFile[] = [];
     setSaving(true);
     try {

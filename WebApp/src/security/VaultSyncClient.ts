@@ -30,6 +30,7 @@ import {
 import {
   loadOrCreateVaultIdentity,
   loadVaultSyncState,
+  markVaultIdentityAuthorized,
   saveVaultSyncState,
   type VaultSyncState,
 } from './VaultKeyStore';
@@ -65,6 +66,8 @@ export async function syncWorkspaceToPrivateCloud({
     const vaultId = await resolveVaultID(state, workspaceName);
     state.vaultId = vaultId;
     await saveVaultSyncState(workspaceId, state);
+    const remoteManifest = await latestManifest(vaultId);
+    assertDeviceAuthorized(identity.syncAuthorized, remoteManifest);
     const signingPublicKey = new Uint8Array(
       await crypto.subtle.exportKey('raw', identity.signingPublicKey),
     );
@@ -78,8 +81,8 @@ export async function syncWorkspaceToPrivateCloud({
       signingPublicKey: base64(signingPublicKey),
       wrappedGrant: base64(identity.wrappedMasterKey),
     });
+    await markVaultIdentityAuthorized(workspaceId);
 
-    const remoteManifest = await latestManifest(vaultId);
     if (!remoteManifest && state.previousDigest) {
       throw new Error('The remote Vault history is unavailable; upload was stopped');
     }
@@ -248,6 +251,17 @@ export async function syncWorkspaceToPrivateCloud({
     };
   } finally {
     identity.masterKey.fill(0);
+  }
+}
+
+export function assertDeviceAuthorized(
+  syncAuthorized: boolean,
+  remoteManifest: LatestManifest | undefined,
+) {
+  if (!syncAuthorized && remoteManifest) {
+    throw new Error(
+      'This Vault already contains encrypted data. Authorize this device from an existing device or restore its Vault key before syncing.',
+    );
   }
 }
 
