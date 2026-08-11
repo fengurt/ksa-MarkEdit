@@ -13,6 +13,8 @@
 		AB1200013000000000000001 /* WorkspacePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1200023000000000000001 /* WorkspacePreviewView.swift */; };
 		AB1200033000000000000001 /* rendered-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = AB1200043000000000000001 /* rendered-preview.html */; };
 		AB1300013000000000000001 /* KnowledgeHub in Resources */ = {isa = PBXBuildFile; fileRef = AB1300023000000000000001 /* KnowledgeHub */; };
+		AB2100013000000000000001 /* ResourceCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100023000000000000001 /* ResourceCore */; };
+		AB2100033000000000000001 /* ResourceUI in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100043000000000000001 /* ResourceUI */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -310,6 +312,8 @@
 				8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */,
 				CC000020300000000000FD01 /* FileDrop in Frameworks */,
 				EE200001EEEE000000000001 /* ExtensionCore in Frameworks */,
+				AB2100013000000000000001 /* ResourceCore in Frameworks */,
+				AB2100033000000000000001 /* ResourceUI in Frameworks */,
 				8775A77B29867012005867BF /* FontPicker in Frameworks */,
 				870F17922985775B00003DA7 /* Previewer in Frameworks */,
 				874823CE29B0BD980067EC49 /* TextCompletion in Frameworks */,
@@ -728,6 +732,8 @@
 				8701D0A32CC12321006AF8C2 /* FileVersion */,
 				CC000020300000000000FD02 /* FileDrop */,
 				EE200002EEEE000000000002 /* ExtensionCore */,
+				AB2100023000000000000001 /* ResourceCore */,
+				AB2100043000000000000001 /* ResourceUI */,
 			);
 			productName = "ksamint MarkEdit";
 			productReference = 870A51A2294700DE0095C7EB /* ksamint MarkEdit.app */;
@@ -1537,6 +1543,14 @@
 		EE200002EEEE000000000002 /* ExtensionCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ExtensionCore;
+		};
+		AB2100023000000000000001 /* ResourceCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ResourceCore;
+		};
+		AB2100043000000000000001 /* ResourceUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ResourceUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

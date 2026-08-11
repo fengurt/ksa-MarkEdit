@@ -117,6 +117,8 @@ The project contains:
 - `CoreEditor`: TypeScript, CodeMirror 6, Lezer, Vite, and Jest
 - `MarkEditCore` and `MarkEditKit`: shared Swift packages
 - `MarkEditMac`: the native macOS app and feature modules
+- `MarkEditMac/Modules/ResourceCore` and `ResourceUI`: signed, isolated,
+  read-only resource module protocol, filesystem broker, and lazy WKWebView host
 - `WebApp`: the shared React/Vite offline knowledge workspace
 - `VaultProtocolTS`: shared TypeScript deterministic-CBOR and vault crypto
 - `AgentSDK`: remote read-only, client-side-decrypting Agent SDK
@@ -132,6 +134,12 @@ yarn build
 yarn test
 cd ..
 node Scripts/validate-localizations.mjs
+cd WebApp
+npm ci
+npm run build
+npm run build:mac
+npm run validate:mac-bundle
+cd ..
 xcodebuild build -project MarkEdit.xcodeproj -scheme MarkEditMac -destination 'platform=macOS'
 ```
 

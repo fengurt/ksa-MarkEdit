@@ -26,6 +26,9 @@ SWIFT_OPTIMIZATION_LEVEL[config=Release] = -Osize
 COPY_PHASE_STRIP[config=Release] = YES
 STRIP_INSTALLED_PRODUCT[config=Release] = YES
 STRIP_STYLE[config=Release] = all
+STRIP_SWIFT_SYMBOLS[config=Release] = YES
 DEPLOYMENT_POSTPROCESSING[config=Release] = YES
+SWIFT_REFLECTION_METADATA_LEVEL[config=Release] = none
+ASSETCATALOG_COMPILER_OPTIMIZATION[config=Release] = space
 
 #include? "Local.xcconfig"

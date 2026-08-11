@@ -149,6 +149,25 @@ enum Localized {
     static let operationFailed = String(localized: "Workspace Operation Failed", comment: "Workspace file operation error title")
   }
 
+  enum Resource {
+    static let openResource = String(localized: "Open Resource…", comment: "Menu item to open a read-only resource")
+    static let open = String(localized: "Open Resource", comment: "Resource open panel button")
+    static let openDescription = String(
+      localized: "Choose a folder, archive, HTML file, OKF catalog, or MinerU result.",
+      comment: "Resource open panel description"
+    )
+    static let openFailed = String(localized: "Couldn’t Open Resource", comment: "Resource open failure title")
+    static let noCompatibleModule = String(
+      localized: "No compatible resource preview module is installed.",
+      comment: "Resource viewer state when no module is installed"
+    )
+    static let moduleStopped = String(
+      localized: "The preview module stopped unexpectedly. Reopen the resource to retry.",
+      comment: "Resource module crash message"
+    )
+    static let moduleFailed = String(localized: "Preview module failed", comment: "Resource module failure prefix")
+  }
+
   enum Document {
     static let openDocument = String(localized: "Open Document", comment: "Menu item: open an existing document")
     static let newDocument = String(localized: "New Document", comment: "Menu item: create a new document")

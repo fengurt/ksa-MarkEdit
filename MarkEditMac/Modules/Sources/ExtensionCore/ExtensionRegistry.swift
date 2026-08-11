@@ -84,6 +84,7 @@ public extension ExtensionRelease {
 public struct ExtensionEntry: Codable, Equatable, Sendable {
   public enum Category: String, Codable, Sendable {
     case `extension`
+    case resourceModule = "resource-module"
     case theme
   }
 
@@ -132,7 +133,7 @@ public struct ExtensionEntry: Codable, Equatable, Sendable {
 /// The registry index the app reads, built by CI from the extensions repo.
 public struct ExtensionIndex: Codable, Equatable, Sendable {
   /// Highest schema version this app understands; bump when the index format changes incompatibly.
-  public static let supportedSchemaVersion = 1
+  public static let supportedSchemaVersion = 2
 
   public let schemaVersion: Int
   public let extensions: [ExtensionEntry]
@@ -273,6 +274,12 @@ public enum ExtensionRegistry {
   ) -> [ExtensionUpdate] {
     installed.compactMap { installed in
       guard let entry = (index.extensions.first { $0.id == installed.id }) else {
+        return nil
+      }
+
+      // Resource modules use signed multi-file manifests and a separate installer. Never
+      // hand them to the legacy single-JavaScript updater, even if an identifier collides.
+      guard entry.category != .resourceModule else {
         return nil
       }
 

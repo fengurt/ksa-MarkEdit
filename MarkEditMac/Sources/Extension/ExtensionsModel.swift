@@ -358,7 +358,9 @@ private extension ExtensionsModel {
       hasLoadedIndex = true
     }
 
-    let entries = index?.extensions ?? []
+    // Resource modules are installed and launched by ResourceModuleHost. They must never
+    // enter the legacy editor-script installer, which injects JavaScript into every editor.
+    let entries = index?.extensions.filter { $0.category != .resourceModule } ?? []
     let entryByID = Dictionary(entries.map { ($0.id, $0) }) { lhs, _ in lhs }
 
     let updates = index.map { ExtensionRegistry.availableUpdates(index: $0, installed: installed) } ?? []

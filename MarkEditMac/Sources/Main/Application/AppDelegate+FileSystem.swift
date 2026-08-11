@@ -9,6 +9,54 @@ import AppKit
 import MarkEditKit
 
 extension AppDelegate {
+  func configureResourceMenu() {
+    guard let mainFileMenu,
+          !mainFileMenu.items.contains(where: { $0.action == #selector(openResource(_:)) }) else {
+      return
+    }
+    let item = NSMenuItem(
+      title: Localized.Resource.openResource,
+      action: #selector(openResource(_:)),
+      keyEquivalent: "o"
+    )
+    item.keyEquivalentModifierMask = [.command, .option]
+    item.target = self
+    let openIndex = mainFileMenu.items.firstIndex {
+      $0.action == #selector(NSDocumentController.openDocument(_:))
+    }
+    mainFileMenu.insertItem(item, at: min((openIndex ?? 1) + 1, mainFileMenu.items.count))
+  }
+
+  @IBAction func openResource(_ sender: Any?) {
+    let openPanel = NSOpenPanel()
+    openPanel.prompt = Localized.Resource.open
+    openPanel.message = Localized.Resource.openDescription
+    openPanel.canChooseDirectories = true
+    openPanel.canChooseFiles = true
+    openPanel.allowsMultipleSelection = false
+    openPanel.resolvesAliases = false
+
+    Task {
+      guard await openPanel.begin() == .OK, let url = openPanel.url else {
+        return
+      }
+      do {
+        try await resourceModuleHost.open(url)
+      } catch {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = Localized.Resource.openFailed
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: Localized.General.done)
+        if let window = NSApp.keyWindow {
+          await alert.beginSheetModal(for: window)
+        } else {
+          alert.runModal()
+        }
+      }
+    }
+  }
+
   func saveGrantedFolderAsBookmark() async {
     let openPanel = NSOpenPanel()
     openPanel.prompt = Localized.General.grantAccess

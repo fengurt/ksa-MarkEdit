@@ -202,6 +202,19 @@ final class ExtensionCoreTests: XCTestCase {
     XCTAssertTrue(updates.isEmpty)
   }
 
+  func testAvailableUpdatesNeverRoutesResourceModulesToScriptInstaller() {
+    ExtensionEnvironment.appVersion = "2.1.0"
+    let index = makeIndex([
+      makeEntry(id: "folder-base", version: "2.0.0", category: .resourceModule),
+    ])
+    let updates = ExtensionRegistry.availableUpdates(
+      index: index,
+      installed: [makeInstalled(id: "folder-base", version: "1.0.0")]
+    )
+
+    XCTAssertTrue(updates.isEmpty)
+  }
+
   // MARK: - hasCachedUpdates
 
   func testHasCachedUpdatesFalseWithoutCache() throws {
@@ -287,6 +300,28 @@ final class ExtensionCoreTests: XCTestCase {
     XCTAssertTrue(ExtensionIndex(schemaVersion: ExtensionIndex.supportedSchemaVersion - 1, extensions: []).isSupported)
     // A newer schema means the app is out of date
     XCTAssertFalse(ExtensionIndex(schemaVersion: ExtensionIndex.supportedSchemaVersion + 1, extensions: []).isSupported)
+  }
+
+  func testResourceModuleCategoryDecodesInSchemaV2() throws {
+    let json = """
+    {
+      "id": "folder-base",
+      "name": "Folder",
+      "description": "",
+      "author": "ksamint",
+      "homepage": "https://example.com",
+      "category": "resource-module",
+      "latest": {
+        "version": "1.0.0",
+        "url": "https://example.com/folder-base/manifest.json",
+        "sha256": "abc"
+      }
+    }
+    """
+    let entry = try JSONDecoder().decode(ExtensionEntry.self, from: Data(json.utf8))
+    XCTAssertEqual(entry.category, .resourceModule)
+    XCTAssertTrue(ExtensionIndex(schemaVersion: 1, extensions: [entry]).isSupported)
+    XCTAssertTrue(ExtensionIndex(schemaVersion: 2, extensions: [entry]).isSupported)
   }
 
   // MARK: - upsertInstalled
@@ -435,14 +470,19 @@ private extension ExtensionCoreTests {
     )
   }
 
-  func makeEntry(id: String, version: String, minAppVersion: String? = nil) -> ExtensionEntry {
+  func makeEntry(
+    id: String,
+    version: String,
+    minAppVersion: String? = nil,
+    category: ExtensionEntry.Category = .extension
+  ) -> ExtensionEntry {
     ExtensionEntry(
       id: id,
       name: id,
       description: "",
       author: "",
       homepage: "",
-      category: .extension,
+      category: category,
       colorScheme: nil,
       colorPatterns: nil,
       featured: nil,
