@@ -232,14 +232,36 @@ extension EditorViewController: EditorModuleCoreDelegate {
     }
   }
 
+  func editorCoreTextChanged(
+    _ sender: EditorModuleCore,
+    revision: UInt64,
+    changes: [EditorTextChange],
+    compositionEnded: Bool
+  ) {
+    editorTextRevision = revision
+    guard isRenderedPreviewActive else {
+      return
+    }
+
+    workspacePreviewView?.apply(
+      changes: changes,
+      revision: revision,
+      compositionEnded: compositionEnded
+    )
+  }
+
   func editorCoreContentHeightDidChange(_ sender: EditorModuleCore, bottomPanelHeight: Double) {
     self.bottomPanelHeight = bottomPanelHeight
     self.layoutStatusView()
   }
 
-  func editorCoreContentOffsetDidChange(_ sender: EditorModuleCore) {
+  func editorCoreContentOffsetDidChange(_ sender: EditorModuleCore, sourcePosition: Int) {
     // Remove all floating UI elements since view coordinates are changed
     removeFloatingUIElements()
+
+    if isRenderedPreviewActive && AppPreferences.Window.workspacePreviewSync {
+      workspacePreviewView?.scrollTo(position: sourcePosition)
+    }
   }
 
   func editorCoreCompositionEnded(_ sender: EditorModuleCore, selectedLineColumn: LineColumnInfo) {
@@ -251,6 +273,10 @@ extension EditorViewController: EditorModuleCoreDelegate {
         info: selectedLineColumn,
         for: document?.fileURL
       )
+    }
+
+    if isRenderedPreviewActive {
+      workspacePreviewView?.renderCurrent()
     }
   }
 

@@ -1,6 +1,12 @@
 import { NativeModule } from '../nativeModule';
 import { LineColumnInfo } from '../../modules/selection/types';
 
+export interface EditorTextChange {
+  from: CodeGen_Int;
+  to: CodeGen_Int;
+  insert: string;
+}
+
 /**
  * @shouldExport true
  * @invokePath core
@@ -15,8 +21,9 @@ export interface NativeModuleCore extends NativeModule {
   notifyBackgroundColorDidChange(args: { color: CodeGen_Int; alpha: number }): void;
   notifyViewportScaleDidChange(): void;
   notifyViewDidUpdate(args: { contentEdited: boolean; compositionEnded: boolean; isDirty: boolean; selectedLineColumn: LineColumnInfo }): void;
+  notifyTextChanged(args: { revision: CodeGen_UInt64; changes: EditorTextChange[]; compositionEnded: boolean }): void;
   notifyContentHeightDidChange({ bottomPanelHeight }: { bottomPanelHeight: number }): void;
-  notifyContentOffsetDidChange(): void;
+  notifyContentOffsetDidChange({ sourcePosition }: { sourcePosition: CodeGen_Int }): void;
   notifyCompositionEnded({ selectedLineColumn }: { selectedLineColumn: LineColumnInfo }): void;
   notifyLinkClicked({ link }: { link: string }): void;
   notifyLightWarning(): void;

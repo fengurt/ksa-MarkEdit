@@ -19,12 +19,14 @@ final class WorkspaceSidebarView: NSView {
   var onMoveToTrash: ((URL) -> Void)?
   var onMove: ((URL, URL) -> Bool)?
   var onResize: ((Double) -> Void)?
+  var onPreviewSyncChanged: ((Bool) -> Void)?
 
   var mode: WorkspaceSidebarMode = .files {
     didSet {
-      modeControl.selectedSegment = mode == .search ? 1 : 0
+      modeControl.selectedSegment = mode.rawValue
       filesContainer.isHidden = mode != .files
       searchContainer.isHidden = mode != .search
+      previewContainer.isHidden = mode != .preview
       if mode == .search {
         window?.makeFirstResponder(searchField)
       }
@@ -49,6 +51,9 @@ final class WorkspaceSidebarView: NSView {
   private let modeControl = NSSegmentedControl()
   private let filesContainer = NSView()
   private let searchContainer = NSView()
+  private let previewContainer = NSView()
+  private let previewContentContainer = NSView()
+  private let previewSyncButton = NSButton()
   private let rootLabel = NSTextField(labelWithString: "")
   private let authorizationLabel = NSTextField(wrappingLabelWithString: "")
   private let authorizeButton = NSButton()
@@ -90,6 +95,22 @@ final class WorkspaceSidebarView: NSView {
   func focusSearch() {
     window?.makeFirstResponder(searchField)
   }
+
+  func setPreviewView(_ previewView: NSView) {
+    previewContentContainer.subviews.forEach { $0.removeFromSuperview() }
+    previewView.translatesAutoresizingMaskIntoConstraints = false
+    previewContentContainer.addSubview(previewView)
+    NSLayoutConstraint.activate([
+      previewView.topAnchor.constraint(equalTo: previewContentContainer.topAnchor),
+      previewView.leadingAnchor.constraint(equalTo: previewContentContainer.leadingAnchor),
+      previewView.trailingAnchor.constraint(equalTo: previewContentContainer.trailingAnchor),
+      previewView.bottomAnchor.constraint(equalTo: previewContentContainer.bottomAnchor),
+    ])
+  }
+
+  func setPreviewSyncEnabled(_ enabled: Bool) {
+    previewSyncButton.state = enabled ? .on : .off
+  }
 }
 
 // MARK: - Setup
@@ -99,9 +120,10 @@ private extension WorkspaceSidebarView {
     wantsLayer = true
     layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
-    modeControl.segmentCount = 2
+    modeControl.segmentCount = 3
     modeControl.setLabel(Localized.Workspace.files, forSegment: 0)
     modeControl.setLabel(Localized.Workspace.search, forSegment: 1)
+    modeControl.setLabel(Localized.Editor.previewButtonTitle, forSegment: 2)
     modeControl.segmentStyle = .texturedRounded
     modeControl.trackingMode = .selectOne
     modeControl.selectedSegment = 0
@@ -114,6 +136,7 @@ private extension WorkspaceSidebarView {
 
     configureOutlineView()
     configureSearchView()
+    configurePreviewView()
     configureAuthorizationView()
 
     addButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: Localized.Workspace.newFile)
@@ -133,7 +156,7 @@ private extension WorkspaceSidebarView {
       self?.onResize?(delta)
     }
 
-    [modeControl, filesContainer, searchContainer, resizeHandle].forEach {
+    [modeControl, filesContainer, searchContainer, previewContainer, resizeHandle].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       addSubview($0)
     }
@@ -144,6 +167,10 @@ private extension WorkspaceSidebarView {
     [searchField, searchScrollView, searchStatusLabel].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       searchContainer.addSubview($0)
+    }
+    [previewSyncButton, previewContentContainer].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      previewContainer.addSubview($0)
     }
 
     NSLayoutConstraint.activate([
@@ -160,6 +187,11 @@ private extension WorkspaceSidebarView {
       searchContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
       searchContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
       searchContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
+
+      previewContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
+      previewContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
+      previewContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
+      previewContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
 
       resizeHandle.topAnchor.constraint(equalTo: topAnchor),
       resizeHandle.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -196,9 +228,18 @@ private extension WorkspaceSidebarView {
       searchStatusLabel.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 10),
       searchStatusLabel.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -10),
       searchStatusLabel.bottomAnchor.constraint(equalTo: searchContainer.bottomAnchor, constant: -7),
+
+      previewSyncButton.topAnchor.constraint(equalTo: previewContainer.topAnchor, constant: 5),
+      previewSyncButton.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor, constant: 8),
+      previewSyncButton.trailingAnchor.constraint(lessThanOrEqualTo: previewContainer.trailingAnchor, constant: -8),
+      previewContentContainer.topAnchor.constraint(equalTo: previewSyncButton.bottomAnchor, constant: 4),
+      previewContentContainer.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+      previewContentContainer.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+      previewContentContainer.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
     ])
 
     searchContainer.isHidden = true
+    previewContainer.isHidden = true
     updateAuthorizationState()
   }
 
@@ -254,6 +295,14 @@ private extension WorkspaceSidebarView {
     authorizeButton.bezelStyle = .rounded
     authorizeButton.target = self
     authorizeButton.action = #selector(chooseWorkspace(_:))
+  }
+
+  func configurePreviewView() {
+    previewSyncButton.setButtonType(.switch)
+    previewSyncButton.title = Localized.Workspace.syncPreview
+    previewSyncButton.state = AppPreferences.Window.workspacePreviewSync ? .on : .off
+    previewSyncButton.target = self
+    previewSyncButton.action = #selector(togglePreviewSync(_:))
   }
 
   func updateAuthorizationState() {
@@ -317,7 +366,14 @@ private extension WorkspaceSidebarView {
 
 private extension WorkspaceSidebarView {
   @objc func selectMode(_ sender: NSSegmentedControl) {
-    onModeSelected?(sender.selectedSegment == 0 ? .files : .search)
+    guard let mode = WorkspaceSidebarMode(rawValue: sender.selectedSegment) else {
+      return
+    }
+    onModeSelected?(mode)
+  }
+
+  @objc func togglePreviewSync(_ sender: NSButton) {
+    onPreviewSyncChanged?(sender.state == .on)
   }
 
   @objc func chooseWorkspace(_ sender: Any?) {

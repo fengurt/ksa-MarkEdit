@@ -13,7 +13,25 @@ extension EditorViewController {
       return 0
     }
 
-    return min(max(workspaceSidebarWidth, 200), max(200, view.bounds.width - 420))
+    let preferredWidth: Double = {
+      switch workspaceSidebarMode {
+      case .files:
+        return workspaceSidebarWidth
+      case .search:
+        return workspaceSearchWidth
+      case .preview:
+        return workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
+      }
+    }()
+
+    return min(max(preferredWidth, 200), max(200, view.bounds.width - 420))
+  }
+
+  var isRenderedPreviewActive: Bool {
+    workspaceSidebarVisible
+      && workspaceSidebarMode == .preview
+      && workspaceContentInset > 0
+      && workspacePreviewView != nil
   }
 
   func prepareWorkspaceSession() {
@@ -67,6 +85,8 @@ extension EditorViewController {
 
     if workspaceSidebarVisible && mode == .search {
       workspaceSidebarView?.focusSearch()
+    } else if workspaceSidebarVisible && mode == .preview {
+      showRenderedPreview()
     } else if !workspaceSidebarVisible {
       startTextEditing()
     }
@@ -123,6 +143,9 @@ extension EditorViewController {
     sidebar.onResize = { [weak self] delta in
       self?.resizeWorkspaceSidebar(by: delta)
     }
+    sidebar.onPreviewSyncChanged = { enabled in
+      AppPreferences.Window.workspacePreviewSync = enabled
+    }
 
     view.addSubview(sidebar, positioned: .above, relativeTo: webView)
     workspaceSidebarView = sidebar
@@ -174,9 +197,94 @@ private extension EditorViewController {
   }
 
   func resizeWorkspaceSidebar(by delta: Double) {
-    workspaceSidebarWidth = min(max(workspaceSidebarWidth + delta, 200), max(200, view.bounds.width - 420))
-    AppPreferences.Window.workspaceFilesWidth = workspaceSidebarWidth
+    let maximumWidth = max(200, view.bounds.width - 420)
+    switch workspaceSidebarMode {
+    case .files:
+      workspaceSidebarWidth = min(max(workspaceSidebarWidth + delta, 200), maximumWidth)
+      AppPreferences.Window.workspaceFilesWidth = workspaceSidebarWidth
+    case .search:
+      workspaceSearchWidth = min(max(workspaceSearchWidth + delta, 200), maximumWidth)
+      AppPreferences.Window.workspaceSearchWidth = workspaceSearchWidth
+    case .preview:
+      let currentWidth = workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
+      workspacePreviewWidth = min(max(currentWidth + delta, 200), maximumWidth)
+      AppPreferences.Window.workspacePreviewWidth = workspacePreviewWidth
+    }
     view.needsLayout = true
+  }
+}
+
+// MARK: - Rendered Preview
+
+extension EditorViewController {
+  func showRenderedPreview() {
+    ensureWorkspaceSidebar()
+
+    if workspacePreviewView == nil {
+      let previewView = WorkspacePreviewView(frame: .zero)
+      previewView.baseURL = document?.baseURL
+      previewView.onLocateSource = { [weak self] position in
+        self?.startTextEditing()
+        self?.bridge.selection.gotoPosition(position: position)
+      }
+      previewView.onOpenLink = { [weak self] link in
+        self?.openRenderedPreviewLink(link)
+      }
+      previewView.onRevisionMismatch = { [weak self] in
+        self?.resetRenderedPreview()
+      }
+      workspacePreviewView = previewView
+      workspaceSidebarView?.setPreviewView(previewView)
+    }
+
+    workspacePreviewView?.baseURL = document?.baseURL
+    workspaceSidebarView?.setPreviewSyncEnabled(AppPreferences.Window.workspacePreviewSync)
+    resetRenderedPreview()
+  }
+
+  func resetRenderedPreview() {
+    guard isRenderedPreviewActive else {
+      return
+    }
+
+    Task { @MainActor [weak self] in
+      guard let self else {
+        return
+      }
+
+      await waitUntilEditorReset()
+      guard isRenderedPreviewActive, let text = await editorText else {
+        return
+      }
+      workspacePreviewView?.reset(text: text, revision: editorTextRevision)
+    }
+  }
+}
+
+private extension EditorViewController {
+  func openRenderedPreviewLink(_ link: String) {
+    if let url = URL(string: link), let scheme = url.scheme?.lowercased() {
+      guard ["http", "https", "mailto"].contains(scheme) else {
+        NSSound.beep()
+        return
+      }
+      NSWorkspace.shared.open(url)
+      return
+    }
+
+    guard let baseURL = document?.baseURL else {
+      NSSound.beep()
+      return
+    }
+
+    let url = baseURL.appending(path: link.removingPercentEncoding ?? link).standardizedFileURL
+    if let session = workspaceSession, session.contains(url) {
+      openWorkspaceFile(url, lineNumber: nil)
+    } else if FileManager.default.fileExists(atPath: url.path) {
+      NSWorkspace.shared.open(url)
+    } else {
+      NSSound.beep()
+    }
   }
 }
 

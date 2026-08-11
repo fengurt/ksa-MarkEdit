@@ -116,6 +116,13 @@ export function gotoLine(lineNumber: number) {
   const state = editor.state;
   const pos = state.doc.line(lineNumber).from;
 
+  gotoPosition(pos);
+}
+
+export function gotoPosition(position: number) {
+  const editor = window.editor;
+  const pos = Math.min(Math.max(position, 0), editor.state.doc.length);
+
   saveGoBackSelection();
   editor.dispatch({ selection: EditorSelection.cursor(pos) });
   scrollToSelection();

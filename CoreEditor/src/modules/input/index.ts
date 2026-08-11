@@ -136,6 +136,25 @@ export function observeChanges() {
       // This should be called before updating the native view
       setHistoryExplictlyMoved(update);
 
+      const changes: {
+        from: CodeGen_Int;
+        to: CodeGen_Int;
+        insert: string;
+      }[] = [];
+      update.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
+        changes.push({
+          from: fromA as CodeGen_Int,
+          to: toA as CodeGen_Int,
+          insert: inserted.toString(),
+        });
+      });
+      editingState.textRevision += 1;
+      window.nativeModules.core.notifyTextChanged({
+        revision: editingState.textRevision as CodeGen_UInt64,
+        changes,
+        compositionEnded: editingState.compositionEnded,
+      });
+
       if (!update.transactions.some(tr => tr.annotation(Transaction.userEvent) === '@none')) {
         // We need this because we have different line height for headings,
         // CodeMirror doesn't by default fix the offset issue.
