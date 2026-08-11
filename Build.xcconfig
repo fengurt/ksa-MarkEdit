@@ -17,11 +17,14 @@ BUNDLE_ID_SUFFIX = .dev
 BUNDLE_ID_SUFFIX[config=Release] =
 REGISTER_APP_GROUPS = YES
 
-MARKETING_VERSION = 2.4.0
-CURRENT_PROJECT_VERSION = 12
+MARKETING_VERSION = 2.5.0
+CURRENT_PROJECT_VERSION = 13
+SWIFT_VERSION = 6.0
+ARCHS = arm64
+VALID_ARCHS = arm64
 
-// Keep the universal release below the 6 MiB distribution budget without
-// affecting Debug diagnostics or removing either CPU architecture.
+// Keep the ARM64 release below the 6 MiB distribution budget without
+// affecting Debug diagnostics.
 SWIFT_OPTIMIZATION_LEVEL[config=Release] = -Osize
 COPY_PHASE_STRIP[config=Release] = YES
 STRIP_INSTALLED_PRODUCT[config=Release] = YES

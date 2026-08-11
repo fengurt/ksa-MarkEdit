@@ -22,9 +22,6 @@ let package = Package(
     .target(
       name: "MarkEditCore",
       path: "Sources",
-      swiftSettings: [
-        .enableExperimentalFeature("StrictConcurrency")
-      ],
       plugins: [
         .plugin(name: "SwiftLint", package: "MarkEditTools"),
       ]
@@ -41,5 +38,6 @@ let package = Package(
         .plugin(name: "SwiftLint", package: "MarkEditTools"),
       ]
     ),
-  ]
+  ],
+  swiftLanguageModes: [.v6]
 )

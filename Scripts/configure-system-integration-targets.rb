@@ -42,7 +42,7 @@ def configure(target, bundle_id, plist, entitlements, product_name)
     settings['SDKROOT'] = 'macosx'
     settings['SWIFT_VERSION'] = '5.0'
     settings['SKIP_INSTALL'] = 'YES'
-    settings['MARKETING_VERSION'] = '2.4.0'
+    settings['MARKETING_VERSION'] = '2.5.0'
     settings['CURRENT_PROJECT_VERSION'] = '12'
     settings['CODE_SIGN_STYLE'] = 'Automatic'
   end
