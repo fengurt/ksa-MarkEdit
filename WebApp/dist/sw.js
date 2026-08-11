@@ -1,5 +1,6 @@
-const CACHE = 'ksamint-shell-v1';
-const SHELL = ['/', '/manifest.webmanifest', '/icon.svg'];
+const CACHE = 'ksamint-shell-v3';
+const BASE = new URL('./', self.location.href).pathname;
+const SHELL = [BASE, `${BASE}manifest.webmanifest`, `${BASE}icon.svg`];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
@@ -16,7 +17,8 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) {
     return;
   }
   event.respondWith(
@@ -26,6 +28,6 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE).then(cache => cache.put(event.request, copy));
         return response;
       })
-      .catch(() => caches.match(event.request).then(response => response || caches.match('/'))),
+      .catch(() => caches.match(event.request).then(response => response || caches.match(BASE))),
   );
 });

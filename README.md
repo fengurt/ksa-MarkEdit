@@ -107,10 +107,19 @@ GitHub App token broker, deployment files, and independent recovery CLI live in
 [`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
 in the app or Web PWA.
 
-The Web PWA encrypts files and paths before direct upload. On a remote head
-change it verifies and decrypts the new snapshot locally, performs a three-way
-Markdown merge, and creates timestamped conflict copies for overlapping edits
-or delete/edit races instead of silently overwriting either side. The shared
+The Web PWA encrypts files and paths before direct upload. It can import
+Markdown, UTF-8 text, and safe HTML from files, complete browser-selected
+folders, drag and drop, or credential-free HTTPS URLs. Imports are stored in
+OPFS with the encrypted IndexedDB fallback and never overwrite an existing
+path.
+
+On a remote head change the PWA verifies and decrypts the new snapshot locally,
+performs a three-way Markdown merge, and creates timestamped conflict copies
+for overlapping edits or delete/edit races instead of silently overwriting
+either side. An encrypted local conflict ledger retains the common ancestor,
+this-device version, remote version, and resolution. The compare UI can retain
+either side, combine both, or save a manually edited result; resolving never
+deletes the preserved source versions. The shared
 `@ksamint/vault-protocol` package keeps deterministic CBOR and cryptographic
 test vectors aligned with Rust. `@ksamint/agent-sdk` verifies signed manifests
 and decrypts an explicit, expiring read-only capability inside the Agent

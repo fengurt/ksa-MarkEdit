@@ -1,0 +1,34 @@
+name: Web PWA Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - WebApp/**
+      - CoreEditor/**
+      - VaultProtocolTS/**
+      - .github/workflows/deploy-web.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: WebApp/package-lock.json
+      - name: Test and build installable PWA
+        working-directory: WebApp
+        env:
+          VITE_BASE_PATH: ./
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build

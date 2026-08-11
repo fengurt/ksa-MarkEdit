@@ -82,7 +82,7 @@ public struct WorkspaceDeepSearchHit: Sendable, Equatable {
 
 public actor WorkspaceDeepSearch {
   public static let defaultManifestURL = URL(
-    string: "https://notes.apuch.art/models/multilingual-e5-small/v1/manifest.json"
+    string: "https://notes.apuch.cn/models/multilingual-e5-small/v1/manifest.json"
   )!
   public static let exactSearchThreshold = 10_000
   public static let maximumResultCount = 100

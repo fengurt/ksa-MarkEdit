@@ -1,0 +1,12 @@
+services:
+  web:
+    volumes:
+      - /opt/ksamint/current/Cloud/tencent-shared.Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - default
+      - ksamint
+
+networks:
+  ksamint:
+    external: true
+    name: ksamint_default

@@ -45,7 +45,7 @@ using its `grantId`, `accessToken`, and the matching private key:
 import { KsamintAgentClient } from '@ksamint/agent-sdk';
 
 const client = await KsamintAgentClient.connect({
-  apiBase: 'https://api.notes.apuch.art',
+  apiBase: 'https://api.notes.apuch.cn',
   grantId: process.env.KSAMINT_GRANT_ID!,
   accessToken: process.env.KSAMINT_ACCESS_TOKEN!,
   recipientPrivateKey: process.env.KSAMINT_HPKE_PRIVATE_KEY!,

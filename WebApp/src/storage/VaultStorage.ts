@@ -1,8 +1,16 @@
 import { applyMetadata, parseMetadata } from '../markdown/metadata';
-import type { NoteFile, NoteMetadata, VaultFile, VaultManifest } from '../types';
+import type {
+  ConflictRecord,
+  ConflictResolution,
+  NoteFile,
+  NoteMetadata,
+  VaultFile,
+  VaultManifest,
+} from '../types';
 
 const MAGIC = new TextEncoder().encode('KSV1');
 const MANIFEST_FILE = 'manifest.ksv';
+const CONFLICTS_FILE = 'conflicts.ksv';
 const DATABASE_NAME = 'ksamint-device-v1';
 const KEY_STORE = 'device-keys';
 const FALLBACK_STORE = 'vault-objects';
@@ -85,6 +93,39 @@ export class VaultStorage {
     return { ...file, content, metadata: parseMetadata(content) };
   }
 
+  async importFiles(
+    documents: Array<{ path: string; content: string; modifiedAt: number }>,
+  ): Promise<NoteFile[]> {
+    if (!documents.length) {
+      return [];
+    }
+    const originalFiles = this.manifest.files.map(file => ({ ...file }));
+    const paths = new Set(this.manifest.files.map(file => file.path));
+    const imported: NoteFile[] = [];
+    try {
+      for (const document of documents) {
+        const path = normalizePath(document.path);
+        if (paths.has(path)) {
+          throw new Error(`A file already exists at ${path}`);
+        }
+        paths.add(path);
+        const file: VaultFile = {
+          id: crypto.randomUUID(),
+          path,
+          modifiedAt: Math.max(0, Math.floor(document.modifiedAt)),
+        };
+        this.manifest.files.push(file);
+        await this.writeContent(file, document.content);
+        imported.push({ ...file, content: document.content, metadata: parseMetadata(document.content) });
+      }
+      await this.persistManifest();
+      return imported;
+    } catch (error) {
+      this.manifest.files = originalFiles;
+      throw error;
+    }
+  }
+
   async writeFile(id: string, content: string): Promise<NoteFile> {
     const file = this.manifest.files.find(candidate => candidate.id === id);
     if (!file) {
@@ -144,6 +185,43 @@ export class VaultStorage {
     return structuredClone(normalized);
   }
 
+  async listConflicts(): Promise<ConflictRecord[]> {
+    const payload = await readObject(this.opfsRoot, this.workspaceId, CONFLICTS_FILE);
+    if (!payload) {
+      return [];
+    }
+    const parsed = JSON.parse(await decryptText(this.key, payload)) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new Error('The local conflict history is damaged');
+    }
+    return structuredClone(parsed as ConflictRecord[]);
+  }
+
+  async appendConflicts(records: ConflictRecord[]): Promise<ConflictRecord[]> {
+    if (!records.length) {
+      return this.listConflicts();
+    }
+    const existing = await this.listConflicts();
+    const known = new Set(existing.map(record => record.id));
+    const next = [...existing, ...records.filter(record => !known.has(record.id))];
+    await this.persistConflicts(next);
+    return structuredClone(next);
+  }
+
+  async resolveConflict(
+    id: string,
+    resolution: ConflictResolution,
+  ): Promise<ConflictRecord[]> {
+    const records = await this.listConflicts();
+    const record = records.find(candidate => candidate.id === id);
+    if (!record) {
+      throw new Error('Conflict record not found');
+    }
+    record.resolution = structuredClone(resolution);
+    await this.persistConflicts(records);
+    return structuredClone(records);
+  }
+
   private async writeContent(file: VaultFile, content: string): Promise<void> {
     const payload = await encryptText(this.key, content);
     await writeObject(this.opfsRoot, this.workspaceId, objectName(file.id), payload);
@@ -153,6 +231,11 @@ export class VaultStorage {
     this.manifest.updatedAt = Date.now();
     const payload = await encryptText(this.key, JSON.stringify(this.manifest));
     await writeObject(this.opfsRoot, this.workspaceId, MANIFEST_FILE, payload);
+  }
+
+  private async persistConflicts(records: ConflictRecord[]): Promise<void> {
+    const payload = await encryptText(this.key, JSON.stringify(records));
+    await writeObject(this.opfsRoot, this.workspaceId, CONFLICTS_FILE, payload);
   }
 }
 

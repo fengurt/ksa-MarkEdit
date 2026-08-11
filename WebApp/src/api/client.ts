@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.notes.apuch.art';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.notes.apuch.cn';
 
 export type VaultSummary = {
   id: string;
@@ -52,11 +52,27 @@ type PublicKeyRequestOptionsJSON = Omit<
   allowCredentials?: Array<Omit<PublicKeyCredentialDescriptor, 'id'> & { id: string }>;
 };
 
-export async function createPasskey(): Promise<void> {
-  const options = await apiRequest<PublicKeyOptionsJSON>('/api/v1/passkeys/register/options', {
-    method: 'POST',
-  });
-  const credential = await navigator.credentials.create({
+type CreationOptionsResponseJSON = {
+  publicKey: PublicKeyOptionsJSON;
+};
+
+type RequestOptionsResponseJSON = {
+  publicKey: PublicKeyRequestOptionsJSON;
+  mediation?: CredentialMediationRequirement;
+};
+
+export function decodeCreationOptions(
+  response: CreationOptionsResponseJSON,
+): CredentialCreationOptions {
+  const options = response?.publicKey;
+  if (
+    !options
+    || typeof options.challenge !== 'string'
+    || typeof options.user?.id !== 'string'
+  ) {
+    throw new Error('Account service returned invalid Passkey registration options');
+  }
+  return {
     publicKey: {
       ...options,
       challenge: fromBase64URL(options.challenge),
@@ -66,7 +82,34 @@ export async function createPasskey(): Promise<void> {
         id: fromBase64URL(item.id),
       })),
     },
+  };
+}
+
+export function decodeRequestOptions(
+  response: RequestOptionsResponseJSON,
+): CredentialRequestOptions {
+  const options = response?.publicKey;
+  if (!options || typeof options.challenge !== 'string') {
+    throw new Error('Account service returned invalid Passkey authentication options');
+  }
+  return {
+    mediation: response.mediation,
+    publicKey: {
+      ...options,
+      challenge: fromBase64URL(options.challenge),
+      allowCredentials: options.allowCredentials?.map(item => ({
+        ...item,
+        id: fromBase64URL(item.id),
+      })),
+    },
+  };
+}
+
+export async function createPasskey(): Promise<void> {
+  const response = await apiRequest<CreationOptionsResponseJSON>('/api/v1/passkeys/register/options', {
+    method: 'POST',
   });
+  const credential = await navigator.credentials.create(decodeCreationOptions(response));
   if (!(credential instanceof PublicKeyCredential)) {
     throw new Error('Passkey creation was cancelled');
   }
@@ -77,20 +120,11 @@ export async function createPasskey(): Promise<void> {
 }
 
 export async function signInWithPasskey(): Promise<void> {
-  const options = await apiRequest<PublicKeyRequestOptionsJSON>(
+  const response = await apiRequest<RequestOptionsResponseJSON>(
     '/api/v1/passkeys/authenticate/options',
     { method: 'POST' },
   );
-  const credential = await navigator.credentials.get({
-    publicKey: {
-      ...options,
-      challenge: fromBase64URL(options.challenge),
-      allowCredentials: options.allowCredentials?.map(item => ({
-        ...item,
-        id: fromBase64URL(item.id),
-      })),
-    },
-  });
+  const credential = await navigator.credentials.get(decodeRequestOptions(response));
   if (!(credential instanceof PublicKeyCredential)) {
     throw new Error('Passkey sign-in was cancelled');
   }

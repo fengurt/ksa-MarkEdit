@@ -41,7 +41,9 @@ async fn main() -> Result<()> {
     let config = Config::from_env()?;
     let bind = config.bind;
     let state = AppState::new(config.clone()).await?;
-    let origin = HeaderValue::from_str(config.public_origin.as_str())?;
+    // Browsers serialize an Origin without a trailing slash. `Url::as_str()`
+    // adds one for a bare origin, which would make every CORS preflight fail.
+    let origin = HeaderValue::from_str(&config.public_origin.origin().ascii_serialization())?;
     let cors = CorsLayer::new()
         .allow_origin(origin)
         .allow_credentials(true)

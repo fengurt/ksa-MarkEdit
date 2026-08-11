@@ -1,8 +1,9 @@
-import type { NoteFile } from '../types';
+import type { ConflictRecord, ConflictVersion, NoteFile } from '../types';
 
 export type WorkspaceMergeResult = {
   files: NoteFile[];
   conflicts: number;
+  conflictRecords: ConflictRecord[];
 };
 
 export function mergeWorkspaceFiles({
@@ -23,6 +24,7 @@ export function mergeWorkspaceFiles({
   const remoteById = new Map(remote.map(file => [file.id, file]));
   const allIDs = new Set([...baseById.keys(), ...localById.keys(), ...remoteById.keys()]);
   const files: NoteFile[] = [];
+  const conflictRecords: ConflictRecord[] = [];
   let conflicts = 0;
 
   for (const id of [...allIDs].sort()) {
@@ -34,7 +36,18 @@ export function mergeWorkspaceFiles({
         if (sameFile(ours, theirs)) {
           files.push(newer(ours, theirs));
         } else {
-          files.push(ours, conflictCopy(theirs, remoteLabel, now));
+          const copy = conflictCopy(theirs, remoteLabel, now);
+          files.push(ours, copy);
+          conflictRecords.push(conflictRecord({
+            fileId: ours.id,
+            path: ours.path,
+            reason: 'content',
+            now,
+            local: ours,
+            remote: theirs,
+            preservedFileIds: [ours.id, copy.id],
+            remoteLabel,
+          }));
           conflicts += 1;
         }
       } else if (ours || theirs) {
@@ -51,7 +64,18 @@ export function mergeWorkspaceFiles({
         continue;
       }
       if (theirs) {
-        files.push(conflictCopy(theirs, remoteLabel, now));
+        const copy = conflictCopy(theirs, remoteLabel, now);
+        files.push(copy);
+        conflictRecords.push(conflictRecord({
+          fileId: copy.id,
+          path: theirs.path,
+          reason: 'delete',
+          now,
+          base: ancestor,
+          remote: theirs,
+          preservedFileIds: [copy.id],
+          remoteLabel,
+        }));
         conflicts += 1;
       }
       continue;
@@ -60,7 +84,18 @@ export function mergeWorkspaceFiles({
       if (sameFile(ancestor, ours)) {
         continue;
       }
-      files.push(conflictCopy(ours, 'local', now));
+      const copy = conflictCopy(ours, 'local', now);
+      files.push(copy);
+      conflictRecords.push(conflictRecord({
+        fileId: copy.id,
+        path: ours.path,
+        reason: 'delete',
+        now,
+        base: ancestor,
+        local: ours,
+        preservedFileIds: [copy.id],
+        remoteLabel,
+      }));
       conflicts += 1;
       continue;
     }
@@ -78,7 +113,19 @@ export function mergeWorkspaceFiles({
     const path = mergeValue(ancestor.path, ours.path, theirs.path);
     const content = mergeMarkdown(ancestor.content, ours.content, theirs.content);
     if (path === undefined || content === undefined) {
-      files.push(ours, conflictCopy(theirs, remoteLabel, now));
+      const copy = conflictCopy(theirs, remoteLabel, now);
+      files.push(ours, copy);
+      conflictRecords.push(conflictRecord({
+        fileId: ours.id,
+        path: ours.path,
+        reason: path === undefined ? 'path' : 'content',
+        now,
+        base: ancestor,
+        local: ours,
+        remote: theirs,
+        preservedFileIds: [ours.id, copy.id],
+        remoteLabel,
+      }));
       conflicts += 1;
       continue;
     }
@@ -93,16 +140,56 @@ export function mergeWorkspaceFiles({
 
   const unique: NoteFile[] = [];
   const usedPaths = new Set<string>();
+  const usedFiles = new Map<string, NoteFile>();
   for (const file of files.sort((left, right) => left.path.localeCompare(right.path))) {
     if (usedPaths.has(file.path)) {
-      unique.push(conflictCopy(file, remoteLabel, now, usedPaths));
+      const copy = conflictCopy(file, remoteLabel, now, usedPaths);
+      const existing = usedFiles.get(file.path);
+      unique.push(copy);
+      conflictRecords.push(conflictRecord({
+        fileId: existing?.id ?? copy.id,
+        path: file.path,
+        reason: 'duplicate',
+        now,
+        local: existing,
+        remote: file,
+        preservedFileIds: existing ? [existing.id, copy.id] : [copy.id],
+        remoteLabel,
+      }));
       conflicts += 1;
     } else {
       usedPaths.add(file.path);
+      usedFiles.set(file.path, file);
       unique.push(file);
     }
   }
-  return { files: unique, conflicts };
+  return { files: unique, conflicts, conflictRecords };
+}
+
+export function suggestedConflictContent(record: ConflictRecord): string {
+  const base = record.versions.find(version => version.source === 'base')?.content;
+  const local = record.versions.find(version => version.source === 'local')?.content;
+  const remote = record.versions.find(version => version.source === 'remote')?.content;
+  if (local === undefined) {
+    return remote ?? '';
+  }
+  if (remote === undefined) {
+    return local;
+  }
+  return base === undefined ? local : (mergeMarkdown(base, local, remote) ?? local);
+}
+
+export function combineConflictContent(record: ConflictRecord): string {
+  const local = record.versions.find(version => version.source === 'local')?.content;
+  const remote = record.versions.find(version => version.source === 'remote')?.content;
+  if (local === undefined) {
+    return remote ?? '';
+  }
+  if (remote === undefined || remote === local) {
+    return local;
+  }
+  const separator = local.endsWith('\n') ? '\n' : '\n\n';
+  return `${local}${separator}---\n\n${remote}`;
 }
 
 export function mergeMarkdown(
@@ -221,4 +308,62 @@ function conflictPath(path: string, label: string, now: number): string {
 
 function lines(value: string): string[] {
   return value.match(/[^\n]*\n|[^\n]+$/gu) ?? [];
+}
+
+function conflictRecord({
+  fileId,
+  path,
+  reason,
+  now,
+  base,
+  local,
+  remote,
+  preservedFileIds,
+  remoteLabel,
+}: {
+  fileId: string;
+  path: string;
+  reason: ConflictRecord['reason'];
+  now: number;
+  base?: NoteFile;
+  local?: NoteFile;
+  remote?: NoteFile;
+  preservedFileIds: string[];
+  remoteLabel: string;
+}): ConflictRecord {
+  const versions: ConflictVersion[] = [];
+  if (base) {
+    versions.push(snapshot('base', 'Common ancestor', base));
+  }
+  if (local) {
+    versions.push(snapshot('local', 'This device', local));
+  }
+  if (remote) {
+    versions.push(snapshot('remote', remoteLabel, remote));
+  }
+  return {
+    version: 1,
+    id: crypto.randomUUID(),
+    fileId,
+    path,
+    reason,
+    createdAt: now,
+    versions,
+    preservedFileIds: [...new Set(preservedFileIds)],
+  };
+}
+
+function snapshot(
+  source: ConflictVersion['source'],
+  label: string,
+  file: NoteFile,
+): ConflictVersion {
+  return {
+    source,
+    label,
+    fileId: file.id,
+    path: file.path,
+    content: file.content,
+    modifiedAt: file.modifiedAt,
+  };
 }

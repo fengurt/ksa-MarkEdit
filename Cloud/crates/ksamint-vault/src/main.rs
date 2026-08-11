@@ -36,7 +36,7 @@ enum Command {
     GenerateKit {
         #[arg(long)]
         vault_id: Uuid,
-        #[arg(long, default_value = "https://api.notes.apuch.art")]
+        #[arg(long, default_value = "https://api.notes.apuch.cn")]
         api_base: String,
         #[arg(long)]
         output: PathBuf,
