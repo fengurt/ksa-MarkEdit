@@ -9,7 +9,7 @@ import Foundation
 import MarkEditCore
 import MarkEditKit
 
-/**
+/*
  To make localization work, always use `String(localized:comment:)` directly and add to this file.
 
  Besides, we use `string catalogs` to do the translation work:
@@ -18,6 +18,7 @@ import MarkEditKit
  The only exception to not using this file for localization is the app intents,
  where we rely on `LocalizedStringResource` instead.
  */
+// swiftlint:disable:next type_body_length
 enum Localized {
   enum General {
     static let done = String(localized: "Done", comment: "Button title, confirm an action")
@@ -85,6 +86,40 @@ enum Localized {
     static let findSelection = String(localized: "Find Selection", comment: "Menu item: use selection to find")
     static let selectAllOccurrences = String(localized: "Select All Occurrences", comment: "Menu item: select all occurrences")
     static let indexOfMatches = String(localized: "%d of %d", comment: "Index of matches, such as 1 of 3")
+  }
+
+  enum Workspace {
+    static let files = String(localized: "Files", comment: "Workspace sidebar files tab")
+    static let search = String(localized: "Search", comment: "Workspace sidebar search tab")
+    static let open = String(localized: "Open", comment: "Open the selected workspace file")
+    static let openFolder = String(localized: "Open Folder…", comment: "Choose a workspace folder")
+    static let chooseFolderDescription = String(localized: "Choose a folder to use as this window’s workspace.", comment: "Workspace folder picker description")
+    static let noFolder = String(localized: "No Workspace", comment: "Workspace sidebar title when no folder is open")
+    static let noFolderDescription = String(localized: "Open a folder to browse and search its Markdown files.", comment: "Empty workspace description")
+    static let authorizationExpired = String(localized: "Access to this workspace has expired.", comment: "Expired workspace bookmark message")
+    static let reauthorize = String(localized: "Reauthorize…", comment: "Reauthorize an expired workspace")
+    static let authorizationFailed = String(localized: "Couldn’t Open Workspace", comment: "Workspace authorization failure title")
+    static let newFile = String(localized: "New File", comment: "Create a file in the workspace")
+    static let newFolder = String(localized: "New Folder", comment: "Create a folder in the workspace")
+    static let untitledFile = String(localized: "Untitled", comment: "Default name for a workspace file")
+    static let untitledFolder = String(localized: "Untitled Folder", comment: "Default name for a workspace folder")
+    static let name = String(localized: "Name", comment: "Workspace file or folder name")
+    static let rename = String(localized: "Rename…", comment: "Rename a workspace item")
+    static let moveToTrash = String(localized: "Move to Trash", comment: "Move a workspace item to the Trash")
+    static let trashConfirmationFormat = String(localized: "Move “%@” to the Trash?", comment: "Workspace trash confirmation")
+    static let refresh = String(localized: "Refresh", comment: "Refresh the workspace tree and search index")
+    static let searchPlaceholder = String(localized: "Search workspace", comment: "Workspace search field placeholder")
+    static let searching = String(localized: "Searching…", comment: "Workspace search progress")
+    static let indexing = String(localized: "Indexing workspace…", comment: "Workspace indexing progress")
+    static let indexedFilesFormat = String(localized: "%d files indexed", comment: "Workspace index file count")
+    static let resultCountFormat = String(localized: "%d results", comment: "Workspace search result count")
+    static let indexFailed = String(localized: "Index unavailable — search will scan files.", comment: "Workspace index failure message")
+    static let outsideWorkspace = String(localized: "The item is outside the workspace folder.", comment: "Blocked workspace traversal message")
+    static let invalidName = String(localized: "Enter a valid name without path separators.", comment: "Invalid workspace item name")
+    static let itemExists = String(localized: "An item with that name already exists.", comment: "Duplicate workspace item message")
+    static let cannotMoveRoot = String(localized: "The workspace root folder cannot be moved or deleted here.", comment: "Blocked root move message")
+    static let unsavedMoveBlocked = String(localized: "Save or close the edited document before moving it.", comment: "Blocked move of unsaved open document")
+    static let operationFailed = String(localized: "Workspace Operation Failed", comment: "Workspace file operation error title")
   }
 
   enum Document {

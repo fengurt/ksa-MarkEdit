@@ -59,9 +59,9 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(path: "../MarkEditCore"),
-    .package(path: "../MarkEditKit"),
-    .package(path: "../MarkEditTools"),
+    .package(path: "../../MarkEditCore"),
+    .package(path: "../../MarkEditKit"),
+    .package(path: "../../MarkEditTools"),
   ],
   targets: [
     .target(
@@ -70,6 +70,9 @@ let package = Package(
       path: "Sources/SharedUI",
       swiftSettings: [
         .enableExperimentalFeature("StrictConcurrency")
+      ],
+      linkerSettings: [
+        .linkedLibrary("sqlite3"),
       ],
       plugins: [
         .plugin(name: "SwiftLint", package: "MarkEditTools"),

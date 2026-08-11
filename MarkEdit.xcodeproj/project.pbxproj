@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB1100013000000000000001 /* WorkspaceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100023000000000000001 /* WorkspaceSession.swift */; };
+		AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100043000000000000001 /* WorkspaceSidebarView.swift */; };
+		AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100063000000000000001 /* EditorViewController+Workspace.swift */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
@@ -161,6 +164,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AB1100023000000000000001 /* WorkspaceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSession.swift; sourceTree = "<group>"; };
+		AB1100043000000000000001 /* WorkspaceSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarView.swift; sourceTree = "<group>"; };
+		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
 		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -574,6 +580,7 @@
 			isa = PBXGroup;
 			children = (
 				870A51B4294702AF0095C7EB /* EditorViewController.swift */,
+				AB1100063000000000000001 /* EditorViewController+Workspace.swift */,
 				8767BBAE295A8BA500BFACAE /* EditorViewController+UI.swift */,
 				874065782BB505F500B5CE5A /* EditorViewController+Events.swift */,
 				870F17672985285B00003DA7 /* EditorViewController+Config.swift */,
@@ -645,6 +652,7 @@
 			isa = PBXGroup;
 			children = (
 				870A51B8294702AF0095C7EB /* EditorDocument.swift */,
+				AB1100023000000000000001 /* WorkspaceSession.swift */,
 				CC000002300000000000001B /* EditorDocument+ClosedTab.swift */,
 				8772E384294AC60D00111E83 /* EditorPreloader.swift */,
 				8725E07F2977EEB3006A4961 /* EditorToolbarItems.swift */,
@@ -656,6 +664,7 @@
 		87A73AB1294C4B0A006A710E /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				AB1100043000000000000001 /* WorkspaceSidebarView.swift */,
 				87091B992A963C6B00F5EF0D /* EditorTextInput.swift */,
 				8752CEB5295B2F8800BA9D5B /* EditorPanelView.swift */,
 				87A73AB2294C4B27006A710E /* EditorWebView.swift */,
@@ -887,6 +896,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB1100013000000000000001 /* WorkspaceSession.swift in Sources */,
+				AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */,
+				AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */,
 				8725E0822977EF46006A4961 /* EditorViewController+Toolbar.swift in Sources */,
 				874BE6F429BB37FA002F83BA /* IntentProvider.swift in Sources */,
 				87B3ED5D2CBCADD6001FA6CE /* NSDocumentController+Extras.swift in Sources */,

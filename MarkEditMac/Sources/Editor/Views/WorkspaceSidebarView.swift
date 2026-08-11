@@ -1,0 +1,623 @@
+//
+//  WorkspaceSidebarView.swift
+//  MarkEditMac
+//
+//  Created by ksamint on 7/27/26.
+//
+
+import AppKit
+import SharedUI
+
+@MainActor
+final class WorkspaceSidebarView: NSView {
+  var onModeSelected: ((WorkspaceSidebarMode) -> Void)?
+  var onChooseWorkspace: (() -> Void)?
+  var onOpenResult: ((URL, Int?) -> Void)?
+  var onCreateFile: ((URL) -> Void)?
+  var onCreateFolder: ((URL) -> Void)?
+  var onRename: ((URL) -> Void)?
+  var onMoveToTrash: ((URL) -> Void)?
+  var onMove: ((URL, URL) -> Bool)?
+  var onResize: ((Double) -> Void)?
+
+  var mode: WorkspaceSidebarMode = .files {
+    didSet {
+      modeControl.selectedSegment = mode == .search ? 1 : 0
+      filesContainer.isHidden = mode != .files
+      searchContainer.isHidden = mode != .search
+      if mode == .search {
+        window?.makeFirstResponder(searchField)
+      }
+    }
+  }
+
+  var session: WorkspaceSession? {
+    didSet {
+      session?.onFileSystemChange = { [weak self] in
+        self?.reloadTree()
+      }
+      session?.onIndexStateChange = { [weak self] state in
+        self?.updateIndexState(state)
+      }
+
+      reloadTree()
+      updateAuthorizationState()
+      session?.rebuildIndex()
+    }
+  }
+
+  private let modeControl = NSSegmentedControl()
+  private let filesContainer = NSView()
+  private let searchContainer = NSView()
+  private let rootLabel = NSTextField(labelWithString: "")
+  private let authorizationLabel = NSTextField(wrappingLabelWithString: "")
+  private let authorizeButton = NSButton()
+  private let outlineView = NSOutlineView()
+  private let outlineScrollView = NSScrollView()
+  private let addButton = NSButton()
+  private let refreshButton = NSButton()
+  private let searchField = NSSearchField()
+  private let searchTableView = NSTableView()
+  private let searchScrollView = NSScrollView()
+  private let searchStatusLabel = NSTextField(labelWithString: "")
+  private let resizeHandle = WorkspaceResizeHandle()
+
+  private var rootNode: WorkspaceTreeNode?
+  private var searchResults = [WorkspaceSearchResult]()
+  private var searchTask: Task<Void, Never>?
+
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    setUp()
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  deinit {
+    searchTask?.cancel()
+  }
+
+  func reloadTree() {
+    rootNode = session.map { WorkspaceTreeNode(url: $0.rootURL) }
+    rootLabel.stringValue = session?.rootURL.lastPathComponent ?? Localized.Workspace.noFolder
+    rootLabel.toolTip = session?.rootURL.path
+    outlineView.reloadData()
+  }
+
+  func focusSearch() {
+    window?.makeFirstResponder(searchField)
+  }
+}
+
+// MARK: - Setup
+
+private extension WorkspaceSidebarView {
+  func setUp() {
+    wantsLayer = true
+    layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+
+    modeControl.segmentCount = 2
+    modeControl.setLabel(Localized.Workspace.files, forSegment: 0)
+    modeControl.setLabel(Localized.Workspace.search, forSegment: 1)
+    modeControl.segmentStyle = .texturedRounded
+    modeControl.trackingMode = .selectOne
+    modeControl.selectedSegment = 0
+    modeControl.target = self
+    modeControl.action = #selector(selectMode(_:))
+
+    rootLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+    rootLabel.lineBreakMode = .byTruncatingMiddle
+    rootLabel.toolTip = session?.rootURL.path
+
+    configureOutlineView()
+    configureSearchView()
+    configureAuthorizationView()
+
+    addButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: Localized.Workspace.newFile)
+    addButton.bezelStyle = .accessoryBarAction
+    addButton.target = self
+    addButton.action = #selector(showAddMenu(_:))
+
+    refreshButton.image = NSImage(
+      systemSymbolName: "arrow.clockwise",
+      accessibilityDescription: Localized.Workspace.refresh
+    )
+    refreshButton.bezelStyle = .accessoryBarAction
+    refreshButton.target = self
+    refreshButton.action = #selector(refresh(_:))
+
+    resizeHandle.onDrag = { [weak self] delta in
+      self?.onResize?(delta)
+    }
+
+    [modeControl, filesContainer, searchContainer, resizeHandle].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      addSubview($0)
+    }
+    [rootLabel, outlineScrollView, authorizationLabel, authorizeButton, addButton, refreshButton].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      filesContainer.addSubview($0)
+    }
+    [searchField, searchScrollView, searchStatusLabel].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      searchContainer.addSubview($0)
+    }
+
+    NSLayoutConstraint.activate([
+      modeControl.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+      modeControl.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+      modeControl.trailingAnchor.constraint(equalTo: resizeHandle.leadingAnchor, constant: -8),
+
+      filesContainer.topAnchor.constraint(equalTo: modeControl.bottomAnchor, constant: 6),
+      filesContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
+      filesContainer.trailingAnchor.constraint(equalTo: resizeHandle.leadingAnchor),
+      filesContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+      searchContainer.topAnchor.constraint(equalTo: filesContainer.topAnchor),
+      searchContainer.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
+      searchContainer.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
+      searchContainer.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor),
+
+      resizeHandle.topAnchor.constraint(equalTo: topAnchor),
+      resizeHandle.trailingAnchor.constraint(equalTo: trailingAnchor),
+      resizeHandle.bottomAnchor.constraint(equalTo: bottomAnchor),
+      resizeHandle.widthAnchor.constraint(equalToConstant: 5),
+
+      rootLabel.topAnchor.constraint(equalTo: filesContainer.topAnchor, constant: 6),
+      rootLabel.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor, constant: 10),
+      rootLabel.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor, constant: -10),
+
+      outlineScrollView.topAnchor.constraint(equalTo: rootLabel.bottomAnchor, constant: 5),
+      outlineScrollView.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor),
+      outlineScrollView.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor),
+      outlineScrollView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -5),
+
+      authorizationLabel.centerYAnchor.constraint(equalTo: outlineScrollView.centerYAnchor, constant: -18),
+      authorizationLabel.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor, constant: 22),
+      authorizationLabel.trailingAnchor.constraint(equalTo: filesContainer.trailingAnchor, constant: -22),
+      authorizeButton.topAnchor.constraint(equalTo: authorizationLabel.bottomAnchor, constant: 10),
+      authorizeButton.centerXAnchor.constraint(equalTo: filesContainer.centerXAnchor),
+
+      addButton.leadingAnchor.constraint(equalTo: filesContainer.leadingAnchor, constant: 8),
+      addButton.bottomAnchor.constraint(equalTo: filesContainer.bottomAnchor, constant: -5),
+      refreshButton.leadingAnchor.constraint(equalTo: addButton.trailingAnchor, constant: 4),
+      refreshButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+
+      searchField.topAnchor.constraint(equalTo: searchContainer.topAnchor, constant: 6),
+      searchField.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 8),
+      searchField.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -8),
+      searchScrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 6),
+      searchScrollView.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor),
+      searchScrollView.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor),
+      searchScrollView.bottomAnchor.constraint(equalTo: searchStatusLabel.topAnchor, constant: -4),
+      searchStatusLabel.leadingAnchor.constraint(equalTo: searchContainer.leadingAnchor, constant: 10),
+      searchStatusLabel.trailingAnchor.constraint(equalTo: searchContainer.trailingAnchor, constant: -10),
+      searchStatusLabel.bottomAnchor.constraint(equalTo: searchContainer.bottomAnchor, constant: -7),
+    ])
+
+    searchContainer.isHidden = true
+    updateAuthorizationState()
+  }
+
+  func configureOutlineView() {
+    let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("WorkspaceFile"))
+    column.resizingMask = .autoresizingMask
+    outlineView.addTableColumn(column)
+    outlineView.outlineTableColumn = column
+    outlineView.headerView = nil
+    outlineView.rowSizeStyle = .default
+    outlineView.delegate = self
+    outlineView.dataSource = self
+    outlineView.target = self
+    outlineView.doubleAction = #selector(openSelectedFile(_:))
+    outlineView.registerForDraggedTypes([.workspaceFileURL])
+    outlineView.setDraggingSourceOperationMask(.move, forLocal: true)
+    outlineView.menu = makeContextMenu()
+
+    outlineScrollView.documentView = outlineView
+    outlineScrollView.hasVerticalScroller = true
+    outlineScrollView.drawsBackground = false
+  }
+
+  func configureSearchView() {
+    let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("WorkspaceSearchResult"))
+    column.resizingMask = .autoresizingMask
+    searchTableView.addTableColumn(column)
+    searchTableView.headerView = nil
+    searchTableView.rowHeight = 44
+    searchTableView.delegate = self
+    searchTableView.dataSource = self
+    searchTableView.target = self
+    searchTableView.doubleAction = #selector(openSelectedSearchResult(_:))
+
+    searchScrollView.documentView = searchTableView
+    searchScrollView.hasVerticalScroller = true
+    searchScrollView.drawsBackground = false
+
+    searchField.placeholderString = Localized.Workspace.searchPlaceholder
+    searchField.sendsSearchStringImmediately = true
+    searchField.target = self
+    searchField.action = #selector(search(_:))
+
+    searchStatusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+    searchStatusLabel.textColor = .secondaryLabelColor
+    searchStatusLabel.lineBreakMode = .byTruncatingTail
+    searchStatusLabel.stringValue = Localized.Workspace.indexing
+  }
+
+  func configureAuthorizationView() {
+    authorizationLabel.alignment = .center
+    authorizationLabel.textColor = .secondaryLabelColor
+    authorizeButton.bezelStyle = .rounded
+    authorizeButton.target = self
+    authorizeButton.action = #selector(chooseWorkspace(_:))
+  }
+
+  func updateAuthorizationState() {
+    let hasSession = session != nil
+    let isAuthorized = session?.isAuthorized == true
+
+    authorizationLabel.stringValue = hasSession
+      ? Localized.Workspace.authorizationExpired
+      : Localized.Workspace.noFolderDescription
+    authorizeButton.title = hasSession
+      ? Localized.Workspace.reauthorize
+      : Localized.Workspace.openFolder
+
+    authorizationLabel.isHidden = isAuthorized
+    authorizeButton.isHidden = isAuthorized
+    outlineScrollView.isHidden = !isAuthorized
+    addButton.isEnabled = isAuthorized
+    refreshButton.isEnabled = isAuthorized
+    searchField.isEnabled = isAuthorized
+  }
+
+  func updateIndexState(_ state: WorkspaceIndexState) {
+    switch state {
+    case .idle:
+      searchStatusLabel.stringValue = ""
+    case .indexing:
+      searchStatusLabel.stringValue = Localized.Workspace.indexing
+    case let .ready(fileCount):
+      searchStatusLabel.stringValue = String(
+        format: Localized.Workspace.indexedFilesFormat,
+        fileCount
+      )
+    case .failed:
+      searchStatusLabel.stringValue = Localized.Workspace.indexFailed
+    }
+  }
+
+  func selectedDirectory() -> URL? {
+    guard let selectedNode = outlineView.item(atRow: outlineView.selectedRow) as? WorkspaceTreeNode else {
+      return session?.rootURL
+    }
+
+    return selectedNode.isDirectory ? selectedNode.url : selectedNode.url.deletingLastPathComponent()
+  }
+
+  func makeContextMenu() -> NSMenu {
+    let menu = NSMenu()
+    menu.addItem(withTitle: Localized.Workspace.open, action: #selector(openSelectedFile(_:)), keyEquivalent: "")
+    menu.addItem(.separator())
+    menu.addItem(withTitle: Localized.Workspace.newFile, action: #selector(createFile(_:)), keyEquivalent: "")
+    menu.addItem(withTitle: Localized.Workspace.newFolder, action: #selector(createFolder(_:)), keyEquivalent: "")
+    menu.addItem(.separator())
+    menu.addItem(withTitle: Localized.Workspace.rename, action: #selector(rename(_:)), keyEquivalent: "")
+    menu.addItem(withTitle: Localized.Workspace.moveToTrash, action: #selector(moveToTrash(_:)), keyEquivalent: "")
+    menu.items.forEach { $0.target = self }
+    return menu
+  }
+}
+
+// MARK: - Actions
+
+private extension WorkspaceSidebarView {
+  @objc func selectMode(_ sender: NSSegmentedControl) {
+    onModeSelected?(sender.selectedSegment == 0 ? .files : .search)
+  }
+
+  @objc func chooseWorkspace(_ sender: Any?) {
+    onChooseWorkspace?()
+  }
+
+  @objc func refresh(_ sender: Any?) {
+    reloadTree()
+    session?.rebuildIndex()
+  }
+
+  @objc func showAddMenu(_ sender: NSButton) {
+    let menu = NSMenu()
+    menu.addItem(withTitle: Localized.Workspace.newFile, action: #selector(createFile(_:)), keyEquivalent: "")
+    menu.addItem(withTitle: Localized.Workspace.newFolder, action: #selector(createFolder(_:)), keyEquivalent: "")
+    menu.items.forEach { $0.target = self }
+    menu.popUp(positioning: nil, at: CGPoint(x: 0, y: sender.bounds.maxY), in: sender)
+  }
+
+  @objc func createFile(_ sender: Any?) {
+    guard let directory = selectedDirectory() else {
+      return
+    }
+    onCreateFile?(directory)
+  }
+
+  @objc func createFolder(_ sender: Any?) {
+    guard let directory = selectedDirectory() else {
+      return
+    }
+    onCreateFolder?(directory)
+  }
+
+  @objc func rename(_ sender: Any?) {
+    guard let node = outlineView.item(atRow: outlineView.selectedRow) as? WorkspaceTreeNode else {
+      return
+    }
+    onRename?(node.url)
+  }
+
+  @objc func moveToTrash(_ sender: Any?) {
+    guard let node = outlineView.item(atRow: outlineView.selectedRow) as? WorkspaceTreeNode else {
+      return
+    }
+    onMoveToTrash?(node.url)
+  }
+
+  @objc func openSelectedFile(_ sender: Any?) {
+    guard let node = outlineView.item(atRow: outlineView.selectedRow) as? WorkspaceTreeNode else {
+      return
+    }
+
+    if node.isDirectory && !node.isSymbolicLink {
+      if outlineView.isItemExpanded(node) {
+        outlineView.collapseItem(node)
+      } else {
+        outlineView.expandItem(node)
+      }
+    } else {
+      onOpenResult?(node.url, nil)
+    }
+  }
+
+  @objc func search(_ sender: NSSearchField) {
+    searchTask?.cancel()
+    let query = sender.stringValue
+    guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      searchResults = []
+      searchTableView.reloadData()
+      return
+    }
+
+    searchStatusLabel.stringValue = Localized.Workspace.searching
+    searchTask = Task { [weak self] in
+      try? await Task.sleep(for: .milliseconds(120))
+      guard let self, !Task.isCancelled, let session else {
+        return
+      }
+
+      let results = await session.search(query)
+      guard !Task.isCancelled else {
+        return
+      }
+
+      searchResults = results
+      searchTableView.reloadData()
+      searchStatusLabel.stringValue = String(
+        format: Localized.Workspace.resultCountFormat,
+        results.count
+      )
+    }
+  }
+
+  @objc func openSelectedSearchResult(_ sender: Any?) {
+    let row = searchTableView.selectedRow
+    guard searchResults.indices.contains(row) else {
+      return
+    }
+
+    let result = searchResults[row]
+    onOpenResult?(result.url, result.lineNumber)
+  }
+}
+
+// MARK: - Outline View
+
+extension WorkspaceSidebarView: NSOutlineViewDataSource, NSOutlineViewDelegate {
+  func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+    if let node = item as? WorkspaceTreeNode {
+      return node.children(showHiddenFiles: AppPreferences.General.showHiddenFiles).count
+    }
+
+    return rootNode?.children(showHiddenFiles: AppPreferences.General.showHiddenFiles).count ?? 0
+  }
+
+  func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+    let children = (item as? WorkspaceTreeNode)?.children(
+      showHiddenFiles: AppPreferences.General.showHiddenFiles
+    ) ?? rootNode?.children(showHiddenFiles: AppPreferences.General.showHiddenFiles) ?? []
+    return children[index]
+  }
+
+  func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+    guard let node = item as? WorkspaceTreeNode else {
+      return false
+    }
+    return node.isDirectory && !node.isSymbolicLink
+  }
+
+  func outlineView(
+    _ outlineView: NSOutlineView,
+    viewFor tableColumn: NSTableColumn?,
+    item: Any
+  ) -> NSView? {
+    guard let node = item as? WorkspaceTreeNode else {
+      return nil
+    }
+
+    let identifier = NSUserInterfaceItemIdentifier("WorkspaceFileCell")
+    let cell = (outlineView.makeView(withIdentifier: identifier, owner: self) as? NSTableCellView)
+      ?? makeFileCell(identifier: identifier)
+
+    cell.textField?.stringValue = node.url.lastPathComponent
+    cell.imageView?.image = NSWorkspace.shared.icon(forFile: node.url.path)
+    cell.toolTip = node.url.path
+    return cell
+  }
+
+  func outlineView(
+    _ outlineView: NSOutlineView,
+    pasteboardWriterForItem item: Any
+  ) -> NSPasteboardWriting? {
+    guard let node = item as? WorkspaceTreeNode else {
+      return nil
+    }
+
+    let item = NSPasteboardItem()
+    item.setString(node.url.path, forType: .workspaceFileURL)
+    return item
+  }
+
+  func outlineView(
+    _ outlineView: NSOutlineView,
+    validateDrop info: NSDraggingInfo,
+    proposedItem item: Any?,
+    proposedChildIndex index: Int
+  ) -> NSDragOperation {
+    guard let node = item as? WorkspaceTreeNode, node.isDirectory, !node.isSymbolicLink else {
+      return []
+    }
+    return .move
+  }
+
+  func outlineView(
+    _ outlineView: NSOutlineView,
+    acceptDrop info: NSDraggingInfo,
+    item: Any?,
+    childIndex index: Int
+  ) -> Bool {
+    guard let target = item as? WorkspaceTreeNode,
+          let path = info.draggingPasteboard.string(forType: .workspaceFileURL) else {
+      return false
+    }
+
+    let sourceURL = URL(filePath: path)
+    let moved = onMove?(sourceURL, target.url) == true
+    if moved {
+      reloadTree()
+    }
+    return moved
+  }
+
+  private func makeFileCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
+    let cell = NSTableCellView()
+    cell.identifier = identifier
+
+    let imageView = NSImageView()
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    imageView.imageScaling = .scaleProportionallyDown
+    cell.imageView = imageView
+    cell.addSubview(imageView)
+
+    let label = NSTextField(labelWithString: "")
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.lineBreakMode = .byTruncatingMiddle
+    cell.textField = label
+    cell.addSubview(label)
+
+    NSLayoutConstraint.activate([
+      imageView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 3),
+      imageView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+      imageView.widthAnchor.constraint(equalToConstant: 16),
+      imageView.heightAnchor.constraint(equalToConstant: 16),
+      label.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 5),
+      label.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -3),
+      label.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+    ])
+    return cell
+  }
+}
+
+// MARK: - Search Results
+
+extension WorkspaceSidebarView: NSTableViewDataSource, NSTableViewDelegate {
+  func numberOfRows(in tableView: NSTableView) -> Int {
+    searchResults.count
+  }
+
+  func tableView(
+    _ tableView: NSTableView,
+    viewFor tableColumn: NSTableColumn?,
+    row: Int
+  ) -> NSView? {
+    guard searchResults.indices.contains(row) else {
+      return nil
+    }
+
+    let identifier = NSUserInterfaceItemIdentifier("WorkspaceSearchCell")
+    let cell = (tableView.makeView(withIdentifier: identifier, owner: self) as? NSTableCellView)
+      ?? makeSearchCell(identifier: identifier)
+    let result = searchResults[row]
+
+    cell.textField?.stringValue = "\(result.relativePath):\(result.lineNumber)\n\(result.snippet)"
+    cell.toolTip = result.url.path
+    return cell
+  }
+
+  private func makeSearchCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
+    let cell = NSTableCellView()
+    cell.identifier = identifier
+
+    let label = NSTextField(wrappingLabelWithString: "")
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.maximumNumberOfLines = 2
+    label.lineBreakMode = .byTruncatingTail
+    label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+    cell.textField = label
+    cell.addSubview(label)
+
+    NSLayoutConstraint.activate([
+      label.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 7),
+      label.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -7),
+      label.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+    ])
+    return cell
+  }
+}
+
+private final class WorkspaceResizeHandle: NSView {
+  var onDrag: ((Double) -> Void)?
+  private var previousX: Double?
+
+  override func resetCursorRects() {
+    addCursorRect(bounds, cursor: .resizeLeftRight)
+  }
+
+  override func mouseDown(with event: NSEvent) {
+    previousX = event.locationInWindow.x
+  }
+
+  override func mouseDragged(with event: NSEvent) {
+    guard let previousX else {
+      return
+    }
+
+    let x = event.locationInWindow.x
+    onDrag?(x - previousX)
+    self.previousX = x
+  }
+
+  override func mouseUp(with event: NSEvent) {
+    previousX = nil
+  }
+
+  override func draw(_ dirtyRect: NSRect) {
+    NSColor.separatorColor.setFill()
+    NSRect(x: bounds.midX, y: bounds.minY, width: 1, height: bounds.height).fill()
+  }
+}
+
+private extension NSPasteboard.PasteboardType {
+  static let workspaceFileURL = NSPasteboard.PasteboardType("art.apuch.ksamint-markedit.workspace-file")
+}
