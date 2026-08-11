@@ -5,7 +5,7 @@ import ServiceManagement
 
 // The capture concerns are extracted into document and queue modules in the
 // immediately following system-integration change.
-// swiftlint:disable:next type_body_length
+// swiftlint:disable type_body_length
 @MainActor
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
@@ -539,6 +539,7 @@ final class ConversationCaptureCoordinator: NSObject {
     return String(array.dropFirst().dropLast())
   }
 }
+// swiftlint:enable type_body_length
 
 private struct CapturedTurn {
   let role: String
