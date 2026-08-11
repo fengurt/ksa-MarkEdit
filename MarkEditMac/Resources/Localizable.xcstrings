@@ -9680,6 +9680,15 @@
         "fr": { "stringUnit": { "state": "translated", "value": "Recherche approfondie indisponible" } }
       }
     },
+    "Open System Settings": {
+      "comment": "Open Login Items settings for helper approval",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开系统设置" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟系統設定" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "システム設定を開く" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir Réglages Système" } }
+      }
+    },
     "Workspace Operation Failed": {
       "comment": "Workspace interface",
       "localizations": {

@@ -232,7 +232,7 @@ final class ConversationCaptureCoordinator: NSObject {
   }
 }
 
-private extension ConversationCaptureCoordinator {
+extension ConversationCaptureCoordinator {
   private func installStatusItem() {
     guard statusItem == nil else { return }
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -412,12 +412,15 @@ private extension ConversationCaptureCoordinator {
   }
 
   private func showLoginItemApprovalRequired() {
-    let notification = NSUserNotification()
-    notification.title = String(localized: "Enable Conversation Capture")
-    notification.informativeText = String(
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Enable Conversation Capture")
+    alert.informativeText = String(
       localized: "Allow ksamint Conversation Capture in System Settings › General › Login Items."
     )
-    NSUserNotificationCenter.default.deliver(notification)
+    alert.addButton(withTitle: String(localized: "Open System Settings"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
     if let settings = URL(
       string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
     ) {
