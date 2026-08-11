@@ -171,14 +171,59 @@ jobs:
             -archivePath "$RUNNER_TEMP/ksamint.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+          ditto -c -k --keepParent \
+            "$RUNNER_TEMP/export/ksamint MarkEdit.app" \
+            "$RUNNER_TEMP/ksamint-MarkEdit-signed-unstapled.zip"
+      - name: Preserve signed app before notarization
+        uses: actions/upload-artifact@v4
+        with:
+          name: ksamint-MarkEdit-signed-unstapled
+          path: ${{ runner.temp }}/ksamint-MarkEdit-signed-unstapled.zip
+          if-no-files-found: error
+          retention-days: 7
       - name: Notarize, staple, and verify
         run: |
           app="$RUNNER_TEMP/export/ksamint MarkEdit.app"
-          before="$RUNNER_TEMP/notarization.zip"
-          ditto -c -k --keepParent "$app" "$before"
+          before="$RUNNER_TEMP/ksamint-MarkEdit-signed-unstapled.zip"
           key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
           printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
-          xcrun notarytool submit "$before" --key "$key" --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" --wait
+          submission="$(xcrun notarytool submit "$before" \
+            --key "$key" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --output-format json)"
+          submission_id="$(printf '%s' "$submission" | jq -r '.id')"
+          test -n "$submission_id"
+          test "$submission_id" != null
+          echo "Notary submission: $submission_id"
+          deadline="$(( $(date +%s) + 21600 ))"
+          while true; do
+            if status_json="$(xcrun notarytool info "$submission_id" \
+              --key "$key" \
+              --key-id "$APPLE_NOTARY_KEY_ID" \
+              --issuer "$APPLE_NOTARY_ISSUER_ID" \
+              --output-format json)"; then
+              status="$(printf '%s' "$status_json" | jq -r '.status')"
+              echo "Current status: $status"
+              case "$status" in
+                Accepted) break ;;
+                Invalid|Rejected)
+                  xcrun notarytool log "$submission_id" \
+                    --key "$key" \
+                    --key-id "$APPLE_NOTARY_KEY_ID" \
+                    --issuer "$APPLE_NOTARY_ISSUER_ID" || true
+                  exit 1
+                  ;;
+              esac
+            else
+              echo 'Transient notary status request failure; retrying.' >&2
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "Timed out waiting for notarization: $submission_id" >&2
+              exit 1
+            fi
+            sleep 30
+          done
           xcrun stapler staple "$app"
           xcrun stapler validate "$app"
           codesign --verify --deep --strict --verbose=2 "$app"
