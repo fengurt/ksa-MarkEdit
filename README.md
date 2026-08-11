@@ -27,6 +27,7 @@ API stay compatible with upstream MarkEdit.
 - Optional Passkey account and zero-knowledge encrypted backup protocol
 - Tencent COS disaster recovery and private GitHub encrypted history
 - Independent universal `ksamint-vault` recovery CLI
+- Shared TypeScript vault protocol and expiring read-only Agent SDK
 - Finder and Quick Look extensions
 - Shortcuts, AppleScript, and JavaScript extension support
 - Universal Intel and Apple silicon build
@@ -80,6 +81,15 @@ GitHub App token broker, deployment files, and independent recovery CLI live in
 [`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
 in the app or Web PWA.
 
+The Web PWA encrypts files and paths before direct upload. On a remote head
+change it verifies and decrypts the new snapshot locally, performs a three-way
+Markdown merge, and creates timestamped conflict copies for overlapping edits
+or delete/edit races instead of silently overwriting either side. The shared
+`@ksamint/vault-protocol` package keeps deterministic CBOR and cryptographic
+test vectors aligned with Rust. `@ksamint/agent-sdk` verifies signed manifests
+and decrypts an explicit, expiring read-only capability inside the Agent
+process; the server never receives plaintext searches or keys.
+
 ## Language review
 
 Every translatable catalog entry is validated for completeness and placeholder
@@ -108,6 +118,8 @@ The project contains:
 - `MarkEditCore` and `MarkEditKit`: shared Swift packages
 - `MarkEditMac`: the native macOS app and feature modules
 - `WebApp`: the shared React/Vite offline knowledge workspace
+- `VaultProtocolTS`: shared TypeScript deterministic-CBOR and vault crypto
+- `AgentSDK`: remote read-only, client-side-decrypting Agent SDK
 - `FinderExtension` and `PreviewExtension`: native system integrations
 
 Use Node.js 22 and Xcode 26.5:

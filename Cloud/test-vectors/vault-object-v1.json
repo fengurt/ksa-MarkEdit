@@ -11,5 +11,9 @@
   "ciphertextSha256Hex": "d0081da7a5e15a18bf654858879491fe44d3dd9d0344598236c2d31f8bab2f75",
   "authenticationTagHex": "31cbb902385b28f1e7e462ef7a254f05",
   "objectDigestHex": "6803094fc0a0749565e706ad8594e18927bd355f7b0b3c4c5e8f3595f2e7fadc",
-  "signedManifestDigestHex": "c1ae192b99f62f4960f67332aceb918cc4badc8cdb597bbd84b46f3edd013790"
+  "pathNonceHex": "040404040404040404040404",
+  "pathCiphertextHex": "1ef91cd36e97a8fb04f8ef57948d6d",
+  "pathAuthenticationTagHex": "3cdcbd6ff080b187490728546d14b27b",
+  "manifestCborSha256Hex": "df7c9227eab743d6e8194421d4eda004f7bbcb08d02932b453c58ffc80ea9a29",
+  "signedManifestDigestHex": "7561fea6ba2a10abd586e49e1a6b39b19ae3b47e873547a146be99e142e34a56"
 }

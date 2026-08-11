@@ -11,6 +11,26 @@ permissions:
   contents: read
 
 jobs:
+  agent-sdk:
+    name: Read-only Agent SDK
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: AgentSDK/package-lock.json
+      - name: Validate TypeScript SDK
+        working-directory: AgentSDK
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm run lint
+          npm test
+          npm run build
+
   cloud:
     name: Private cloud and recovery
     runs-on: ubuntu-24.04
@@ -71,6 +91,8 @@ jobs:
           npm run lint
           npm test
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
 
       - name: Build ksamint MarkEdit
         run: |
@@ -130,6 +152,8 @@ jobs:
         run: |
           npm ci
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
       - name: Build deployment-target release
         run: |
           xcodebuild build \
@@ -165,6 +189,8 @@ jobs:
         run: |
           npm ci
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
       - name: Build universal app
         run: |
           xcodebuild build \
@@ -175,14 +201,33 @@ jobs:
             -destination 'generic/platform=macOS' \
             ARCHS="arm64 x86_64" \
             ONLY_ACTIVE_ARCH=NO \
+            SWIFT_OPTIMIZATION_LEVEL="-Osize" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
           app="$RUNNER_TEMP/DerivedData/Build/Products/Release/ksamint MarkEdit.app"
+          strip "$app/Contents/MacOS/ksamint MarkEdit"
+          strip "$app/Contents/PlugIns/FinderExtension.appex/Contents/MacOS/FinderExtension"
+          strip "$app/Contents/PlugIns/PreviewExtension.appex/Contents/MacOS/PreviewExtension"
           codesign --force --deep --sign - "$app"
+          hdiutil create \
+            -volname "ksamint MarkEdit" \
+            -srcfolder "$app" \
+            -ov \
+            -format UDBZ \
+            "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg"
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
+          dmg_size="$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")"
+          release_limit=6291456
+          required_margin=102400
+          ci_limit="$((release_limit - required_margin))"
+          echo "Universal UDBZ size: $dmg_size bytes (CI limit: $ci_limit; release limit: $release_limit)"
+          test "$dmg_size" -le "$ci_limit"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ksamint-MarkEdit-development
-          path: ${{ runner.temp }}/ksamint-MarkEdit-development.zip
+          path: |
+            ${{ runner.temp }}/ksamint-MarkEdit-development.zip
+            ${{ runner.temp }}/ksamint-MarkEdit-size-check.dmg
           if-no-files-found: error

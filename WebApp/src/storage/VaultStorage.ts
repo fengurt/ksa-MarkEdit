@@ -115,6 +115,35 @@ export class VaultStorage {
     await this.persistManifest();
   }
 
+  async replaceFiles(files: NoteFile[]): Promise<NoteFile[]> {
+    const ids = new Set<string>();
+    const paths = new Set<string>();
+    const normalized = files.map(file => {
+      const path = normalizePath(file.path);
+      if (ids.has(file.id) || paths.has(path)) {
+        throw new Error('Remote workspace contains duplicate file identities or paths');
+      }
+      ids.add(file.id);
+      paths.add(path);
+      return {
+        ...file,
+        path,
+        modifiedAt: Math.max(0, Math.floor(file.modifiedAt)),
+        metadata: parseMetadata(file.content),
+      };
+    });
+    for (const file of normalized) {
+      await this.writeContent(file, file.content);
+    }
+    this.manifest.files = normalized.map(({ id, path, modifiedAt }) => ({
+      id,
+      path,
+      modifiedAt,
+    }));
+    await this.persistManifest();
+    return structuredClone(normalized);
+  }
+
   private async writeContent(file: VaultFile, content: string): Promise<void> {
     const payload = await encryptText(this.key, content);
     await writeObject(this.opfsRoot, this.workspaceId, objectName(file.id), payload);

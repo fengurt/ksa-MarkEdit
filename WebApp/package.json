@@ -1,15 +1,18 @@
 {
   "name": "ksamint-notes-web",
   "private": true,
-  "version": "1.4.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:mac": "tsc -b && vite build --config vite.mac.config.ts",
+    "validate:mac-bundle": "node ../Scripts/validate-mac-web-bundle.mjs",
     "test": "vitest run",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@ksamint/vault-protocol": "file:../VaultProtocolTS",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/language": "^6.11.3",

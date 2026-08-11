@@ -172,7 +172,7 @@
 		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
 		AB1200023000000000000001 /* WorkspacePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewView.swift; sourceTree = "<group>"; };
 		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
-		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = WebApp/dist; sourceTree = SOURCE_ROOT; };
+		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
 		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };

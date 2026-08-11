@@ -397,9 +397,9 @@ private final class WorkspaceHubViewController: NSViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     guard let indexURL = Bundle.main.url(
-      forResource: "index",
+      forResource: "mac-index",
       withExtension: "html",
-      subdirectory: "KnowledgeHub"
+      subdirectory: "dist-mac"
     ) else {
       return
     }

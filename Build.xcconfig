@@ -17,7 +17,15 @@ BUNDLE_ID_SUFFIX = .dev
 BUNDLE_ID_SUFFIX[config=Release] =
 REGISTER_APP_GROUPS = NO
 
-MARKETING_VERSION = 1.4.0
-CURRENT_PROJECT_VERSION = 5
+MARKETING_VERSION = 2.0.0
+CURRENT_PROJECT_VERSION = 6
+
+// Keep the universal release below the 6 MiB distribution budget without
+// affecting Debug diagnostics or removing either CPU architecture.
+SWIFT_OPTIMIZATION_LEVEL[config=Release] = -Osize
+COPY_PHASE_STRIP[config=Release] = YES
+STRIP_INSTALLED_PRODUCT[config=Release] = YES
+STRIP_STYLE[config=Release] = all
+DEPLOYMENT_POSTPROCESSING[config=Release] = YES
 
 #include? "Local.xcconfig"

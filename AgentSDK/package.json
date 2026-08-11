@@ -1,0 +1,33 @@
+{
+  "name": "@ksamint/agent-sdk",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/index.js",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@hpke/core": "^1.9.0",
+    "@ksamint/vault-protocol": "file:../VaultProtocolTS",
+    "@types/node": "^24.2.1",
+    "esbuild": "^0.25.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^3.2.4"
+  }
+}

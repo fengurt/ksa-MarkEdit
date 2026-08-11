@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
+use vault_protocol::{SignedManifestV1, decode_cbor};
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -107,10 +108,20 @@ pub async fn recovery_catalog(
     .fetch_optional(&state.pool)
     .await?
     .ok_or(ApiError::NotFound)?;
+    let signed: SignedManifestV1 = decode_cbor(&manifest.2)
+        .map_err(|error| ApiError::Unavailable(format!("stored manifest is invalid: {error}")))?;
+    let current_versions = signed
+        .manifest
+        .entries
+        .iter()
+        .map(|entry| entry.current_version_id)
+        .collect::<Vec<_>>();
     let objects = sqlx::query_as::<_, (Uuid, String, i64, Vec<u8>)>(
-        "SELECT id, kind, cipher_size, digest FROM objects WHERE vault_id = $1",
+        "SELECT id, kind, cipher_size, digest FROM objects \
+         WHERE vault_id = $1 AND id = ANY($2)",
     )
     .bind(vault_id)
+    .bind(current_versions)
     .fetch_all(&state.pool)
     .await?;
     let credentials = assume_role(&state, config, vault_id, true).await?;
@@ -168,7 +179,7 @@ pub struct RecoveryRequest {
     recovery_token: String,
 }
 
-async fn assume_role(
+pub(crate) async fn assume_role(
     state: &AppState,
     config: &CosConfig,
     vault_id: Uuid,

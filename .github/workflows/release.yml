@@ -43,6 +43,9 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           test "$version" = "$(sed -n 's/^MARKETING_VERSION = //p' Build.xcconfig)"
+          test "$version" = "$(node -p "require('./WebApp/package.json').version")"
+          test "$version" = "$(node -p "require('./AgentSDK/package.json').version")"
+          test "$version" = "$(sed -n 's/^version = \"\\(.*\\)\"/\\1/p' Cloud/Cargo.toml | head -1)"
           test "$(git tag --points-at HEAD)" = "$RELEASE_TAG"
           node Scripts/validate-localizations.mjs
 
@@ -62,6 +65,8 @@ jobs:
           npm run lint
           npm test
           npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
 
       - name: Validate private cloud and recovery
         working-directory: Cloud
@@ -69,6 +74,16 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
+
+      - name: Build and pack read-only Agent SDK
+        working-directory: AgentSDK
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm run lint
+          npm test
+          npm run build
+          npm pack --pack-destination "$RUNNER_TEMP"
 
       - name: Import Developer ID certificate
         run: |
@@ -110,6 +125,11 @@ jobs:
             -destination 'generic/platform=macOS' \
             ARCHS="arm64 x86_64" \
             ONLY_ACTIVE_ARCH=NO \
+            SWIFT_OPTIMIZATION_LEVEL="-Osize" \
+            COPY_PHASE_STRIP=YES \
+            STRIP_INSTALLED_PRODUCT=YES \
+            STRIP_STYLE=all \
+            DEPLOYMENT_POSTPROCESSING=YES \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_IDENTITY="$identity"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
@@ -129,7 +149,7 @@ jobs:
           mkdir -p "$staging"
           ditto "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$staging/ksamint MarkEdit.app"
           ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDZO "$dmg"
+          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDBZ "$dmg"
           identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
           codesign --force --timestamp --sign "$identity" "$dmg"
           notary_key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
@@ -150,11 +170,13 @@ jobs:
           spctl --assess --type execute -vv "$RUNNER_TEMP/export/ksamint MarkEdit.app"
           Scripts/verify-universal.sh "$RUNNER_TEMP/export/ksamint MarkEdit.app"
           dmg_size="$(stat -f '%z' "$dmg")"
+          echo "Notarized UDBZ size: $dmg_size bytes (limit: 6291456)"
           test "$dmg_size" -le 6291456
           printf '{"minOSVer":"15.0"}\n' > "$RUNNER_TEMP/ReleaseInfo.json"
           shasum -a 256 \
             "$dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
             > "$RUNNER_TEMP/SHA256SUMS"
 
       - name: Publish GitHub release
@@ -165,6 +187,7 @@ jobs:
           gh release create "$RELEASE_TAG" \
             "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
             "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
             "$RUNNER_TEMP/ReleaseInfo.json" \
             "$RUNNER_TEMP/SHA256SUMS" \
             --repo "$GITHUB_REPOSITORY" \

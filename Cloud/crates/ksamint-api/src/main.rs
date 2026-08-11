@@ -1,3 +1,4 @@
+mod agent;
 mod auth;
 mod config;
 mod error;
@@ -122,6 +123,10 @@ fn api_routes() -> Router<AppState> {
         )
         .route("/vaults/{vault_id}/recovery", put(sts::set_recovery_token))
         .route("/recovery/{vault_id}/catalog", post(sts::recovery_catalog))
+        .route(
+            "/agent/capabilities/{grant_id}/catalog",
+            post(agent::capability_catalog),
+        )
 }
 
 async fn health() -> (StatusCode, Json<serde_json::Value>) {
