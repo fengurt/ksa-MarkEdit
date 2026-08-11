@@ -71,7 +71,7 @@ if helper_group
 end
 configure(
   helper,
-  'art.apuch.ksamint-markedit.conversation-capture-helper',
+  'art.apuch.ksamint.markedit.conversation-capture-helper',
   'ConversationCaptureHelper/Info.plist',
   'ConversationCaptureHelper/Info.entitlements',
   'ConversationCaptureHelper'
@@ -107,7 +107,7 @@ if quick_group
 end
 configure(
   quick,
-  'art.apuch.ksamint-markedit.quick-actions',
+  'art.apuch.ksamint.markedit.quick-actions',
   'QuickActionExtension/Info.plist',
   'QuickActionExtension/Info.entitlements',
   'QuickActionExtension'

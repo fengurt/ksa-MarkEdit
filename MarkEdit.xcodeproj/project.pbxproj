@@ -1317,7 +1317,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 2.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint-markedit.conversation-capture-helper";
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.conversation-capture-helper";
 				PRODUCT_NAME = ConversationCaptureHelper;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1340,7 +1340,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 2.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint-markedit.conversation-capture-helper";
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.conversation-capture-helper";
 				PRODUCT_NAME = ConversationCaptureHelper;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1722,7 +1722,7 @@
 				INFOPLIST_FILE = QuickActionExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 2.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint-markedit.quick-actions";
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.quick-actions";
 				PRODUCT_NAME = QuickActionExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1741,7 +1741,7 @@
 				INFOPLIST_FILE = QuickActionExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 2.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint-markedit.quick-actions";
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.quick-actions";
 				PRODUCT_NAME = QuickActionExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;

@@ -359,7 +359,7 @@ extension ConversationCaptureCoordinator {
   private func registerLoginAgent() -> Bool {
     guard #available(macOS 13, *) else { return false }
     let service = SMAppService.loginItem(
-      identifier: "art.apuch.ksamint-markedit.conversation-capture-helper"
+      identifier: "art.apuch.ksamint.markedit.conversation-capture-helper"
     )
     do {
       if service.status == .notRegistered { try service.register() }
@@ -380,7 +380,7 @@ extension ConversationCaptureCoordinator {
   private func unregisterLoginAgent() {
     guard #available(macOS 13, *) else { return }
     let service = SMAppService.loginItem(
-      identifier: "art.apuch.ksamint-markedit.conversation-capture-helper"
+      identifier: "art.apuch.ksamint.markedit.conversation-capture-helper"
     )
     try? service.unregister()
   }
