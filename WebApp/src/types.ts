@@ -7,10 +7,14 @@ export type VaultFile = {
   id: string;
   path: string;
   modifiedAt: number;
+  kind?: 'markdown' | 'attachment';
+  mimeType?: string;
+  byteSize?: number;
+  contentDigest?: string;
 };
 
 export type VaultManifest = {
-  version: 1;
+  version: 2;
   id: string;
   name: string;
   files: VaultFile[];
@@ -18,8 +22,14 @@ export type VaultManifest = {
 };
 
 export type NoteFile = VaultFile & {
+  kind?: 'markdown';
   content: string;
   metadata: NoteMetadata;
+};
+
+export type AttachmentFile = VaultFile & {
+  kind: 'attachment';
+  bytes: Uint8Array;
 };
 
 export type ConflictVersionSource = 'base' | 'local' | 'remote';

@@ -12,7 +12,7 @@ import {
   type VaultObjectSummary,
 } from '../api/client';
 import { parseMetadata } from '../markdown/metadata';
-import type { ConflictRecord, NoteFile } from '../types';
+import type { AttachmentFile, ConflictRecord, NoteFile } from '../types';
 import {
   decodeAndVerifySignedManifest,
   decodeVaultObject,
@@ -30,6 +30,7 @@ import {
 import {
   loadOrCreateVaultIdentity,
   loadVaultSyncState,
+  markVaultIdentityAuthorized,
   saveVaultSyncState,
   type VaultSyncState,
 } from './VaultKeyStore';
@@ -45,16 +46,19 @@ export type VaultSyncReport = {
   conflicts: number;
   conflictRecords: ConflictRecord[];
   files: NoteFile[];
+  attachments: AttachmentFile[];
 };
 
 export async function syncWorkspaceToPrivateCloud({
   workspaceId,
   workspaceName,
   files,
+  attachments = [],
 }: {
   workspaceId: string;
   workspaceName: string;
   files: NoteFile[];
+  attachments?: AttachmentFile[];
 }): Promise<VaultSyncReport> {
   const identity = await loadOrCreateVaultIdentity(workspaceId);
   try {
@@ -62,6 +66,8 @@ export async function syncWorkspaceToPrivateCloud({
     const vaultId = await resolveVaultID(state, workspaceName);
     state.vaultId = vaultId;
     await saveVaultSyncState(workspaceId, state);
+    const remoteManifest = await latestManifest(vaultId);
+    assertDeviceAuthorized(identity.syncAuthorized, remoteManifest);
     const signingPublicKey = new Uint8Array(
       await crypto.subtle.exportKey('raw', identity.signingPublicKey),
     );
@@ -75,12 +81,13 @@ export async function syncWorkspaceToPrivateCloud({
       signingPublicKey: base64(signingPublicKey),
       wrappedGrant: base64(identity.wrappedMasterKey),
     });
+    await markVaultIdentityAuthorized(workspaceId);
 
-    const remoteManifest = await latestManifest(vaultId);
     if (!remoteManifest && state.previousDigest) {
       throw new Error('The remote Vault history is unavailable; upload was stopped');
     }
     let workingFiles = files;
+    let workingAttachments = attachments;
     let parentState = state;
     let downloadedObjects = 0;
     let conflicts = 0;
@@ -96,6 +103,7 @@ export async function syncWorkspaceToPrivateCloud({
         grant,
         masterKey: identity.masterKey,
         localFiles: files,
+        localAttachments: attachments,
         localState: state,
       });
       const base = await loadBaseSnapshot({
@@ -114,21 +122,26 @@ export async function syncWorkspaceToPrivateCloud({
         remoteLabel: `Remote manifest #${remoteManifest.sequence}`,
       });
       workingFiles = merged.files;
+      workingAttachments = mergeAttachments(attachments, remote.attachments);
       conflicts = merged.conflicts;
       conflictRecords = merged.conflictRecords;
       parentState = remote.state;
-      if (sameWorkspace(workingFiles, remote.files)) {
+      if (
+        sameWorkspace(workingFiles, remote.files)
+        && sameAttachments(workingAttachments, remote.attachments)
+      ) {
         await saveVaultSyncState(workspaceId, remote.state);
         return {
           vaultId,
           sequence: remoteManifest.sequence,
           uploadedObjects: 0,
           downloadedObjects,
-          unchangedObjects: workingFiles.length,
+          unchangedObjects: workingFiles.length + workingAttachments.length,
           tombstones: 0,
           conflicts,
           conflictRecords,
           files: workingFiles,
+          attachments: workingAttachments,
         };
       }
     }
@@ -142,7 +155,7 @@ export async function syncWorkspaceToPrivateCloud({
       previousDigest,
       files: { ...parentState.files },
     };
-    const sortedFiles = [...workingFiles].sort((left, right) => (
+    const sortedFiles = [...workingFiles, ...workingAttachments].sort((left, right) => (
       left.path.localeCompare(right.path)
     ));
     const prepared = await mapConcurrent(sortedFiles, 4, async file => (
@@ -157,7 +170,7 @@ export async function syncWorkspaceToPrivateCloud({
         await registerObject({
           vaultId,
           objectId: item.versionId,
-          kind: 'markdown',
+          kind: item.kind,
           cipherSize: item.object.length,
           digest: item.objectDigest,
         });
@@ -183,9 +196,11 @@ export async function syncWorkspaceToPrivateCloud({
         objectDigest: item.objectDigest,
         byteSize: item.byteSize,
         path: item.file.path,
+        kind: item.kind,
+        mimeType: item.mimeType,
       };
     }
-    const activeFileIDs = new Set(workingFiles.map(file => file.id));
+    const activeFileIDs = new Set([...workingFiles, ...workingAttachments].map(file => file.id));
     const tombstones: VaultTombstone[] = Object.entries(parentState.files)
       .filter(([fileId]) => !activeFileIDs.has(fileId))
       .map(([fileId, value]) => ({
@@ -227,19 +242,32 @@ export async function syncWorkspaceToPrivateCloud({
       sequence,
       uploadedObjects,
       downloadedObjects,
-      unchangedObjects: workingFiles.length - uploadedObjects,
+      unchangedObjects: workingFiles.length + workingAttachments.length - uploadedObjects,
       tombstones: tombstones.length,
       conflicts,
       conflictRecords,
       files: workingFiles,
+      attachments: workingAttachments,
     };
   } finally {
     identity.masterKey.fill(0);
   }
 }
 
+export function assertDeviceAuthorized(
+  syncAuthorized: boolean,
+  remoteManifest: LatestManifest | undefined,
+) {
+  if (!syncAuthorized && remoteManifest) {
+    throw new Error(
+      'This Vault already contains encrypted data. Authorize this device from an existing device or restore its Vault key before syncing.',
+    );
+  }
+}
+
 type RemoteSnapshot = {
   files: NoteFile[];
+  attachments: AttachmentFile[];
   state: VaultSyncState;
   downloadedObjects: number;
 };
@@ -251,6 +279,7 @@ async function loadRemoteSnapshot({
   grant,
   masterKey,
   localFiles,
+  localAttachments,
   localState,
 }: {
   vaultId: string;
@@ -259,6 +288,7 @@ async function loadRemoteSnapshot({
   grant: TemporaryCosGrant;
   masterKey: Uint8Array;
   localFiles: NoteFile[];
+  localAttachments: AttachmentFile[];
   localState: VaultSyncState;
 }): Promise<RemoteSnapshot> {
   const signedBytes = unbase64(manifest.signedCbor);
@@ -274,7 +304,7 @@ async function loadRemoteSnapshot({
     throw new Error('Remote manifest identity or parent is invalid');
   }
   const objectByID = new Map(catalog.map(object => [object.objectId, object]));
-  const localByID = new Map(localFiles.map(file => [file.id, file]));
+  const localByID = new Map([...localFiles, ...localAttachments].map(file => [file.id, file]));
   const loaded = await mapConcurrent(signed.manifest.entries, 4, async entry => {
     const path = await openVaultPath({
       masterKey,
@@ -283,48 +313,92 @@ async function loadRemoteSnapshot({
     });
     const previous = localState.files[entry.fileId];
     const local = localByID.get(entry.fileId);
-    let content: string;
+    const metadata = objectByID.get(entry.currentVersionId);
+    if (!metadata) {
+      throw new Error(`Remote object ${entry.currentVersionId} is missing from the catalog`);
+    }
+    if (metadata.kind !== 'markdown' && metadata.kind !== 'attachment') {
+      throw new Error(`Remote object ${entry.currentVersionId} has an unsupported workspace kind`);
+    }
     let parentVersionId: string | undefined;
     let downloaded = false;
-    if (
-      local
-      && previous?.versionId === entry.currentVersionId
-      && await sha256Text(local.content) === previous.contentDigest
-    ) {
-      content = local.content;
-      parentVersionId = previous.parentVersionId;
+    let file: NoteFile | AttachmentFile;
+    let contentDigest: string;
+    if (metadata.kind === 'attachment') {
+      const localAttachment = local?.kind === 'attachment' ? local as AttachmentFile : undefined;
+      let bytes: Uint8Array;
+      let mimeType = previous?.mimeType ?? localAttachment?.mimeType ?? 'application/octet-stream';
+      if (
+        localAttachment
+        && previous?.versionId === entry.currentVersionId
+        && await sha256Hex(localAttachment.bytes) === previous.contentDigest
+      ) {
+        bytes = localAttachment.bytes;
+        parentVersionId = previous.parentVersionId;
+      } else {
+        const opened = await downloadAttachment({ entry, metadata, grant, masterKey });
+        bytes = opened.bytes;
+        mimeType = opened.mimeType;
+        parentVersionId = opened.parentVersionId;
+        downloaded = true;
+      }
+      contentDigest = await sha256Hex(bytes);
+      file = {
+        id: entry.fileId,
+        path,
+        bytes,
+        modifiedAt: entry.modifiedUnixMs,
+        kind: 'attachment',
+        mimeType,
+        byteSize: bytes.length,
+        contentDigest,
+      };
     } else {
-      const opened = await downloadMarkdown({
-        entry,
-        metadata: objectByID.get(entry.currentVersionId),
-        grant,
-        masterKey,
-      });
-      content = opened.content;
-      parentVersionId = opened.parentVersionId;
-      downloaded = true;
-    }
-    return {
-      file: {
+      const localNote = local?.kind !== 'attachment' ? local as NoteFile | undefined : undefined;
+      let content: string;
+      if (
+        localNote
+        && previous?.versionId === entry.currentVersionId
+        && await sha256Text(localNote.content) === previous.contentDigest
+      ) {
+        content = localNote.content;
+        parentVersionId = previous.parentVersionId;
+      } else {
+        const opened = await downloadMarkdown({ entry, metadata, grant, masterKey });
+        content = opened.content;
+        parentVersionId = opened.parentVersionId;
+        downloaded = true;
+      }
+      contentDigest = await sha256Text(content);
+      file = {
         id: entry.fileId,
         path,
         content,
         modifiedAt: entry.modifiedUnixMs,
+        kind: 'markdown',
+        mimeType: 'text/markdown',
+        byteSize: new TextEncoder().encode(content).length,
         metadata: parseMetadata(content),
-      } satisfies NoteFile,
+      };
+    }
+    return {
+      file,
       version: {
         versionId: entry.currentVersionId,
         parentVersionId,
         path,
-        contentDigest: await sha256Text(content),
+        contentDigest,
         objectDigest: hex(entry.objectDigest),
         byteSize: entry.byteSize,
+        kind: metadata.kind,
+        mimeType: file.mimeType,
       },
       downloaded,
     };
   });
   return {
-    files: loaded.map(value => value.file),
+    files: loaded.filter(value => value.file.kind !== 'attachment').map(value => value.file as NoteFile),
+    attachments: loaded.filter(value => value.file.kind === 'attachment').map(value => value.file as AttachmentFile),
     state: {
       vaultId,
       sequence: manifest.sequence,
@@ -354,6 +428,10 @@ async function loadBaseSnapshot({
   const remoteByID = new Map(remoteFiles.map(file => [file.id, file]));
   const objectByID = new Map(catalog.map(object => [object.objectId, object]));
   const loaded = await mapConcurrent(Object.entries(state.files), 4, async ([fileId, version]) => {
+    const catalogObject = objectByID.get(version.versionId);
+    if (version.kind === 'attachment' || catalogObject?.kind === 'attachment') {
+      return undefined;
+    }
     const local = localByID.get(fileId);
     const remote = remoteByID.get(fileId);
     const path = version.path ?? local?.path ?? remote?.path;
@@ -376,7 +454,7 @@ async function loadBaseSnapshot({
         downloaded: false,
       };
     }
-    const metadata = objectByID.get(version.versionId);
+    const metadata = catalogObject;
     if (!metadata || metadata.digest !== version.objectDigest) {
       return undefined;
     }
@@ -430,6 +508,48 @@ async function downloadMarkdown({
     byteSize: entry.byteSize,
     expectedDigest: hex(entry.objectDigest),
   });
+}
+
+async function downloadAttachment({
+  entry,
+  metadata,
+  grant,
+  masterKey,
+}: {
+  entry: VaultManifestEntry;
+  metadata: VaultObjectSummary;
+  grant: TemporaryCosGrant;
+  masterKey: Uint8Array;
+}): Promise<{ bytes: Uint8Array; mimeType: string; parentVersionId?: string }> {
+  const encrypted = await downloadCosObject(grant, metadata.objectKey);
+  if (
+    metadata.kind !== 'attachment'
+    || metadata.cipherSize !== encrypted.length
+    || metadata.digest !== hex(entry.objectDigest)
+    || await sha256Hex(encrypted) !== metadata.digest
+  ) {
+    throw new Error(`Encrypted attachment ${entry.currentVersionId} failed integrity checks`);
+  }
+  const object = decodeVaultObject(encrypted);
+  if (
+    object.fileId !== entry.fileId
+    || object.versionId !== entry.currentVersionId
+    || object.kind !== 'attachment'
+  ) {
+    throw new Error(`Encrypted attachment ${entry.currentVersionId} has an invalid identity`);
+  }
+  const mimeType = object.mimeType ?? 'application/octet-stream';
+  const bytes = await openVaultObject({
+    value: object,
+    plaintextSize: entry.byteSize,
+    masterKey,
+    fileId: entry.fileId,
+    versionId: entry.currentVersionId,
+    parentVersionId: object.parentVersionId,
+    kind: object.kind,
+    mimeType,
+  });
+  return { bytes, mimeType, parentVersionId: object.parentVersionId };
 }
 
 async function openMarkdownObject({
@@ -489,21 +609,35 @@ async function resolveVaultID(state: VaultSyncState, workspaceName: string): Pro
 
 async function prepareFile(
   masterKey: Uint8Array,
-  file: NoteFile,
+  file: NoteFile | AttachmentFile,
   state: VaultSyncState,
 ): Promise<{
-  file: NoteFile;
+  file: NoteFile | AttachmentFile;
   versionId: string;
   parentVersionId?: string;
   contentDigest: string;
   objectDigest: string;
   byteSize: number;
+  kind: 'markdown' | 'attachment';
+  mimeType: string;
   object?: Uint8Array;
 }> {
-  const plaintext = new TextEncoder().encode(file.content);
+  const kind = file.kind === 'attachment' ? 'attachment' : 'markdown';
+  const mimeType = kind === 'attachment'
+    ? file.mimeType ?? 'application/octet-stream'
+    : 'text/markdown';
+  const plaintext = kind === 'attachment'
+    ? (file as AttachmentFile).bytes
+    : new TextEncoder().encode((file as NoteFile).content);
   const contentDigest = await sha256Hex(plaintext);
   const previous = state.files[file.id];
-  if (previous?.contentDigest === contentDigest) {
+  const previousKind = previous?.kind ?? 'markdown';
+  const previousMimeType = previous?.mimeType ?? (previousKind === 'markdown' ? 'text/markdown' : undefined);
+  if (
+    previous?.contentDigest === contentDigest
+    && previousKind === kind
+    && previousMimeType === mimeType
+  ) {
     return {
       file,
       versionId: previous.versionId,
@@ -511,6 +645,8 @@ async function prepareFile(
       contentDigest,
       objectDigest: previous.objectDigest,
       byteSize: previous.byteSize,
+      kind,
+      mimeType,
     };
   }
   const versionId = crypto.randomUUID();
@@ -520,12 +656,16 @@ async function prepareFile(
     fileId: file.id,
     versionId,
     parentVersionId: previous?.versionId,
+    kind,
+    mimeType,
   });
   const object = encodeVaultObject({
     ...sealed,
     fileId: file.id,
     versionId,
     parentVersionId: previous?.versionId,
+    kind,
+    mimeType,
   });
   return {
     file,
@@ -534,6 +674,8 @@ async function prepareFile(
     contentDigest,
     objectDigest: await sha256Hex(object),
     byteSize: plaintext.length,
+    kind,
+    mimeType,
     object,
   };
 }
@@ -599,7 +741,7 @@ async function downloadCosObject(
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function cosAuthorization({
+export async function cosAuthorization({
   method,
   host,
   path,
@@ -621,8 +763,8 @@ async function cosAuthorization({
     + `&x-cos-security-token=${percentEncode(token)}`;
   const httpString = `${method.toLowerCase()}\n${path}\n\n${canonicalHeaders}\n`;
   const stringToSign = `sha1\n${keyTime}\n${await sha1Hex(new TextEncoder().encode(httpString))}\n`;
-  const signKey = await hmacSha1(new TextEncoder().encode(secretKey), keyTime);
-  const signature = hex(await hmacSha1(signKey, stringToSign));
+  const signKey = hex(await hmacSha1(new TextEncoder().encode(secretKey), keyTime));
+  const signature = hex(await hmacSha1(new TextEncoder().encode(signKey), stringToSign));
   return `q-sign-algorithm=sha1&q-ak=${percentEncode(secretId)}`
     + `&q-sign-time=${keyTime}&q-key-time=${keyTime}`
     + `&q-header-list=${headerList}&q-url-param-list=&q-signature=${signature}`;
@@ -679,6 +821,29 @@ function sameWorkspace(left: NoteFile[], right: NoteFile[]): boolean {
   return left.every(file => {
     const other = rightByID.get(file.id);
     return other?.path === file.path && other.content === file.content;
+  });
+}
+
+function mergeAttachments(local: AttachmentFile[], remote: AttachmentFile[]): AttachmentFile[] {
+  const merged = new Map<string, AttachmentFile>();
+  for (const attachment of [...local, ...remote]) {
+    const existing = merged.get(attachment.path);
+    if (existing && existing.contentDigest !== attachment.contentDigest) {
+      throw new Error(`Immutable attachment conflict at ${attachment.path}`);
+    }
+    if (!existing || attachment.modifiedAt > existing.modifiedAt) {
+      merged.set(attachment.path, attachment);
+    }
+  }
+  return [...merged.values()].sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function sameAttachments(left: AttachmentFile[], right: AttachmentFile[]): boolean {
+  if (left.length !== right.length) return false;
+  const rightByPath = new Map(right.map(file => [file.path, file]));
+  return left.every(file => {
+    const other = rightByPath.get(file.path);
+    return other?.contentDigest === file.contentDigest && other?.byteSize === file.byteSize;
   });
 }
 

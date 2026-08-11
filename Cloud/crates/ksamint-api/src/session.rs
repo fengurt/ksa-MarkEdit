@@ -84,15 +84,19 @@ pub async fn optional_account(state: &AppState, cookies: &Cookies) -> ApiResult<
 }
 
 pub fn set_challenge_cookie(cookies: &Cookies, id: Uuid) {
-    cookies.add(
-        Cookie::build((CHALLENGE_COOKIE, id.to_string()))
-            .path("/api/v1/passkeys")
-            .http_only(true)
-            .secure(true)
-            .same_site(SameSite::Strict)
-            .max_age(tower_cookies::cookie::time::Duration::minutes(5))
-            .build(),
-    );
+    cookies.add(challenge_cookie(id));
+}
+
+fn challenge_cookie(id: Uuid) -> Cookie<'static> {
+    Cookie::build((CHALLENGE_COOKIE, id.to_string()))
+        // Cookies with the __Host- prefix must use Path=/, otherwise
+        // conforming browsers silently reject the Set-Cookie header.
+        .path("/")
+        .http_only(true)
+        .secure(true)
+        .same_site(SameSite::Strict)
+        .max_age(tower_cookies::cookie::time::Duration::minutes(5))
+        .build()
 }
 
 pub fn take_challenge_cookie(cookies: &Cookies) -> ApiResult<Uuid> {
@@ -101,11 +105,7 @@ pub fn take_challenge_cookie(cookies: &Cookies) -> ApiResult<Uuid> {
         .ok_or_else(|| ApiError::Invalid("challenge has expired".to_owned()))?;
     let id = Uuid::parse_str(cookie.value())
         .map_err(|_| ApiError::Invalid("invalid challenge".to_owned()))?;
-    cookies.remove(
-        Cookie::build((CHALLENGE_COOKIE, ""))
-            .path("/api/v1/passkeys")
-            .build(),
-    );
+    cookies.remove(Cookie::build((CHALLENGE_COOKIE, "")).path("/").build());
     Ok(id)
 }
 
@@ -118,4 +118,19 @@ pub fn now_ms() -> i64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as i64
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn host_prefixed_challenge_cookie_uses_root_path() {
+        let cookie = challenge_cookie(Uuid::nil());
+        assert_eq!(cookie.name(), CHALLENGE_COOKIE);
+        assert_eq!(cookie.path(), Some("/"));
+        assert_eq!(cookie.secure(), Some(true));
+        assert_eq!(cookie.http_only(), Some(true));
+        assert_eq!(cookie.same_site(), Some(SameSite::Strict));
+    }
 }

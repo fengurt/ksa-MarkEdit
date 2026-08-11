@@ -20,12 +20,25 @@ import {
 import { t } from './i18n';
 import { canonicalTag } from './markdown/metadata';
 import { renderMarkdown } from './markdown/preview';
+import {
+  planWorkspaceReplace,
+  type ReplaceOptions,
+  type ReplaceScope,
+  type WorkspaceReplacePlan,
+} from './search/replace';
 import { searchNotes } from './search/search';
 import {
   combineConflictContent,
   suggestedConflictContent,
 } from './security/VaultMerge';
 import { VaultStorage } from './storage/VaultStorage';
+import { PendingFileSave } from './storage/PendingFileSave';
+import type { ConversationInbox as ConversationInboxModule } from './conversation/ConversationInbox';
+import type {
+  ConversationImportDecision,
+  ConversationImportPlan,
+  ConversationImportSource,
+} from './conversation/types';
 import type {
   ConflictRecord,
   ConflictResolution,
@@ -45,6 +58,9 @@ const CoreEditor = lazy(() => import('./editor/CoreEditor').then(module => ({
 const MindmapStation = lazy(() => import('./graph/MindmapStation').then(module => ({
   default: module.MindmapStation,
 })));
+const ConversationImportDialog = lazy(() => import('./conversation/ConversationImportDialog').then(module => ({
+  default: module.ConversationImportDialog,
+})));
 
 export default function App() {
   const [storage, setStorage] = useState<VaultStorage>();
@@ -53,6 +69,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>('hub');
   const [sidebar, setSidebar] = useState<SidebarMode>('files');
   const [query, setQuery] = useState('');
+  const [replacePlan, setReplacePlan] = useState<WorkspaceReplacePlan>();
+  const [replaceUndo, setReplaceUndo] = useState<NoteFile[]>();
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
@@ -64,7 +82,11 @@ export default function App() {
   const [importing, setImporting] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictRecord[]>([]);
   const [conflictManagerOpen, setConflictManagerOpen] = useState(false);
-  const saveTimer = useRef<number | undefined>(undefined);
+  const [conversationPlan, setConversationPlan] = useState<ConversationImportPlan>();
+  const [conversationUndo, setConversationUndo] = useState<string>();
+  const conversationInbox = useRef<ConversationInboxModule | undefined>(undefined);
+  const pendingFileSave = useRef<PendingFileSave<NoteFile> | undefined>(undefined);
+  const openFileRequest = useRef(0);
   const selected = files.find(file => file.id === selectedId);
   const graph = useMemo(() => buildGraph(files), [files]);
   const hits = useMemo(() => searchNotes(files, query), [files, query]);
@@ -104,6 +126,24 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!storage) return;
+    const coordinator = new PendingFileSave(
+      (fileId, content) => storage.writeFile(fileId, content),
+      (saved, edit) => {
+        setFiles(current => current.map(file => (
+          file.id === saved.id && file.content === edit.content ? saved : file
+        )));
+      },
+      setSaving,
+      error => setNotice(error instanceof Error ? error.message : String(error)),
+    );
+    pendingFileSave.current = coordinator;
+    return () => {
+      if (pendingFileSave.current === coordinator) pendingFileSave.current = undefined;
+    };
+  }, [storage]);
+
   async function continueOffline() {
     try {
       const opened = await VaultStorage.open();
@@ -124,17 +164,23 @@ export default function App() {
     if (!storage || syncing) {
       return;
     }
-    window.clearTimeout(saveTimer.current);
-    setSaving(false);
     setSyncing(true);
     try {
+      await flushPendingEdit();
       const { syncWorkspaceToPrivateCloud } = await import('./security/VaultSyncClient');
+      const attachments = await Promise.all(
+        storage.listAllFiles()
+          .filter(file => file.kind === 'attachment')
+          .map(file => storage.readAttachment(file.id)),
+      );
       const report = await syncWorkspaceToPrivateCloud({
         workspaceId: storage.workspace().id,
         workspaceName: storage.workspace().name,
         files,
+        attachments,
       });
       const synchronized = await storage.replaceFiles(report.files);
+      await storage.replaceAttachments(report.attachments);
       const conflictHistory = await storage.appendConflicts(report.conflictRecords);
       setFiles(synchronized);
       setConflicts(conflictHistory);
@@ -155,8 +201,15 @@ export default function App() {
   }
 
   async function openFile(id: string) {
+    const request = ++openFileRequest.current;
+    await flushPendingEdit();
+    if (request !== openFileRequest.current) return;
     setSelectedId(id);
     setRoute('editor');
+  }
+
+  async function flushPendingEdit() {
+    await pendingFileSave.current?.flush();
   }
 
   function changeContent(content: string) {
@@ -168,13 +221,7 @@ export default function App() {
         ? { ...file, content, metadata: parseMetadataLazy(content), modifiedAt: Date.now() }
         : file
     )));
-    setSaving(true);
-    window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(async () => {
-      const saved = await storage.writeFile(selected.id, content);
-      setFiles(current => current.map(file => file.id === saved.id ? saved : file));
-      setSaving(false);
-    }, 450);
+    pendingFileSave.current?.queue(selected.id, content);
   }
 
   async function createNote() {
@@ -253,6 +300,95 @@ export default function App() {
     }
   }
 
+  async function planConversationImport(sources: ConversationImportSource[]) {
+    if (!storage || !sources.length || importing) return;
+    setImporting(true);
+    try {
+      const [{ ConversationInbox }, { VaultConversationWorkspace }] = await Promise.all([
+        import('./conversation/ConversationInbox'),
+        import('./conversation/VaultConversationWorkspace'),
+      ]);
+      const inbox = new ConversationInbox(new VaultConversationWorkspace(storage));
+      conversationInbox.current = inbox;
+      const plan = await inbox.plan(sources);
+      if (!plan.items.length && plan.failures.length) {
+        throw new Error(plan.failures.map(failure => `${failure.sourceName}: ${failure.reason}`).join('\n'));
+      }
+      setConversationPlan(plan);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  function chooseConversationImport(kind: 'files' | 'folder' = 'files') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.zip,.json,.md,.markdown,.txt,.text,.html,.htm,.rtf,application/zip,application/json,text/plain,text/markdown,text/html,application/rtf';
+    if (kind === 'folder') {
+      input.setAttribute('webkitdirectory', '');
+      input.setAttribute('directory', '');
+    }
+    input.addEventListener('change', () => {
+      void planConversationImport(conversationSources([...input.files ?? []]));
+    }, { once: true });
+    input.click();
+  }
+
+  function conversationSources(files: File[]): ConversationImportSource[] {
+    return files.map(file => ({
+      kind: 'file',
+      name: file.webkitRelativePath || file.name,
+      mimeType: file.type,
+      lastModified: file.lastModified,
+      read: async () => new Uint8Array(await file.arrayBuffer()),
+    }));
+  }
+
+  async function pasteConversation(text?: string) {
+    try {
+      const content = text ?? await navigator.clipboard.readText();
+      if (!content.trim()) throw new Error(t('conversationClipboardEmpty'));
+      const bytes = new TextEncoder().encode(content);
+      await planConversationImport([{
+        kind: 'clipboard',
+        name: 'Clipboard.md',
+        mimeType: 'text/markdown',
+        read: async () => bytes,
+      }]);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function applyConversationImport(decisions: ConversationImportDecision[]) {
+    if (!storage || !conversationPlan || !conversationInbox.current) return;
+    await flushPendingEdit();
+    const report = await conversationInbox.current.apply(conversationPlan, decisions);
+    const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
+    setFiles(loaded);
+    setConversationPlan(undefined);
+    setConversationUndo(report.transactionId);
+    if (report.files[0]) {
+      setSelectedId(report.files[0].id);
+      setRoute('editor');
+    }
+    setNotice(`${report.created} ${t('conversationNew')} · ${report.updated} ${t('conversationUpdates')} · ${report.skipped} ${t('conversationDuplicates')}`);
+  }
+
+  async function undoConversationImport() {
+    if (!storage || !conversationUndo || !conversationInbox.current) return;
+    await flushPendingEdit();
+    await conversationInbox.current.undo(conversationUndo);
+    const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
+    setFiles(loaded);
+    setSelectedId(current => current && loaded.some(file => file.id === current) ? current : loaded[0]?.id);
+    setConversationUndo(undefined);
+    setNotice(t('conversationUndoComplete'));
+  }
+
   async function resolveConflict(
     record: ConflictRecord,
     content: string,
@@ -261,6 +397,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const target = files.find(file => file.id === record.fileId)
       ?? files.find(file => record.preservedFileIds.includes(file.id));
     if (!target) {
@@ -281,6 +418,7 @@ export default function App() {
     if (!storage || !selected || !tag.trim()) {
       return;
     }
+    await flushPendingEdit();
     const tags = [...selected.metadata.tags, tag.trim()];
     const updated = await storage.setMetadata(selected.id, {
       ...selected.metadata,
@@ -293,6 +431,7 @@ export default function App() {
     if (!storage || !selected) {
       return;
     }
+    await flushPendingEdit();
     const identity = canonicalTag(tag);
     const updated = await storage.setMetadata(selected.id, {
       ...selected.metadata,
@@ -305,6 +444,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const file = files.find(value => value.id === fileId);
     if (!file) {
       return;
@@ -327,6 +467,7 @@ export default function App() {
     if (!storage) {
       return;
     }
+    await flushPendingEdit();
     const sourceIdentity = canonicalTag(source);
     const affected = files.filter(file => (
       kind === 'tag'
@@ -375,6 +516,7 @@ export default function App() {
     if (!storage || !taxonomyUndo) {
       return;
     }
+    await flushPendingEdit();
     const restored: NoteFile[] = [];
     setSaving(true);
     try {
@@ -389,12 +531,88 @@ export default function App() {
     }
   }
 
+  function previewReplace(options: ReplaceOptions, scope: ReplaceScope) {
+    try {
+      const plan = planWorkspaceReplace(files, options, scope, selectedId);
+      if (!plan.changes.length) {
+        setNotice(t('noReplaceMatches'));
+        return;
+      }
+      setReplacePlan(plan);
+      setNotice(undefined);
+    } catch {
+      setNotice(t('replaceInvalid'));
+    }
+  }
+
+  async function applyReplace(plan: WorkspaceReplacePlan, selectedFileIds: string[]) {
+    if (!storage || !selectedFileIds.length) return;
+    await flushPendingEdit();
+    const selectedIds = new Set(selectedFileIds);
+    const changes = plan.changes.filter(change => selectedIds.has(change.fileId));
+    const originals = changes.map(change => files.find(file => file.id === change.fileId));
+    if (originals.some(file => !file) || changes.some(change => (
+      files.find(file => file.id === change.fileId)?.modifiedAt !== change.sourceModifiedAt
+    ))) {
+      setReplacePlan(undefined);
+      setNotice(t('replacePlanStale'));
+      return;
+    }
+    const snapshots = originals.filter((file): file is NoteFile => Boolean(file)).map(file => structuredClone(file));
+    const updated: NoteFile[] = [];
+    setSaving(true);
+    try {
+      for (const change of changes) {
+        updated.push(await storage.writeFile(change.fileId, change.content));
+      }
+      const byId = new Map(updated.map(file => [file.id, file]));
+      setFiles(current => current.map(file => byId.get(file.id) ?? file));
+      setReplaceUndo(snapshots);
+      setReplacePlan(undefined);
+      const replacements = changes.reduce((total, change) => total + change.occurrences, 0);
+      setNotice(`${replacements} ${t('replacementsApplied')} · ${changes.length} ${t('affectedFiles').toLocaleLowerCase()}`);
+    } catch (error) {
+      for (const snapshot of snapshots) {
+        await storage.writeFile(snapshot.id, snapshot.content);
+      }
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function undoReplace() {
+    if (!storage || !replaceUndo) return;
+    await flushPendingEdit();
+    const restored: NoteFile[] = [];
+    setSaving(true);
+    try {
+      for (const snapshot of replaceUndo) {
+        restored.push(await storage.writeFile(snapshot.id, snapshot.content));
+      }
+      const byId = new Map(restored.map(file => [file.id, file]));
+      setFiles(current => current.map(file => byId.get(file.id) ?? file));
+      setReplaceUndo(undefined);
+      setNotice(t('replaceUndoComplete'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (!storage) {
     return (
       <Welcome
         notice={notice}
         onContinue={continueOffline}
         onSignIn={async () => {
+          setNotice(undefined);
+          if (
+            typeof window.PublicKeyCredential === 'undefined'
+            || !window.navigator.credentials
+          ) {
+            setNotice(t('passkeyUnsupported'));
+            return;
+          }
           localStorage.setItem('ksamint-cloud-enabled', 'true');
           setCloudEnabled(true);
           try {
@@ -495,6 +713,9 @@ export default function App() {
             onMindmap={() => setRoute('mindmap')}
             onChooseImport={chooseImport}
             onImportURL={importURL}
+            onChooseConversation={chooseConversationImport}
+            onDropConversation={files => planConversationImport(conversationSources(files))}
+            onPasteConversation={pasteConversation}
             onOpenConflicts={() => setConflictManagerOpen(true)}
           />
         ) : route === 'mindmap' ? (
@@ -519,8 +740,12 @@ export default function App() {
                 <SearchPanel
                   query={query}
                   hits={hits}
+                  hasCurrentFile={Boolean(selectedId)}
+                  canUndo={Boolean(replaceUndo)}
                   onQuery={setQuery}
                   onOpen={hit => openFile(hit.fileId)}
+                  onPreview={previewReplace}
+                  onUndo={() => void undoReplace()}
                 />
               )}
               {sidebar === 'tags' && (
@@ -575,6 +800,16 @@ export default function App() {
           {t('undo')} · {taxonomyUndo.length} {t('affectedFiles').toLocaleLowerCase()}
         </button>
       )}
+      {conversationUndo && (
+        <button className="undo-toast conversation-undo" type="button" onClick={() => void undoConversationImport()}>
+          {t('undo')} · {t('conversationImport')}
+        </button>
+      )}
+      {replaceUndo && (
+        <button className="undo-toast replace-undo" type="button" onClick={() => void undoReplace()}>
+          {t('undo')} · {t('replace')}
+        </button>
+      )}
       {tagManagerOpen && (
         <TagManagerDialog
           files={files}
@@ -587,6 +822,23 @@ export default function App() {
           records={conflicts}
           onClose={() => setConflictManagerOpen(false)}
           onResolve={resolveConflict}
+        />
+      )}
+      {conversationPlan && (
+        <Suspense fallback={<RouteLoading />}>
+          <ConversationImportDialog
+            plan={conversationPlan}
+            onClose={() => setConversationPlan(undefined)}
+            onApply={applyConversationImport}
+          />
+        </Suspense>
+      )}
+      {replacePlan && (
+        <ReplacePreviewDialog
+          key={`${replacePlan.scope}-${replacePlan.occurrenceCount}-${replacePlan.options.replacement}`}
+          plan={replacePlan}
+          onClose={() => setReplacePlan(undefined)}
+          onApply={selectedIds => void applyReplace(replacePlan, selectedIds)}
         />
       )}
     </div>
@@ -634,6 +886,9 @@ function Hub({
   onMindmap,
   onChooseImport,
   onImportURL,
+  onChooseConversation,
+  onDropConversation,
+  onPasteConversation,
   onOpenConflicts,
 }: {
   files: NoteFile[];
@@ -644,6 +899,9 @@ function Hub({
   onMindmap: () => void;
   onChooseImport: (kind: 'files' | 'folder') => void;
   onImportURL: (url: string) => Promise<void>;
+  onChooseConversation: (kind?: 'files' | 'folder') => void;
+  onDropConversation: (files: File[]) => Promise<void>;
+  onPasteConversation: (text?: string) => Promise<void>;
   onOpenConflicts: () => void;
 }) {
   const tags = taxonomy(files);
@@ -704,6 +962,12 @@ function Hub({
           onChoose={onChooseImport}
           onImportURL={onImportURL}
         />
+        <ConversationInboxPanel
+          importing={importing}
+          onChoose={onChooseConversation}
+          onDrop={onDropConversation}
+          onPaste={onPasteConversation}
+        />
         <article className="hub-panel action-panel conflict-summary">
           <p className="eyebrow">{t('versionHistory')}</p>
           <h2>{conflicts.filter(record => !record.resolution).length} {t('unresolvedConflicts')}</h2>
@@ -712,6 +976,59 @@ function Hub({
         </article>
       </section>
     </main>
+  );
+}
+
+function ConversationInboxPanel({
+  importing,
+  onChoose,
+  onDrop,
+  onPaste,
+}: {
+  importing: boolean;
+  onChoose: (kind?: 'files' | 'folder') => void;
+  onDrop: (files: File[]) => Promise<void>;
+  onPaste: (text?: string) => Promise<void>;
+}) {
+  const [draft, setDraft] = useState('');
+  return (
+    <article
+      className="hub-panel conversation-inbox-panel"
+      onDragOver={event => {
+        if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+      }}
+      onDrop={event => {
+        if (!event.dataTransfer.files.length) return;
+        event.preventDefault();
+        void onDrop([...event.dataTransfer.files]);
+      }}
+    >
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Claude · ChatGPT · Markdown</p>
+          <h2>{t('conversationInbox')}</h2>
+        </div>
+      </div>
+      <p>{t('conversationDescription')}</p>
+      <textarea
+        value={draft}
+        rows={4}
+        placeholder={t('conversationPastePlaceholder')}
+        onChange={event => setDraft(event.target.value)}
+        onPaste={event => {
+          if (!draft && event.clipboardData.getData('text/plain')) {
+            event.currentTarget.dataset.pasted = 'true';
+          }
+        }}
+      />
+      <div className="import-actions">
+        <button type="button" disabled={importing} onClick={() => onChoose('files')}>{t('conversationImportExport')}</button>
+        <button type="button" disabled={importing} onClick={() => onChoose('folder')}>{t('importFolder')}</button>
+        <button type="button" disabled={importing} onClick={() => {
+          void onPaste(draft || undefined).then(() => setDraft(''));
+        }}>{draft ? t('conversationPreview') : t('conversationReadClipboard')}</button>
+      </div>
+    </article>
   );
 }
 
@@ -987,14 +1304,26 @@ function FilesPanel({
 function SearchPanel({
   query,
   hits,
+  hasCurrentFile,
+  canUndo,
   onQuery,
   onOpen,
+  onPreview,
+  onUndo,
 }: {
   query: string;
   hits: SearchHit[];
+  hasCurrentFile: boolean;
+  canUndo: boolean;
   onQuery: (value: string) => void;
   onOpen: (hit: SearchHit) => void;
+  onPreview: (options: ReplaceOptions, scope: ReplaceScope) => void;
+  onUndo: () => void;
 }) {
+  const [replacement, setReplacement] = useState('');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [regularExpression, setRegularExpression] = useState(false);
+  const options = { find: query, replacement, caseSensitive, regularExpression };
   return (
     <section className="sidebar-panel">
       <header className="sidebar-header"><h2>{t('search')}</h2><span>{hits.length}</span></header>
@@ -1002,6 +1331,23 @@ function SearchPanel({
         <span className="sr-only">{t('searchWorkspace')}</span>
         <input autoFocus value={query} onChange={event => onQuery(event.target.value)} placeholder={t('searchWorkspace')} />
       </label>
+      <section className="replace-controls" aria-label={t('replace')}>
+        <input
+          value={replacement}
+          onChange={event => setReplacement(event.target.value)}
+          placeholder={t('replaceWith')}
+          aria-label={t('replaceWith')}
+        />
+        <div className="replace-options">
+          <label><input type="checkbox" checked={caseSensitive} onChange={event => setCaseSensitive(event.target.checked)} />{t('matchCase')}</label>
+          <label><input type="checkbox" checked={regularExpression} onChange={event => setRegularExpression(event.target.checked)} />{t('regularExpression')}</label>
+        </div>
+        <div className="replace-actions">
+          <button type="button" disabled={!query || !hasCurrentFile} onClick={() => onPreview(options, 'current')}>{t('replaceCurrent')}</button>
+          <button type="button" disabled={!query} onClick={() => onPreview(options, 'workspace')}>{t('replaceWorkspace')}</button>
+        </div>
+        {canUndo && <button className="replace-undo-inline" type="button" onClick={onUndo}>{t('undoReplace')}</button>}
+      </section>
       {query && !hits.length ? <p className="empty-copy">{t('noResults')}</p> : (
         <ul className="search-list">
           {hits.map(hit => (
@@ -1015,6 +1361,65 @@ function SearchPanel({
         </ul>
       )}
     </section>
+  );
+}
+
+function ReplacePreviewDialog({
+  plan,
+  onClose,
+  onApply,
+}: {
+  plan: WorkspaceReplacePlan;
+  onClose: () => void;
+  onApply: (selectedFileIds: string[]) => void;
+}) {
+  const [selected, setSelected] = useState(() => new Set(plan.changes.map(change => change.fileId)));
+  const selectedOccurrences = plan.changes.reduce((total, change) => (
+    selected.has(change.fileId) ? total + change.occurrences : total
+  ), 0);
+  return (
+    <div className="dialog-backdrop">
+      <section className="taxonomy-dialog replace-dialog" role="dialog" aria-modal="true" aria-label={t('replacePreview')}>
+        <header>
+          <div><p className="eyebrow">{t('replace')}</p><h2>{t('replacePreview')}</h2></div>
+          <button type="button" onClick={onClose}>×</button>
+        </header>
+        <div className="replace-summary">
+          <strong>{selectedOccurrences}</strong>
+          <span>{t('occurrences')} · {selected.size} {t('affectedFiles').toLocaleLowerCase()}</span>
+          <code>{plan.options.find} → {plan.options.replacement || '∅'}</code>
+          <div>
+            <button type="button" onClick={() => setSelected(new Set(plan.changes.map(change => change.fileId)))}>{t('selectAll')}</button>
+            <button type="button" onClick={() => setSelected(new Set())}>{t('clearAll')}</button>
+          </div>
+        </div>
+        <ul className="replace-preview-list">
+          {plan.changes.map(change => (
+            <li key={change.fileId}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.has(change.fileId)}
+                  onChange={event => setSelected(current => {
+                    const next = new Set(current);
+                    if (event.target.checked) next.add(change.fileId);
+                    else next.delete(change.fileId);
+                    return next;
+                  })}
+                />
+                <span><strong>{change.path}</strong><small>{change.occurrences} {t('occurrences')}</small></span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <footer>
+          <button type="button" onClick={onClose}>{t('cancel')}</button>
+          <button className="primary-button" type="button" disabled={!selected.size} onClick={() => onApply([...selected])}>
+            {t('replaceSelected')}
+          </button>
+        </footer>
+      </section>
+    </div>
   );
 }
 

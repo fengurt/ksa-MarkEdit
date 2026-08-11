@@ -94,6 +94,22 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test protocol, API, and recovery
         run: cargo test --workspace
+      - name: Validate Tencent sync environment wiring
+        env:
+          POSTGRES_PASSWORD: ci-postgres-password
+          TENCENT_SECRET_ID: ci-secret-id
+          TENCENT_SECRET_KEY: ci-secret-key
+          TENCENT_STS_ROLE_ARN: qcs::cam::uin/100022600923:roleName/KsamintVaultStsRole
+          TENCENT_COS_BUCKET: ksamint-vault-1308586823
+          TENCENT_COS_REGION: ap-singapore
+          TENCENT_APP_ID: "1308586823"
+        run: |
+          docker compose -f docker-compose.tencent.yml config > /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_SECRET_ID: ci-secret-id' /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_SECRET_KEY: ci-secret-key' /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_STS_ROLE_ARN: qcs::cam::uin/100022600923:roleName/KsamintVaultStsRole' /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_COS_BUCKET: ksamint-vault-1308586823' /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_APP_ID: "1308586823"' /tmp/ksamint-compose.yml
 
   test:
     name: Tests (${{ matrix.arch }})

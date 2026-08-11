@@ -17,8 +17,8 @@ BUNDLE_ID_SUFFIX = .dev
 BUNDLE_ID_SUFFIX[config=Release] =
 REGISTER_APP_GROUPS = NO
 
-MARKETING_VERSION = 2.1.2
-CURRENT_PROJECT_VERSION = 9
+MARKETING_VERSION = 2.3.0
+CURRENT_PROJECT_VERSION = 10
 
 // Keep the universal release below the 6 MiB distribution budget without
 // affecting Debug diagnostics or removing either CPU architecture.

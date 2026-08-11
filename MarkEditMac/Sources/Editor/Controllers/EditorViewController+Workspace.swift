@@ -413,6 +413,8 @@ extension EditorViewController {
           if let url = URL(string: "https://notes.apuch.cn") {
             NSWorkspace.shared.open(url)
           }
+        case "openConversationInbox":
+          ConversationCaptureCoordinator.shared.showInbox()
         default:
           break
         }

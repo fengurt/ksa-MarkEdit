@@ -118,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     AppDesign.migrateMainMenuIcons(delegate: self)
     configureResourceMenu()
     configureWorkspaceViewMenu()
+    ConversationCaptureCoordinator.shared.configureFromPreferences()
     Task {
       await AccountServiceMonitor.shared.refresh()
     }

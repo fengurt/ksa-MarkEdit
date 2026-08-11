@@ -60,6 +60,9 @@ enum AppPreferences {
     @Storage(key: "general.recent-resource-bookmarks", defaultValue: [])
     static var recentResourceBookmarks: [Data]
 
+    @Storage(key: "general.conversation-capture-enabled", defaultValue: false)
+    static var conversationCaptureEnabled: Bool
+
     static var quitAlwaysKeepsWindows: Bool {
       get {
         UserDefaults.standard.bool(forKey: NSQuitAlwaysKeepsWindows)

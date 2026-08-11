@@ -150,4 +150,35 @@ describe('VaultObjectV1 cross-language vector', () => {
       versionId: vector.versionId,
     })).rejects.toThrow();
   });
+
+  it('round-trips binary attachments without UTF-8 conversion', async () => {
+    const bytes = Uint8Array.from([0, 255, 1, 2, 3, 0, 128]);
+    const sealed = await sealVaultObject({
+      plaintext: bytes,
+      masterKey: unhex(vector.masterKeyHex),
+      fileId: vector.fileId,
+      versionId: vector.versionId,
+      kind: 'attachment',
+      mimeType: 'application/octet-stream',
+      nonce: unhex(vector.nonceHex),
+    });
+    const encoded = encodeVaultObject({
+      ...sealed,
+      fileId: vector.fileId,
+      versionId: vector.versionId,
+      kind: 'attachment',
+      mimeType: 'application/octet-stream',
+    });
+    const object = decodeVaultObject(encoded);
+    expect(object).toMatchObject({ kind: 'attachment', mimeType: 'application/octet-stream' });
+    await expect(openVaultObject({
+      value: object,
+      plaintextSize: bytes.length,
+      masterKey: unhex(vector.masterKeyHex),
+      fileId: vector.fileId,
+      versionId: vector.versionId,
+      kind: object.kind,
+      mimeType: object.mimeType,
+    })).resolves.toEqual(bytes);
+  });
 });

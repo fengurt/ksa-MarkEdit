@@ -195,16 +195,7 @@ pub(crate) async fn assume_role(
     let body = serde_json::to_string(&body).map_err(|error| ApiError::Internal(error.into()))?;
     let timestamp = Utc::now().timestamp();
     let authorization = tc3_authorization(config, timestamp, &body)?;
-    let response = state
-        .http
-        .post("https://sts.tencentcloudapi.com")
-        .header("Authorization", authorization)
-        .header("Content-Type", "application/json; charset=utf-8")
-        .header("Host", "sts.tencentcloudapi.com")
-        .header("X-TC-Action", "AssumeRole")
-        .header("X-TC-Timestamp", timestamp)
-        .header("X-TC-Version", "2018-08-13")
-        .body(body)
+    let response = sts_request(&state.http, config, timestamp, authorization, body)
         .send()
         .await
         .map_err(|error| ApiError::Unavailable(error.to_string()))?;
@@ -230,6 +221,25 @@ pub(crate) async fn assume_role(
     }))
 }
 
+fn sts_request(
+    client: &reqwest::Client,
+    config: &CosConfig,
+    timestamp: i64,
+    authorization: String,
+    body: String,
+) -> reqwest::RequestBuilder {
+    client
+        .post("https://sts.tencentcloudapi.com")
+        .header("Authorization", authorization)
+        .header("Content-Type", "application/json; charset=utf-8")
+        .header("Host", "sts.tencentcloudapi.com")
+        .header("X-TC-Action", "AssumeRole")
+        .header("X-TC-Region", &config.region)
+        .header("X-TC-Timestamp", timestamp)
+        .header("X-TC-Version", "2018-08-13")
+        .body(body)
+}
+
 fn cos_policy(config: &CosConfig, vault_id: Uuid, read_only: bool) -> Value {
     let actions = if read_only {
         vec!["name/cos:GetObject", "name/cos:HeadObject"]
@@ -252,7 +262,7 @@ fn cos_policy(config: &CosConfig, vault_id: Uuid, read_only: bool) -> Value {
             "resource": [
                 format!(
                     "qcs::cos:{}:uid/{}:{}/vaults/{}/*",
-                    config.region, config.owner_uin, config.bucket, vault_id
+                    config.region, config.app_id, config.bucket, vault_id
                 )
             ]
         }]
@@ -299,20 +309,42 @@ fn hmac(key: &[u8], value: &[u8]) -> ApiResult<Vec<u8>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn signing_is_stable() {
-        let config = CosConfig {
+    fn test_config() -> CosConfig {
+        CosConfig {
             secret_id: "id".to_owned(),
             secret_key: "key".to_owned(),
             role_arn: "role".to_owned(),
             bucket: "bucket-123".to_owned(),
             region: "ap-singapore".to_owned(),
-            owner_uin: "123".to_owned(),
+            app_id: "123".to_owned(),
             duration_seconds: 900,
-        };
+        }
+    }
+
+    #[test]
+    fn signing_is_stable() {
+        let config = test_config();
         let first = tc3_authorization(&config, 1_700_000_000, "{}").expect("sign");
         let second = tc3_authorization(&config, 1_700_000_000, "{}").expect("sign");
         assert_eq!(first, second);
         assert!(first.contains("Credential=id/"));
+    }
+
+    #[test]
+    fn assume_role_request_includes_required_region() {
+        let request = sts_request(
+            &reqwest::Client::new(),
+            &test_config(),
+            1_700_000_000,
+            "authorization".to_owned(),
+            "{}".to_owned(),
+        )
+        .build()
+        .expect("build request");
+
+        assert_eq!(
+            request.headers().get("X-TC-Region").unwrap(),
+            "ap-singapore"
+        );
     }
 }

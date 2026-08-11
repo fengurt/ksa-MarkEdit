@@ -21,13 +21,13 @@ API stay compatible with upstream MarkEdit.
 - UTF-8, GB 18030, Big 5, EUC-JP, Shift JIS, and other native encodings
 - GFM-compatible Markdown powered by CodeMirror 6
 - Local workspace tree, global Unicode search, tags, categories, backlinks, and graph
-- Optional on-device Deep Search with a separately downloaded multilingual model
+- Optional Mac on-device Deep Search with a separately downloaded multilingual model
 - Offline Web PWA workspace using OPFS with an IndexedDB fallback
 - Opt-in local MCP tools constrained to one authorized workspace
 - Lazy local Codex and Claude Code Agent panel with read-only defaults and diff-gated writes
 - Signed, on-demand Folder, safe HTML, OKF, MinerU, ZIP, TAR, and TGZ resource previews
 - Optional Passkey account and zero-knowledge encrypted backup protocol
-- Tencent COS disaster recovery and private GitHub encrypted history
+- Tencent COS encrypted object and manifest synchronization
 - Independent universal `ksamint-vault` recovery CLI
 - Shared TypeScript vault protocol and expiring read-only Agent SDK
 - Finder and Quick Look extensions
@@ -107,6 +107,17 @@ GitHub App token broker, deployment files, and independent recovery CLI live in
 [`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
 in the app or Web PWA.
 
+The current Web release binds an encrypted Vault to its first authorized
+browser identity. Until the device-approval and recovery-package UI ships, an
+unknown browser fails closed instead of registering a different Vault Master
+Key or overwriting encrypted history. The GitHub App token broker and recovery
+protocol are present, but automatic GitHub commit scheduling and history
+restore are not yet exposed as finished backup features. Web Deep Search is
+also pending; the downloadable semantic index currently applies to the Mac app.
+Conversation import currently retains a JSON export as a document-level source
+attachment, but provider-specific per-message attachment extraction and the
+preview toggle for omitting the original export are still pending.
+
 The Web PWA encrypts files and paths before direct upload. It can import
 Markdown, UTF-8 text, and safe HTML from files, complete browser-selected
 folders, drag and drop, or credential-free HTTPS URLs. Imports are stored in
@@ -155,7 +166,9 @@ The project contains:
 - `MarkEditMac/Modules/ResourceCore` and `ResourceUI`: signed, isolated,
   read-only resource module protocol, filesystem broker, and lazy WKWebView host
 - `ResourceModules`: separately signed Folder, safe HTML, Google OKF, MinerU,
-  and ZIP/TAR/TGZ preview modules (kept outside the main DMG)
+  and ZIP/TAR/TGZ preview modules. The signed OKF, safe HTML, and archive
+  modules are bundled as offline fallbacks; Folder, MinerU, and newer module
+  versions remain separately downloadable.
 - `WebApp`: the shared React/Vite offline knowledge workspace
 - `VaultProtocolTS`: shared TypeScript deterministic-CBOR and vault crypto
 - `AgentSDK`: remote read-only, client-side-decrypting Agent SDK
@@ -188,9 +201,11 @@ cd ResourceModules
 npm run verify
 ```
 
-The app downloads a module only after the user opens a matching resource and
-approves its displayed name, version, and size. Every manifest has a P-256
-signature and every static asset has a SHA-256 hash. Modules run in a
+The app creates no module WebView or worker until the user opens a matching
+resource. Bundled OKF, safe HTML, and archive modules work offline on first
+use. A newer or separately distributed module is downloaded only after the
+user approves its displayed name, version, and size. Every manifest has a
+P-256 signature and every static asset has a SHA-256 hash. Modules run in a
 non-persistent, network-disabled WebKit process and receive only paginated
 directory metadata or bounded byte ranges from the selected resource.
 Resource containers can be opened from File > Open Resource, the Recent

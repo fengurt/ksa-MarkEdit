@@ -22,7 +22,7 @@ pub struct CosConfig {
     pub role_arn: String,
     pub bucket: String,
     pub region: String,
-    pub owner_uin: String,
+    pub app_id: String,
     pub duration_seconds: u32,
 }
 
@@ -52,9 +52,9 @@ impl Config {
             env::var("TENCENT_SECRET_KEY").ok(),
             env::var("TENCENT_STS_ROLE_ARN").ok(),
             env::var("TENCENT_COS_BUCKET").ok(),
-            env::var("TENCENT_OWNER_UIN").ok(),
+            env::var("TENCENT_APP_ID").ok(),
         ) {
-            (Some(secret_id), Some(secret_key), Some(role_arn), Some(bucket), Some(owner_uin)) => {
+            (Some(secret_id), Some(secret_key), Some(role_arn), Some(bucket), Some(app_id)) => {
                 Some(CosConfig {
                     secret_id,
                     secret_key,
@@ -62,7 +62,7 @@ impl Config {
                     bucket,
                     region: env::var("TENCENT_COS_REGION")
                         .unwrap_or_else(|_| "ap-singapore".to_owned()),
-                    owner_uin,
+                    app_id,
                     duration_seconds: 1_800,
                 })
             }

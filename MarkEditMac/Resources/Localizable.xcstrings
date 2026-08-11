@@ -1,6 +1,118 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Capture conversations from clipboard" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer les conversations depuis le presse-papiers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボードから会話を取り込む" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从剪贴板收集对话" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "從剪貼簿收集對話" } }
+      }
+    },
+    "Conversation capture is on" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La capture des conversations est activée" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みはオンです" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话收集已开启" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "對話收集已開啟" } }
+      }
+    },
+    "Conversation Inbox" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Boîte de réception des conversations" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話受信箱" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话收件箱" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "對話收件匣" } }
+      }
+    },
+    "Capture Next Copy" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer la prochaine copie" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のコピーを取り込む" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "捕捉下一次复制" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "擷取下一次複製" } }
+      }
+    },
+    "High-confidence Claude and ChatGPT transcripts are saved to Conversations. Other text stays encrypted for 30 days until reviewed." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les conversations Claude et ChatGPT reconnues avec une forte confiance sont enregistrées dans Conversations. Les autres textes restent chiffrés pendant 30 jours en attente de validation." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "高い確度で認識された Claude と ChatGPT の会話は Conversations に保存されます。それ以外のテキストは確認されるまで30日間暗号化して保持されます。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "高置信度的 Claude 和 ChatGPT 对话会保存到 Conversations；其他文本将加密保留 30 天，等待确认。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "高可信度的 Claude 和 ChatGPT 對話會儲存到 Conversations；其他文字將加密保留 30 天，等待確認。" } }
+      }
+    },
+    "Open Conversation Inbox" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir la boîte de réception" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話受信箱を開く" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开对话收件箱" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟對話收件匣" } }
+      }
+    },
+    "Turn Off Conversation Capture" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désactiver la capture des conversations" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みをオフにする" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭对话收集" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "關閉對話收集" } }
+      }
+    },
+    "Undo Last Capture" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler la dernière capture" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "直前の取り込みを取り消す" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销上次收集" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "撤銷上次收集" } }
+      }
+    },
+    "Waiting for next copy…" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente de la prochaine copie…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のコピーを待機中…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在等待下一次复制…" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "正在等待下一次複製…" } }
+      }
+    },
+    "Discard" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "破棄" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "丢弃" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "捨棄" } }
+      }
+    },
+    "Keep for Later" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver pour plus tard" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "後で確認" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "稍后处理" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "稍後處理" } }
+      }
+    },
+    "Review clipboard capture" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vérifier la capture du presse-papiers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボードの取り込みを確認" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "检查剪贴板内容" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檢查剪貼簿內容" } }
+      }
+    },
+    "Save to Conversations" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer dans Conversations" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Conversations に保存" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存到 Conversations" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "儲存到 Conversations" } }
+      }
+    },
+    "Unknown application" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Application inconnue" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "不明なアプリケーション" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未知应用" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未知應用程式" } }
+      }
+    },
     "Add a heading to build the document outline." : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajoutez un titre pour créer le plan du document." } },

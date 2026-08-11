@@ -35,6 +35,8 @@
 		870A51B9294702AF0095C7EB /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B4294702AF0095C7EB /* EditorViewController.swift */; };
 		870A51BA294702AF0095C7EB /* EditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B5294702AF0095C7EB /* EditorWindowController.swift */; };
 		870A51BC294702AF0095C7EB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B7294702AF0095C7EB /* AppDelegate.swift */; };
+		AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */; };
+		AB3000043000000000000001 /* conversation-capture.plist in Embed Conversation Capture Agent */ = {isa = PBXBuildFile; fileRef = AB3000033000000000000001 /* conversation-capture.plist */; };
 		870A51BD294702AF0095C7EB /* EditorDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B8294702AF0095C7EB /* EditorDocument.swift */; };
 		870A51C9294752530095C7EB /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 870A51C8294752530095C7EB /* index.html */; };
 		870C59C72EC61261003882BD /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 870C59C62EC61261003882BD /* Localizable.xcstrings */; };
@@ -162,6 +164,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		AB3000053000000000000001 /* Embed Conversation Capture Agent */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchAgents;
+			dstSubfolderSpec = 1;
+			files = (
+				AB3000043000000000000001 /* conversation-capture.plist in Embed Conversation Capture Agent */,
+			);
+			name = "Embed Conversation Capture Agent";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		872924112951525C007156B1 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -206,6 +219,8 @@
 		870A51B4294702AF0095C7EB /* EditorViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
 		870A51B5294702AF0095C7EB /* EditorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorWindowController.swift; sourceTree = "<group>"; };
 		870A51B7294702AF0095C7EB /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationCaptureCoordinator.swift; sourceTree = "<group>"; };
+		AB3000033000000000000001 /* conversation-capture.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "art.apuch.ksamint-markedit.conversation-capture.plist"; sourceTree = "<group>"; };
 		870A51B8294702AF0095C7EB /* EditorDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorDocument.swift; sourceTree = "<group>"; };
 		870A51BE294702FD0095C7EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		870A51C8294752530095C7EB /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = index.html; path = CoreEditor/dist/index.html; sourceTree = SOURCE_ROOT; };
@@ -413,6 +428,7 @@
 		870A51C229470D5C0095C7EB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				AB3000033000000000000001 /* conversation-capture.plist */,
 				AB1200043000000000000001 /* rendered-preview.html */,
 				AB1300023000000000000001 /* KnowledgeHub */,
 				AB2600023000000000000001 /* okf */,
@@ -493,6 +509,7 @@
 			children = (
 				87ACB6932BD8CA8400CE6F9E /* Application.swift */,
 				870A51B7294702AF0095C7EB /* AppDelegate.swift */,
+				AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */,
 				87FAFFD62BE0B6A300FA509D /* AppDelegate+FileSystem.swift */,
 				871C995C2973F20E003FF3A7 /* AppDelegate+Menu.swift */,
 				871C995A2973F1E6003FF3A7 /* AppDelegate+Document.swift */,
@@ -734,6 +751,7 @@
 				870A519E294700DE0095C7EB /* Sources */,
 				870A519F294700DE0095C7EB /* Frameworks */,
 				870A51A0294700DE0095C7EB /* Resources */,
+				AB3000053000000000000001 /* Embed Conversation Capture Agent */,
 				872924112951525C007156B1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -961,6 +979,7 @@
 				878B7B9A2CE0DA8A00220F39 /* EditorViewController+FileVersion.swift in Sources */,
 				873D6402295FCC3E0095DEF7 /* AppResources.swift in Sources */,
 				870A51BC294702AF0095C7EB /* AppDelegate.swift in Sources */,
+				AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */,
 				87FAFFD72BE0B6A300FA509D /* AppDelegate+FileSystem.swift in Sources */,
 				8780AC1E2982A2C900065EF4 /* EditorSettingsView.swift in Sources */,
 				8767BBB5295AD62700BFACAE /* EditorReplaceButtons.swift in Sources */,

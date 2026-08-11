@@ -2,6 +2,7 @@ import { applyMetadata, parseMetadata } from '../markdown/metadata';
 import type {
   ConflictRecord,
   ConflictResolution,
+  AttachmentFile,
   NoteFile,
   NoteMetadata,
   VaultFile,
@@ -14,6 +15,15 @@ const CONFLICTS_FILE = 'conflicts.ksv';
 const DATABASE_NAME = 'ksamint-device-v1';
 const KEY_STORE = 'device-keys';
 const FALLBACK_STORE = 'vault-objects';
+const LOCAL_RECORD_DIRECTORY = 'local-records';
+
+type LocalRecord = { expiresAt: number; value: unknown };
+
+type LegacyVaultFile = Pick<VaultFile, 'id' | 'path' | 'modifiedAt'>;
+type LegacyVaultManifest = Omit<VaultManifest, 'version' | 'files'> & {
+  version: 1;
+  files: LegacyVaultFile[];
+};
 
 type EncryptedPayload = {
   nonce: Uint8Array;
@@ -33,12 +43,15 @@ export class VaultStorage {
     const opfsRoot = await workspaceDirectory(workspaceId);
     const encryptedManifest = await readObject(opfsRoot, workspaceId, MANIFEST_FILE);
     let manifest: VaultManifest;
+    let migrated = false;
 
     if (encryptedManifest) {
-      manifest = JSON.parse(await decryptText(key, encryptedManifest)) as VaultManifest;
+      const decoded = JSON.parse(await decryptText(key, encryptedManifest)) as VaultManifest | LegacyVaultManifest;
+      migrated = decoded.version === 1;
+      manifest = migrateVaultManifest(decoded);
     } else {
       manifest = {
-        version: 1,
+        version: 2,
         id: workspaceId,
         name: 'Personal Workspace',
         files: [],
@@ -47,6 +60,10 @@ export class VaultStorage {
     }
 
     const storage = new VaultStorage(workspaceId, key, manifest, opfsRoot);
+    if (migrated) {
+      await storage.refreshLegacyFileSizes();
+      await storage.persistManifest();
+    }
     if (manifest.files.length === 0) {
       await storage.createFile(
         'Welcome.md',
@@ -61,6 +78,12 @@ export class VaultStorage {
   }
 
   listFiles(): VaultFile[] {
+    return this.manifest.files
+      .filter(file => file.kind !== 'attachment')
+      .sort((left, right) => left.path.localeCompare(right.path));
+  }
+
+  listAllFiles(): VaultFile[] {
     return [...this.manifest.files].sort((left, right) => left.path.localeCompare(right.path));
   }
 
@@ -69,12 +92,15 @@ export class VaultStorage {
     if (!file) {
       throw new Error('File not found');
     }
+    if (file.kind === 'attachment') {
+      throw new Error('Attachment cannot be opened as Markdown');
+    }
     const payload = await readObject(this.opfsRoot, this.workspaceId, objectName(file.id));
     if (!payload) {
       throw new Error('Encrypted file object is missing');
     }
     const content = await decryptText(this.key, payload);
-    return { ...file, content, metadata: parseMetadata(content) };
+    return { ...file, kind: 'markdown', content, metadata: parseMetadata(content) };
   }
 
   async createFile(path: string, content = ''): Promise<NoteFile> {
@@ -86,11 +112,14 @@ export class VaultStorage {
       id: crypto.randomUUID(),
       path: normalizedPath,
       modifiedAt: Date.now(),
+      kind: 'markdown',
+      mimeType: 'text/markdown',
+      byteSize: new TextEncoder().encode(content).length,
     };
     this.manifest.files.push(file);
     await this.writeContent(file, content);
     await this.persistManifest();
-    return { ...file, content, metadata: parseMetadata(content) };
+    return { ...file, kind: 'markdown', content, metadata: parseMetadata(content) };
   }
 
   async importFiles(
@@ -113,10 +142,13 @@ export class VaultStorage {
           id: crypto.randomUUID(),
           path,
           modifiedAt: Math.max(0, Math.floor(document.modifiedAt)),
+          kind: 'markdown',
+          mimeType: 'text/markdown',
+          byteSize: new TextEncoder().encode(document.content).length,
         };
         this.manifest.files.push(file);
         await this.writeContent(file, document.content);
-        imported.push({ ...file, content: document.content, metadata: parseMetadata(document.content) });
+        imported.push({ ...file, kind: 'markdown', content: document.content, metadata: parseMetadata(document.content) });
       }
       await this.persistManifest();
       return imported;
@@ -128,13 +160,14 @@ export class VaultStorage {
 
   async writeFile(id: string, content: string): Promise<NoteFile> {
     const file = this.manifest.files.find(candidate => candidate.id === id);
-    if (!file) {
+    if (!file || file.kind === 'attachment') {
       throw new Error('File not found');
     }
     file.modifiedAt = Date.now();
+    file.byteSize = new TextEncoder().encode(content).length;
     await this.writeContent(file, content);
     await this.persistManifest();
-    return { ...file, content, metadata: parseMetadata(content) };
+    return { ...file, kind: 'markdown', content, metadata: parseMetadata(content) };
   }
 
   async setMetadata(id: string, metadata: NoteMetadata): Promise<NoteFile> {
@@ -156,6 +189,118 @@ export class VaultStorage {
     await this.persistManifest();
   }
 
+  async deleteFile(id: string): Promise<void> {
+    const index = this.manifest.files.findIndex(file => file.id === id);
+    if (index < 0) {
+      throw new Error('File not found');
+    }
+    this.manifest.files.splice(index, 1);
+    await deleteObject(this.opfsRoot, this.workspaceId, objectName(id));
+    await this.persistManifest();
+  }
+
+  async writeAttachment(input: {
+    path: string;
+    bytes: Uint8Array;
+    mimeType: string;
+    contentDigest: string;
+    modifiedAt?: number;
+  }): Promise<AttachmentFile> {
+    const path = normalizeAssetPath(input.path);
+    const existing = this.manifest.files.find(file => file.path === path);
+    if (existing && existing.kind !== 'attachment') {
+      throw new Error(`A Markdown file already exists at ${path}`);
+    }
+    if (existing?.contentDigest === input.contentDigest) {
+      return { ...existing, kind: 'attachment', bytes: input.bytes.slice() };
+    }
+    const file: VaultFile = existing ?? {
+      id: crypto.randomUUID(),
+      path,
+      modifiedAt: input.modifiedAt ?? Date.now(),
+      kind: 'attachment',
+      mimeType: input.mimeType || 'application/octet-stream',
+      byteSize: input.bytes.length,
+    };
+    file.modifiedAt = input.modifiedAt ?? Date.now();
+    file.mimeType = input.mimeType || 'application/octet-stream';
+    file.byteSize = input.bytes.length;
+    file.contentDigest = input.contentDigest;
+    if (!existing) this.manifest.files.push(file);
+    await writeObject(
+      this.opfsRoot,
+      this.workspaceId,
+      objectName(file.id),
+      await encryptBytes(this.key, input.bytes),
+    );
+    await this.persistManifest();
+    return { ...file, kind: 'attachment', bytes: input.bytes.slice() };
+  }
+
+  async readAttachment(id: string): Promise<AttachmentFile> {
+    const file = this.manifest.files.find(candidate => candidate.id === id);
+    if (!file || file.kind !== 'attachment') {
+      throw new Error('Attachment not found');
+    }
+    const payload = await readObject(this.opfsRoot, this.workspaceId, objectName(file.id));
+    if (!payload) throw new Error('Encrypted attachment object is missing');
+    return { ...file, kind: 'attachment', bytes: await decryptBytes(this.key, payload) };
+  }
+
+  async replaceAttachments(attachments: AttachmentFile[]): Promise<AttachmentFile[]> {
+    const expected = new Set(attachments.map(attachment => attachment.id));
+    const removed = this.manifest.files.filter(file => file.kind === 'attachment' && !expected.has(file.id));
+    for (const file of removed) {
+      await deleteObject(this.opfsRoot, this.workspaceId, objectName(file.id));
+    }
+    this.manifest.files = this.manifest.files.filter(file => file.kind !== 'attachment');
+    for (const attachment of attachments) {
+      const path = normalizeAssetPath(attachment.path);
+      const metadata: VaultFile = {
+        id: attachment.id,
+        path,
+        modifiedAt: attachment.modifiedAt,
+        kind: 'attachment',
+        mimeType: attachment.mimeType ?? 'application/octet-stream',
+        byteSize: attachment.bytes.length,
+        contentDigest: attachment.contentDigest,
+      };
+      this.manifest.files.push(metadata);
+      await writeObject(
+        this.opfsRoot,
+        this.workspaceId,
+        objectName(metadata.id),
+        await encryptBytes(this.key, attachment.bytes),
+      );
+    }
+    await this.persistManifest();
+    return structuredClone(attachments);
+  }
+
+  async writeLocalRecord(
+    namespace: string,
+    id: string,
+    value: unknown,
+    expiresAt: number,
+  ): Promise<void> {
+    const records = await this.readLocalRecords(namespace);
+    records[id] = { expiresAt, value };
+    await this.writeLocalRecords(namespace, records);
+  }
+
+  async readLocalRecord<T>(namespace: string, id: string): Promise<T | undefined> {
+    const records = await this.readLocalRecords(namespace);
+    const record = records[id];
+    if (!record || record.expiresAt <= Date.now()) return undefined;
+    return structuredClone(record.value as T);
+  }
+
+  async deleteLocalRecord(namespace: string, id: string): Promise<void> {
+    const records = await this.readLocalRecords(namespace);
+    delete records[id];
+    await this.writeLocalRecords(namespace, records);
+  }
+
   async replaceFiles(files: NoteFile[]): Promise<NoteFile[]> {
     const ids = new Set<string>();
     const paths = new Set<string>();
@@ -170,17 +315,28 @@ export class VaultStorage {
         ...file,
         path,
         modifiedAt: Math.max(0, Math.floor(file.modifiedAt)),
+        kind: 'markdown' as const,
+        mimeType: 'text/markdown',
+        byteSize: new TextEncoder().encode(file.content).length,
         metadata: parseMetadata(file.content),
       };
     });
     for (const file of normalized) {
       await this.writeContent(file, file.content);
     }
-    this.manifest.files = normalized.map(({ id, path, modifiedAt }) => ({
-      id,
-      path,
-      modifiedAt,
-    }));
+    const attachments = this.manifest.files.filter(file => file.kind === 'attachment');
+    this.manifest.files = [
+      ...normalized.map(({ id, path, modifiedAt, kind, mimeType, byteSize, contentDigest }) => ({
+        id,
+        path,
+        modifiedAt,
+        kind,
+        mimeType,
+        byteSize,
+        contentDigest,
+      })),
+      ...attachments,
+    ];
     await this.persistManifest();
     return structuredClone(normalized);
   }
@@ -227,6 +383,34 @@ export class VaultStorage {
     await writeObject(this.opfsRoot, this.workspaceId, objectName(file.id), payload);
   }
 
+  private async refreshLegacyFileSizes(): Promise<void> {
+    for (const file of this.manifest.files) {
+      const payload = await readObject(this.opfsRoot, this.workspaceId, objectName(file.id));
+      if (!payload) continue;
+      const bytes = await decryptBytes(this.key, payload);
+      file.byteSize = bytes.length;
+    }
+  }
+
+  private async readLocalRecords(namespace: string): Promise<Record<string, LocalRecord>> {
+    const path = localRecordPath(namespace);
+    const payload = await readObject(this.opfsRoot, this.workspaceId, path);
+    if (!payload) return {};
+    const decoded = JSON.parse(await decryptText(this.key, payload)) as Record<string, LocalRecord>;
+    const now = Date.now();
+    return Object.fromEntries(Object.entries(decoded).filter(([, record]) => record.expiresAt > now));
+  }
+
+  private async writeLocalRecords(namespace: string, records: Record<string, LocalRecord>): Promise<void> {
+    const path = localRecordPath(namespace);
+    await writeObject(
+      this.opfsRoot,
+      this.workspaceId,
+      path,
+      await encryptText(this.key, JSON.stringify(records)),
+    );
+  }
+
   private async persistManifest(): Promise<void> {
     this.manifest.updatedAt = Date.now();
     const payload = await encryptText(this.key, JSON.stringify(this.manifest));
@@ -239,8 +423,27 @@ export class VaultStorage {
   }
 }
 
+export function migrateVaultManifest(value: VaultManifest | LegacyVaultManifest): VaultManifest {
+  if (value.version === 2) return structuredClone(value);
+  return {
+    ...value,
+    version: 2,
+    files: value.files.map(file => ({
+      ...file,
+      kind: 'markdown',
+      mimeType: 'text/markdown',
+      byteSize: 0,
+    })),
+  };
+}
+
 function objectName(id: string): string {
   return `objects/${id}.ksv`;
+}
+
+function localRecordPath(namespace: string): string {
+  if (!/^[a-z0-9-]{1,64}$/u.test(namespace)) throw new Error('Invalid local record namespace');
+  return `${LOCAL_RECORD_DIRECTORY}/${namespace}.ksv`;
 }
 
 function normalizePath(path: string): string {
@@ -252,7 +455,23 @@ function normalizePath(path: string): string {
   return /\.[a-z0-9]+$/i.test(normalized) ? normalized : `${normalized}.md`;
 }
 
+function normalizeAssetPath(path: string): string {
+  const segments = path.normalize('NFC').replaceAll('\\', '/').split('/').filter(Boolean);
+  if (
+    !segments.length
+    || segments.some(segment => segment === '..' || segment === '.' || segment.includes('\0'))
+    || path.startsWith('/')
+  ) {
+    throw new Error('Invalid attachment path');
+  }
+  return segments.join('/');
+}
+
 async function encryptText(key: CryptoKey, value: string): Promise<ArrayBuffer> {
+  return encryptBytes(key, new TextEncoder().encode(value));
+}
+
+async function encryptBytes(key: CryptoKey, value: Uint8Array): Promise<ArrayBuffer> {
   const nonce = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = await crypto.subtle.encrypt(
     {
@@ -261,7 +480,7 @@ async function encryptText(key: CryptoKey, value: string): Promise<ArrayBuffer> 
       additionalData: MAGIC.buffer as ArrayBuffer,
     },
     key,
-    new TextEncoder().encode(value),
+    value.slice().buffer,
   );
   const output = new Uint8Array(MAGIC.length + nonce.length + ciphertext.byteLength);
   output.set(MAGIC, 0);
@@ -271,6 +490,10 @@ async function encryptText(key: CryptoKey, value: string): Promise<ArrayBuffer> 
 }
 
 async function decryptText(key: CryptoKey, value: ArrayBuffer): Promise<string> {
+  return new TextDecoder().decode(await decryptBytes(key, value));
+}
+
+async function decryptBytes(key: CryptoKey, value: ArrayBuffer): Promise<Uint8Array> {
   const payload = splitPayload(value);
   const plaintext = await crypto.subtle.decrypt(
     {
@@ -281,7 +504,7 @@ async function decryptText(key: CryptoKey, value: ArrayBuffer): Promise<string> 
     key,
     payload.ciphertext,
   );
-  return new TextDecoder().decode(plaintext);
+  return new Uint8Array(plaintext);
 }
 
 function splitPayload(value: ArrayBuffer): EncryptedPayload {
@@ -340,6 +563,27 @@ async function writeObject(
   await idbPut(FALLBACK_STORE, `${workspaceId}/${path}`, payload);
 }
 
+async function deleteObject(
+  root: FileSystemDirectoryHandle | undefined,
+  workspaceId: string,
+  path: string,
+): Promise<void> {
+  if (root) {
+    const segments = path.split('/');
+    let directory = root;
+    try {
+      for (const segment of segments.slice(0, -1)) {
+        directory = await directory.getDirectoryHandle(segment);
+      }
+      await directory.removeEntry(segments.at(-1) ?? path);
+    } catch {
+      // Missing objects are already deleted from the logical Vault.
+    }
+    return;
+  }
+  await idbDelete(FALLBACK_STORE, `${workspaceId}/${path}`);
+}
+
 async function nestedFile(
   root: FileSystemDirectoryHandle,
   path: string,
@@ -380,6 +624,15 @@ async function idbPut(store: string, key: string, value: unknown): Promise<void>
   const database = await openDatabase();
   await new Promise<void>((resolve, reject) => {
     const request = database.transaction(store, 'readwrite').objectStore(store).put(value, key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbDelete(store: string, key: string): Promise<void> {
+  const database = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const request = database.transaction(store, 'readwrite').objectStore(store).delete(key);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
