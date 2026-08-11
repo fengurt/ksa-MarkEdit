@@ -109,7 +109,9 @@ jobs:
           grep -F 'TENCENT_SECRET_KEY: ci-secret-key' /tmp/ksamint-compose.yml
           grep -F 'TENCENT_STS_ROLE_ARN: qcs::cam::uin/100022600923:roleName/KsamintVaultStsRole' /tmp/ksamint-compose.yml
           grep -F 'TENCENT_COS_BUCKET: ksamint-vault-1308586823' /tmp/ksamint-compose.yml
-          grep -F 'TENCENT_APP_ID: 1308586823' /tmp/ksamint-compose.yml
+          grep -F 'TENCENT_APP_ID: "1308586823"' /tmp/ksamint-compose.yml
+          grep -F 'GITHUB_APP_ID: ""' /tmp/ksamint-compose.yml
+          grep -F 'GITHUB_APP_PRIVATE_KEY_PEM: ""' /tmp/ksamint-compose.yml
 
   test:
     name: Tests (${{ matrix.arch }})
