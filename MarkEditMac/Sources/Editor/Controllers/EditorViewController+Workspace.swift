@@ -146,6 +146,9 @@ extension EditorViewController {
     sidebar.onPreviewSyncChanged = { enabled in
       AppPreferences.Window.workspacePreviewSync = enabled
     }
+    sidebar.onVisualEditingChanged = { [weak self] enabled in
+      self?.changeVisualEditingPreference(enabled)
+    }
 
     view.addSubview(sidebar, positioned: .above, relativeTo: webView)
     workspaceSidebarView = sidebar
@@ -239,7 +242,17 @@ extension EditorViewController {
 
     workspacePreviewView?.baseURL = document?.baseURL
     workspaceSidebarView?.setPreviewSyncEnabled(AppPreferences.Window.workspacePreviewSync)
+    workspaceSidebarView?.setVisualEditingEnabled(AppPreferences.Editor.visualEditingMode)
     resetRenderedPreview()
+  }
+
+  func changeVisualEditingPreference(_ enabled: Bool) {
+    AppPreferences.Editor.visualEditingMode = enabled
+    startTextEditing()
+  }
+
+  func toggleVisualEditing() {
+    changeVisualEditingPreference(!AppPreferences.Editor.visualEditingMode)
   }
 
   func resetRenderedPreview() {

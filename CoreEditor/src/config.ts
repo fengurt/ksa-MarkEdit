@@ -57,6 +57,7 @@ export interface Config {
   readOnlyMode: boolean;
   typewriterMode: boolean;
   focusMode: boolean;
+  visualEditingMode: boolean;
   lineWrapping: boolean;
   lineHeight: number;
   suggestWhileTyping: boolean;
@@ -92,6 +93,7 @@ export interface Dynamics {
   selectionHighlight?: Compartment;
   extensionConfigurator?: Compartment;
   markdownConfigurator?: Compartment;
+  visualEditing?: Compartment;
 }
 
 export type { WebFontFace };

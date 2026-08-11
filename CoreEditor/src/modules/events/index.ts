@@ -7,6 +7,7 @@ import * as tokenizer from '../../modules/tokenizer';
 import * as invisible from '../../styling/nodes/invisible';
 import * as link from '../../styling/nodes/link';
 import * as task from '../../styling/nodes/task';
+import { finishVisualComposition } from '../visualEditing';
 
 export function startObserving() {
   document.addEventListener('mousedown', event => {
@@ -71,6 +72,7 @@ export function startObserving() {
   document.addEventListener('compositionend', () => {
     editingState.compositionEnded = true;
     editingState.compositionPosition = undefined;
+    finishVisualComposition();
 
     // [macOS 15] 'compositionend' is received before the editor is initialized
     if (tryGetEditor() === null) {

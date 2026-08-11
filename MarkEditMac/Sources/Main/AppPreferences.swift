@@ -138,6 +138,13 @@ enum AppPreferences {
       }
     }
 
+    @Storage(key: "editor.visual-editing-mode", defaultValue: false)
+    static var visualEditingMode: Bool {
+      didSet {
+        performUpdates { $0.setVisualEditing(enabled: visualEditingMode) }
+      }
+    }
+
     @Storage(key: "editor.line-wrapping", defaultValue: true)
     static var lineWrapping: Bool {
       didSet {
@@ -311,6 +318,7 @@ extension AppPreferences {
       readOnlyMode: false,
       typewriterMode: Editor.typewriterMode,
       focusMode: Editor.focusMode,
+      visualEditingMode: Editor.visualEditingMode,
       lineWrapping: Editor.lineWrapping,
       lineHeight: Editor.lineHeight.multiplier,
       suggestWhileTyping: Assistant.suggestWhileTyping,

@@ -35,6 +35,7 @@ import { customizedCommandsKeymap } from './modules/commands';
 import { autocompleteExtensions, standardLinkCompletion, referenceLinkCompletion } from './modules/completion';
 import { tocKeymap } from './modules/toc';
 import { userExtensions, userMarkdownConfigs, userCodeLanguages } from './api/methods';
+import { visualEditingExtension } from './modules/visualEditing';
 
 const theme = new Compartment;
 const readOnly = new Compartment;
@@ -48,6 +49,7 @@ const indentUnit = new Compartment;
 const selectionHighlight = new Compartment;
 const extensionConfigurator = new Compartment;
 const markdownConfigurator = new Compartment;
+const visualEditing = new Compartment;
 
 window.dynamics = {
   theme,
@@ -62,6 +64,7 @@ window.dynamics = {
   selectionHighlight,
   extensionConfigurator,
   markdownConfigurator,
+  visualEditing,
 };
 
 export function extensions(options: { lineBreak?: string }) {
@@ -155,6 +158,7 @@ export function extensions(options: { lineBreak?: string }) {
     invisibles.of([]), // Must after actionExtensions to have line breaks at the end
     linkStyles, // Must after invisibles because whitespaces can break this
     selectedLines.of([]),
+    visualEditing.of(window.config.visualEditingMode ? visualEditingExtension : []),
 
     // Input handling
     wordTokenizer(),
