@@ -1,8 +1,15 @@
 import { describe, expect, test, beforeEach } from '@jest/globals';
 import { taskMarkerStyle } from '../src/styling/nodes/task';
-import { sleep } from './utils/helpers';
 import { Config } from '../src/config';
 import * as editor from './utils/editor';
+
+async function waitForTaskMarkers(count: number, timeout = 2_000) {
+  const deadline = Date.now() + timeout;
+  while (document.querySelectorAll('.cm-md-taskMarker').length < count) {
+    if (Date.now() >= deadline) break;
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
 describe('Task marker decoration', () => {
   beforeEach(() => {
@@ -15,7 +22,7 @@ describe('Task marker decoration', () => {
 
   test('decorates unchecked tasks with cm-md-taskMarker-unchecked', async () => {
     editor.setUp('- [ ] todo', taskMarkerStyle);
-    await sleep(200);
+    await waitForTaskMarkers(1);
 
     const marker = document.querySelector('.cm-md-taskMarker');
     expect(marker).not.toBeNull();
@@ -25,7 +32,7 @@ describe('Task marker decoration', () => {
 
   test('decorates checked tasks with cm-md-taskMarker-checked (lowercase x)', async () => {
     editor.setUp('- [x] done', taskMarkerStyle);
-    await sleep(200);
+    await waitForTaskMarkers(1);
 
     const marker = document.querySelector('.cm-md-taskMarker');
     expect(marker).not.toBeNull();
@@ -35,7 +42,7 @@ describe('Task marker decoration', () => {
 
   test('decorates checked tasks with cm-md-taskMarker-checked (uppercase X)', async () => {
     editor.setUp('- [X] done', taskMarkerStyle);
-    await sleep(200);
+    await waitForTaskMarkers(1);
 
     const marker = document.querySelector('.cm-md-taskMarker');
     expect(marker?.classList.contains('cm-md-taskMarker-checked')).toBe(true);
@@ -43,7 +50,7 @@ describe('Task marker decoration', () => {
 
   test('decorates mixed task lists with the correct state per line', async () => {
     editor.setUp('- [ ] one\n- [x] two\n- [X] three', taskMarkerStyle);
-    await sleep(200);
+    await waitForTaskMarkers(3);
 
     const markers = document.querySelectorAll('.cm-md-taskMarker');
     expect(markers.length).toBe(3);
