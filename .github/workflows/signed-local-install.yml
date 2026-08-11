@@ -1,5 +1,5 @@
 name: Signed local install artifact
-run-name: Signed local ${{ inputs.ref }}
+run-name: Signed local ${{ inputs.architecture }} ${{ inputs.ref }}
 
 on:
   workflow_dispatch:
@@ -8,6 +8,14 @@ on:
         description: Exact commit SHA to build
         required: true
         type: string
+      architecture:
+        description: Architectures for this local install artifact
+        required: true
+        default: arm64
+        type: choice
+        options:
+          - arm64
+          - universal
 
 permissions:
   contents: read
@@ -79,10 +87,15 @@ jobs:
             -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
           security find-identity -v -p codesigning "$keychain" | \
             grep 'Developer ID Application:'
-      - name: Archive universal app
+      - name: Archive signed app
         run: |
           key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
           printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
+          case '${{ inputs.architecture }}' in
+            arm64) archive_archs='arm64' ;;
+            universal) archive_archs='arm64 x86_64' ;;
+            *) echo 'Unsupported architecture selection' >&2; exit 2 ;;
+          esac
           xcodebuild archive \
             -project MarkEdit.xcodeproj \
             -scheme MarkEditMac \
@@ -93,7 +106,7 @@ jobs:
             -authenticationKeyPath "$key" \
             -authenticationKeyID "$APPLE_NOTARY_KEY_ID" \
             -authenticationKeyIssuerID "$APPLE_NOTARY_ISSUER_ID" \
-            ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
+            ARCHS="$archive_archs" ONLY_ACTIVE_ARCH=NO \
             KSAMINT_BUILD_COMMIT='${{ inputs.ref }}' \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
@@ -121,7 +134,11 @@ jobs:
           xcrun stapler validate "$app"
           codesign --verify --deep --strict --verbose=2 "$app"
           spctl --assess --type execute -vv "$app"
-          Scripts/verify-universal.sh "$app"
+          archs="$(lipo -archs "$app/Contents/MacOS/ksamint MarkEdit")"
+          echo "$archs" | grep -qw arm64
+          if [ '${{ inputs.architecture }}' = universal ]; then
+            echo "$archs" | grep -qw x86_64
+          fi
           test -d "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app"
           test -d "$app/Contents/PlugIns/QuickActionExtension.appex"
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-signed-local.zip"

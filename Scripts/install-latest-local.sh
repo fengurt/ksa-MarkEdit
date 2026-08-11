@@ -5,6 +5,7 @@ source_mode=auto
 requested_ref=HEAD
 repository=fengurt/ksa-MarkEdit
 team_id=${KSAMINT_EXPECTED_TEAM_ID:-}
+requested_arch=auto
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -12,11 +13,21 @@ while [ "$#" -gt 0 ]; do
     --ref) requested_ref=$2; shift 2 ;;
     --repo) repository=$2; shift 2 ;;
     --team-id) team_id=$2; shift 2 ;;
+    --arch) requested_arch=$2; shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
 case "$source_mode" in auto|ci|local) ;; *) echo "--source must be auto, ci, or local" >&2; exit 2 ;; esac
+case "$requested_arch" in
+  auto) requested_arch=$(uname -m) ;;
+  arm64|universal) ;;
+  *) echo "--arch must be auto, arm64, or universal" >&2; exit 2 ;;
+esac
+test "$requested_arch" = arm64 || test "$requested_arch" = universal || {
+  echo "This installer supports ARM Macs and universal artifacts." >&2
+  exit 2
+}
 
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 expected_commit=$(git -C "$root" rev-parse "$requested_ref^{commit}")
@@ -37,11 +48,12 @@ fi
 command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required to obtain the signed build." >&2; exit 1; }
 gh auth status >/dev/null 2>&1 || { echo "Sign in with gh auth login first." >&2; exit 1; }
 
-gh workflow run signed-local-install.yml --repo "$repository" --ref main -f ref="$expected_commit"
+gh workflow run signed-local-install.yml --repo "$repository" --ref main \
+  -f ref="$expected_commit" -f architecture="$requested_arch"
 run_id=
 attempt=0
 while [ "$attempt" -lt 120 ]; do
-  run_id=$(gh run list --repo "$repository" --workflow signed-local-install.yml --limit 30 --json databaseId,displayTitle,status,conclusion --jq ".[] | select(.displayTitle == \"Signed local $expected_commit\") | .databaseId" | head -1)
+  run_id=$(gh run list --repo "$repository" --workflow signed-local-install.yml --limit 30 --json databaseId,displayTitle,status,conclusion --jq ".[] | select(.displayTitle == \"Signed local $requested_arch $expected_commit\") | .databaseId" | head -1)
   if [ -n "$run_id" ]; then
     state=$(gh run view "$run_id" --repo "$repository" --json status,conclusion --jq '.status + ":" + (.conclusion // "")')
     case "$state" in
@@ -65,7 +77,7 @@ actual_commit=$(/usr/libexec/PlistBuddy -c 'Print :KSAMINTBuildCommit' "$candida
 test "$actual_commit" = "$expected_commit" || { echo "Artifact commit mismatch: $actual_commit" >&2; exit 1; }
 archs=$(lipo -archs "$candidate/Contents/MacOS/ksamint MarkEdit")
 echo "$archs" | grep -qw arm64
-echo "$archs" | grep -qw x86_64
+if [ "$requested_arch" = universal ]; then echo "$archs" | grep -qw x86_64; fi
 codesign --verify --deep --strict --verbose=2 "$candidate"
 spctl --assess --type execute -vv "$candidate"
 xcrun stapler validate "$candidate"
