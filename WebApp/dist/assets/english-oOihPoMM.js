@@ -1,4 +1,4 @@
-const e=`abandon
+var e=Object.freeze(`abandon
 ability
 able
 about
@@ -2046,4 +2046,4 @@ zebra
 zero
 zone
 zoo`.split(`
-`);export{e as wordlist};
+`));export{e as wordlist};

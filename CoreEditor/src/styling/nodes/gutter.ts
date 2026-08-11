@@ -1,4 +1,4 @@
-import { Decoration, DecorationSet, lineNumbers } from '@codemirror/view';
+import { DecorationSet, lineNumbers } from '@codemirror/view';
 import { codeFolding, foldGutter, foldState } from '@codemirror/language';
 
 export const gutterExtensions = [
@@ -8,7 +8,7 @@ export const gutterExtensions = [
 ];
 
 export function isPositionFolded(pos: number) {
-  let rangeSet: DecorationSet = Decoration.none;
+  let rangeSet: DecorationSet;
   let isFolded = false;
 
   try {
