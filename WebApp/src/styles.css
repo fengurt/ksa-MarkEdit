@@ -818,10 +818,44 @@ canvas:focus-visible {
 }
 
 .account-state {
-  margin-left: auto;
   padding-bottom: 4px;
   color: var(--muted);
   font-size: 11px;
+}
+
+.account-actions {
+  display: flex;
+  align-items: flex-end;
+  margin-left: auto;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.account-actions button,
+.panel-heading button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.account-actions button {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.account-actions button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.panel-heading button {
+  margin-left: auto;
+  padding: 3px 7px;
+  color: var(--muted);
+  font-size: 10px;
 }
 
 .hub-grid {

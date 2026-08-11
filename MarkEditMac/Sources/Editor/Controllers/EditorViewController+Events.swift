@@ -85,8 +85,13 @@ extension EditorViewController {
           return nil
         }
 
+        if event.keyCode == .kVK_ANSI_O, event.userModifierFlags == [.shift, .command] {
+          self.toggleWorkspaceSidebar(.outline)
+          return nil
+        }
+
         if event.keyCode == .kVK_ANSI_P, event.userModifierFlags == [.option, .command] {
-          self.toggleWorkspaceSidebar(.preview)
+          self.toggleRenderedPreview()
           return nil
         }
 

@@ -9,10 +9,11 @@ import AppKit
 import SharedUI
 
 enum WorkspaceSidebarMode: Int {
-  case files
-  case search
-  case tags
-  case preview
+  case files = 0
+  case search = 1
+  case tags = 2
+  case preview = 3 // Legacy persisted value; preview now has its own right pane.
+  case outline = 4
 }
 
 enum WorkspaceTaxonomyItem: Equatable {
@@ -45,15 +46,92 @@ enum WorkspaceTaxonomyAction: Equatable {
 }
 
 struct WorkspaceHubSnapshot: Codable {
+  let version: Int
+  let hasWorkspace: Bool
   let workspaceName: String
   let rootPath: String
   let recentFiles: [WorkspaceFileSummary]
+  let recentDocuments: [WorkspaceRecentDocument]
+  let activities: [WorkspaceActivitySummary]
   let tags: [WorkspaceTagSummary]
   let categories: [WorkspaceCategorySummary]
   let graph: WorkspaceGraph
   let accountEnabled: Bool
   let syncEnabled: Bool
   let backupEnabled: Bool
+  let accountServiceStatus: String
+
+  @MainActor
+  static func local() async -> Self {
+    let history = ActivityHistoryStore.shared
+    return Self(
+      version: 2,
+      hasWorkspace: false,
+      workspaceName: "ksamint MarkEdit",
+      rootPath: Localized.Workspace.noFolder,
+      recentFiles: [],
+      recentDocuments: history.recentDocuments().map(WorkspaceRecentDocument.init),
+      activities: history.entries().map(WorkspaceActivitySummary.init),
+      tags: [],
+      categories: [],
+      graph: WorkspaceGraph(nodes: [], edges: []),
+      accountEnabled: false,
+      syncEnabled: false,
+      backupEnabled: false,
+      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus
+    )
+  }
+}
+
+struct WorkspaceRecentDocument: Codable {
+  let path: String
+  let title: String
+  let lastOpenedAt: Double
+
+  init(_ activity: EditorHistory.Activity) {
+    path = activity.path
+    title = activity.title
+    lastOpenedAt = activity.timestamp.timeIntervalSince1970 * 1_000
+  }
+}
+
+struct WorkspaceActivitySummary: Codable {
+  let id: String
+  let path: String
+  let title: String
+  let kind: String
+  let timestamp: Double
+  let count: Int
+
+  init(_ activity: EditorHistory.Activity) {
+    id = activity.id.uuidString
+    path = activity.path
+    title = activity.title
+    kind = activity.kind.rawValue
+    timestamp = activity.timestamp.timeIntervalSince1970 * 1_000
+    count = activity.count
+  }
+}
+
+actor AccountServiceMonitor {
+  static let shared = AccountServiceMonitor()
+  private(set) var currentStatus = "checking"
+
+  func refresh() async {
+    guard let url = URL(string: "https://api.notes.apuch.art/healthz") else {
+      currentStatus = "offline"
+      return
+    }
+    var request = URLRequest(url: url)
+    request.timeoutInterval = 3
+    do {
+      let (_, response) = try await URLSession.shared.data(for: request)
+      let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+      currentStatus = (200..<300).contains(status) ? "online" : "offline"
+    } catch {
+      currentStatus = "offline"
+    }
+  }
 }
 
 @MainActor
@@ -234,16 +312,22 @@ final class WorkspaceSession {
     let graph = await index.graph()
     let configuration = try? await WorkspaceConfigurationStore(rootURL: rootURL).load()
     let sync = configuration?.sync
+    let history = ActivityHistoryStore.shared
     return WorkspaceHubSnapshot(
+      version: 2,
+      hasWorkspace: true,
       workspaceName: rootURL.lastPathComponent,
       rootPath: rootURL.path,
       recentFiles: recentFiles,
+      recentDocuments: history.recentDocuments().map(WorkspaceRecentDocument.init),
+      activities: history.entries().map(WorkspaceActivitySummary.init),
       tags: tags,
       categories: categories,
       graph: graph,
       accountEnabled: sync?.accountEnabled == true,
       syncEnabled: sync?.syncEnabled == true,
-      backupEnabled: sync?.cosBackupEnabled == true || sync?.githubBackupEnabled == true
+      backupEnabled: sync?.cosBackupEnabled == true || sync?.githubBackupEnabled == true,
+      accountServiceStatus: await AccountServiceMonitor.shared.currentStatus
     )
   }
 

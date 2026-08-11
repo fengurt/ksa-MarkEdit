@@ -96,6 +96,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   ])) ?? ResourceModuleTrustStore()
 
   func applicationWillFinishLaunching(_ notification: Notification) {
+    if !AppPreferences.General.blankDocumentStartupMigrated {
+      AppPreferences.General.newWindowBehavior = .newDocument
+      AppPreferences.General.blankDocumentStartupMigrated = true
+    }
     NSApp.appearance = AppPreferences.General.appearance.resolved()
     EditorPreloader.shared.warmUp()
   }
@@ -103,6 +107,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     AppDesign.migrateMainMenuIcons(delegate: self)
     configureResourceMenu()
+    configureWorkspaceViewMenu()
+    Task {
+      await AccountServiceMonitor.shared.refresh()
+    }
     appearanceObservation = NSApp.observe(\.effectiveAppearance) { _, _ in
       Task { @MainActor in
         AppTheme.current.updateAppearance()

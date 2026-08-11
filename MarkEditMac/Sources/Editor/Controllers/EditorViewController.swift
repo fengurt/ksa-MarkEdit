@@ -39,15 +39,19 @@ final class EditorViewController: NSViewController {
   }
   var workspaceSidebarView: WorkspaceSidebarView?
   var workspacePreviewView: WorkspacePreviewView?
+  var workspacePreviewPaneView: WorkspacePreviewPaneView?
   var workspaceSidebarMode = WorkspaceSidebarMode(
     rawValue: AppPreferences.Window.workspaceSidebarMode
-  ) ?? .files
+  ).flatMap { $0 == .preview ? .outline : $0 } ?? .outline
   var workspaceSidebarVisible = AppPreferences.Window.workspaceSidebarVisible
+  var workspacePreviewVisible = AppPreferences.Window.workspacePreviewVisible
+  var workspaceOutlineWidth = AppPreferences.Window.workspaceOutlineWidth
   var workspaceSidebarWidth = AppPreferences.Window.workspaceFilesWidth
   var workspaceSearchWidth = AppPreferences.Window.workspaceSearchWidth
   var workspaceTagsWidth = AppPreferences.Window.workspaceTagsWidth
   var workspacePreviewWidth = AppPreferences.Window.workspacePreviewWidth
   var workspaceMetadataTask: Task<Void, Never>?
+  var documentOutlineTask: Task<Void, Never>?
   var workspaceHubWindowController: NSWindowController?
   var editorTextRevision: UInt64 = 0
   var agentPanelView: AgentPanelView?
@@ -268,6 +272,7 @@ final class EditorViewController: NSViewController {
 
   deinit {
     workspaceMetadataTask?.cancel()
+    documentOutlineTask?.cancel()
     agentEventTask?.cancel()
     agentStartupTask?.cancel()
     agentMCPServer?.stop()
@@ -291,6 +296,16 @@ final class EditorViewController: NSViewController {
 
   init(preloadDelay: TimeInterval? = nil) {
     super.init(nibName: nil, bundle: nil)
+
+    if !AppPreferences.Window.workspaceExperienceV2Migrated {
+      workspaceSidebarMode = .outline
+      workspaceSidebarVisible = true
+      workspacePreviewVisible = true
+      AppPreferences.Window.workspaceSidebarMode = WorkspaceSidebarMode.outline.rawValue
+      AppPreferences.Window.workspaceSidebarVisible = true
+      AppPreferences.Window.workspacePreviewVisible = true
+      AppPreferences.Window.workspaceExperienceV2Migrated = true
+    }
 
     if let preloadDelay, preloadDelay > 0 {
       DispatchQueue.main.asyncAfter(deadline: .now() + preloadDelay) { [weak self] in
@@ -322,6 +337,7 @@ final class EditorViewController: NSViewController {
     }
 
     layoutWorkspaceSidebar()
+    layoutRenderedPreview()
     layoutAgentPanel()
     layoutPanels()
     layoutWebView()

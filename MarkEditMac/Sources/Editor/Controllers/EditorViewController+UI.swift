@@ -44,6 +44,7 @@ extension EditorViewController {
     layoutWebView()
     layoutStatusView()
     layoutWorkspaceSidebar()
+    layoutRenderedPreview()
     layoutAgentPanel()
 
     if AppDesign.modernTitleBar {
@@ -223,7 +224,7 @@ extension EditorViewController {
     webView.update(animated).frame = CGRect(
       x: workspaceContentInset,
       y: offset + findPanelHeight,
-      width: view.bounds.width - workspaceContentInset - agentPanelInset,
+      width: view.bounds.width - workspaceContentInset - workspacePreviewInset - agentPanelInset,
       height: height - findPanelHeight
     )
   }
@@ -239,7 +240,7 @@ extension EditorViewController {
     }()
 
     statusView.frame = CGRect(
-      x: view.bounds.width - agentPanelInset - statusView.frame.width - margin,
+      x: view.bounds.width - agentPanelInset - workspacePreviewInset - statusView.frame.width - margin,
       y: bottomPanelHeight + margin + 2, // Vertical margins are intentionally larger to visually look the same
       width: statusView.frame.width,
       height: statusView.frame.height
@@ -515,7 +516,7 @@ private extension EditorViewController {
     CGRect(
       x: workspaceContentInset,
       y: contentHeight - (findPanel.mode == .hidden ? 0 : findPanel.frame.height),
-      width: view.bounds.width - workspaceContentInset,
+      width: view.bounds.width - workspaceContentInset - workspacePreviewInset - agentPanelInset,
       height: findPanel.frame.height
     )
   }
@@ -541,7 +542,7 @@ private extension EditorViewController {
     return CGRect(
       x: workspaceContentInset,
       y: offset,
-      width: view.frame.width - workspaceContentInset,
+      width: view.frame.width - workspaceContentInset - workspacePreviewInset - agentPanelInset,
       height: panelDivider.length
     )
   }

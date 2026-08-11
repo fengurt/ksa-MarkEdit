@@ -256,6 +256,8 @@ extension EditorViewController: EditorModuleCoreDelegate {
     compositionEnded: Bool
   ) {
     editorTextRevision = revision
+    scheduleDocumentOutlineUpdate()
+    ActivityHistoryStore.shared.scheduleEdit(url: document?.fileURL)
     guard isRenderedPreviewActive else {
       return
     }
@@ -275,6 +277,7 @@ extension EditorViewController: EditorModuleCoreDelegate {
   func editorCoreContentOffsetDidChange(_ sender: EditorModuleCore, sourcePosition: Int) {
     // Remove all floating UI elements since view coordinates are changed
     removeFloatingUIElements()
+    scheduleDocumentOutlineUpdate()
 
     if isRenderedPreviewActive && AppPreferences.Window.workspacePreviewSync {
       workspacePreviewView?.scrollTo(position: sourcePosition)

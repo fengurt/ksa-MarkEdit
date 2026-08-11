@@ -50,6 +50,7 @@ public extension UInt16 {
   static let kVK_ANSI_V: Self = 0x09
   static let kVK_ANSI_E: Self = 0x0E
   static let kVK_ANSI_T: Self = 0x11
+  static let kVK_ANSI_O: Self = 0x1F
   static let kVK_ANSI_I: Self = 0x22
   static let kVK_ANSI_P: Self = 0x23
   static let kVK_ANSI_M: Self = 0x2E
