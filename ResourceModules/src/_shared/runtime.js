@@ -2,13 +2,25 @@ const MAX_READ = 10 * 1024 * 1024;
 const MAX_PREVIEW = 100 * 1024 * 1024;
 let sequence = 0;
 
-export function request(method, fields = {}) {
+export function request(method, fields = {}, signal) {
   sequence += 1;
-  return window.ksamintResource.request({
-    operationID: `module-${Date.now()}-${sequence}`,
+  const operationID = `module-${Date.now()}-${sequence}`;
+  if (signal?.aborted) return Promise.reject(new DOMException('Operation cancelled', 'AbortError'));
+  const promise = window.ksamintResource.request({
+    operationID,
     method,
     ...fields,
   });
+  if (!signal) return promise;
+  const cancel = () => {
+    window.ksamintResource.request({
+      operationID: `cancel-${Date.now()}-${sequence}`,
+      method: 'cancel',
+      entryID: operationID,
+    }).catch(() => {});
+  };
+  signal.addEventListener('abort', cancel, { once: true });
+  return promise.finally(() => signal.removeEventListener('abort', cancel));
 }
 
 export function installStyles(...names) {
@@ -22,11 +34,11 @@ export function installStyles(...names) {
   }
 }
 
-export async function listAll(parentID, maximum = 200000) {
+export async function listAll(parentID, maximum = 200000, signal) {
   const entries = [];
   let cursor;
   do {
-    const page = await request('listChildren', { parentID, cursor });
+    const page = await request('listChildren', { parentID, cursor }, signal);
     entries.push(...page.entries);
     if (entries.length > maximum) throw new Error('Resource entry limit exceeded');
     cursor = page.nextCursor;
@@ -34,37 +46,61 @@ export async function listAll(parentID, maximum = 200000) {
   return entries;
 }
 
-export async function walkFiles(parentID, maximum = 50000) {
+export async function walkFiles(parentID, maximum = 50000, signal, onBatch) {
   const pending = [parentID];
   const files = [];
-  while (pending.length) {
-    const parent = pending.shift();
-    for (const entry of await listAll(parent, maximum)) {
-      if (entry.kind === 'folder' || entry.kind === 'symbolicLink' && !entry.byteCount) pending.push(entry.id);
-      else files.push(entry);
-      if (files.length + pending.length > maximum) throw new Error('Resource entry limit exceeded');
-    }
+  for (let cursor = 0; cursor < pending.length; cursor += 1) {
+    const parent = pending[cursor];
+    let pageCursor;
+    do {
+      const page = await request('listChildren', { parentID: parent, cursor: pageCursor }, signal);
+      const batch = [];
+      for (const entry of page.entries) {
+        if (entry.kind === 'folder' || entry.kind === 'symbolicLink' && !entry.byteCount) pending.push(entry.id);
+        else { files.push(entry); batch.push(entry); }
+        if (files.length + pending.length > maximum) throw new Error('Resource entry limit exceeded');
+      }
+      if (batch.length) await onBatch?.(batch);
+      pageCursor = page.nextCursor;
+    } while (pageCursor);
   }
   return files;
 }
 
-export async function readBytes(entryID, offset = 0, length = MAX_READ) {
-  const result = await request('readRange', { entryID, offset, length: Math.min(length, MAX_READ) });
+export async function readBytes(entryID, offset = 0, length = MAX_READ, signal) {
+  const result = await request('readRange', { entryID, offset, length: Math.min(length, MAX_READ) }, signal);
   const binary = atob(result.base64);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return bytes;
 }
 
-export async function readAll(entryID, byteCount, maximum = MAX_PREVIEW) {
+export async function readBatch(reads, signal) {
+  if (!reads.length) return [];
+  const results = await request('readBatch', { reads }, signal);
+  return results.map(result => ({
+    entryID: result.entryID,
+    offset: result.offset,
+    bytes: decodeBase64(result.data),
+  }));
+}
+
+export async function readAll(entryID, byteCount, maximum = MAX_PREVIEW, signal) {
   if (byteCount > maximum) throw new Error(`Preview is limited to ${formatBytes(maximum)}`);
   const result = new Uint8Array(byteCount);
   for (let offset = 0; offset < byteCount; offset += MAX_READ) {
-    const chunk = await readBytes(entryID, offset, Math.min(MAX_READ, byteCount - offset));
+    const chunk = await readBytes(entryID, offset, Math.min(MAX_READ, byteCount - offset), signal);
     result.set(chunk, offset);
     if (!chunk.length) break;
   }
   return result;
+}
+
+function decodeBase64(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes;
 }
 
 export async function renderInfo(entryID) {

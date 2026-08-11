@@ -68,12 +68,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     trustStore: Self.resourceModuleTrustStore,
     messages: ResourceUIMessages(
       noCompatibleModule: Localized.Resource.noCompatibleModule,
+      catalogUnavailable: Localized.Resource.catalogUnavailable,
       moduleStopped: Localized.Resource.moduleStopped,
       moduleFailedPrefix: Localized.Resource.moduleFailed
     ),
     catalogURL: URL(
-      string: "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/registry.json"
+      string: "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/registry.json"
     ),
+    bundledModuleURLs: ["okf", "html-safe", "archive-base"].compactMap {
+      Bundle.main.url(forResource: $0, withExtension: nil)
+    },
     appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0",
     confirmInstallation: { [weak self] entry in
       await self?.confirmResourceModuleInstallation(entry) ?? false
@@ -91,6 +95,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     -----BEGIN PUBLIC KEY-----
     MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1WR0WFJ6w6oA1fJN8eqtnr5dCE7Q
     Xl2F0//Lk05kVcToOvvQQjWQdlwTEzFWgadgDZapMbLA/LnzBnHJ5nsAAA==
+    -----END PUBLIC KEY-----
+    """,
+    "official-v2": """
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+SnoSrHpglcFkdLRAmEY7PVC6aeU
+    HsR8yt5qSDV27eaDJEGkSFLPTawhl696HHPSoK30x/0kDIkmOwLOzHHaJA==
     -----END PUBLIC KEY-----
     """,
   ])) ?? ResourceModuleTrustStore()

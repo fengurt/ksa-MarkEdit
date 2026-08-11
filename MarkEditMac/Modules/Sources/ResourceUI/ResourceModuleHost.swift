@@ -12,8 +12,10 @@ public final class ResourceModuleHost {
   public typealias ConfirmInstallation = @MainActor (ResourceModuleCatalogEntryV1) async -> Bool
 
   private let installer: ResourceModuleInstaller
+  private let trustStore: ResourceModuleTrustStore
   private let messages: ResourceUIMessages
   private let catalogURL: URL?
+  private let bundledModuleURLs: [URL]
   private let appVersion: String
   private let confirmInstallation: ConfirmInstallation
   private let openInEditor: @MainActor (URL) -> Void
@@ -25,6 +27,7 @@ public final class ResourceModuleHost {
     trustStore: ResourceModuleTrustStore,
     messages: ResourceUIMessages,
     catalogURL: URL? = nil,
+    bundledModuleURLs: [URL] = [],
     appVersion: String = "0",
     confirmInstallation: @escaping ConfirmInstallation = { _ in false },
     openInEditor: @escaping @MainActor (URL) -> Void = { _ in },
@@ -34,8 +37,10 @@ public final class ResourceModuleHost {
       installationRoot: installationRoot,
       trustStore: trustStore
     )
+    self.trustStore = trustStore
     self.messages = messages
     self.catalogURL = catalogURL
+    self.bundledModuleURLs = bundledModuleURLs
     self.appVersion = appVersion
     self.confirmInstallation = confirmInstallation
     self.openInEditor = openInEditor
@@ -49,16 +54,21 @@ public final class ResourceModuleHost {
   ) async throws -> ResourceViewerWindowController {
     let session = try ResourceSession(url: url)
     let selected: InstalledModule?
+    let catalogUnavailable: Bool
     if let installed = try await selectInstalledModule(for: url, session: session) {
       selected = installed
+      catalogUnavailable = false
     } else {
-      selected = await downloadModuleIfApproved(for: url, session: session)
+      let result = await downloadModuleIfApproved(for: url, session: session)
+      selected = result.module
+      catalogUnavailable = result.catalogUnavailable
     }
     let controller = ResourceViewerWindowController(
       session: session,
       title: url.lastPathComponent,
       moduleURL: selected?.url,
       manifest: selected?.manifest,
+      catalogUnavailable: selected == nil && catalogUnavailable,
       messages: messages,
       openInEditor: openInEditor,
       openExternally: openExternally
@@ -92,6 +102,12 @@ private extension ResourceModuleHost {
     let url: URL
     let manifest: ResourceModuleManifestV1
     let confidence: Int
+    let bundled: Bool
+  }
+
+  struct DownloadResult {
+    let module: InstalledModule?
+    let catalogUnavailable: Bool
   }
 
   func selectInstalledModule(for url: URL, session: ResourceSession) async throws -> InstalledModule? {
@@ -100,8 +116,13 @@ private extension ResourceModuleHost {
     let fileExtension = url.pathExtension.lowercased()
 
     var candidates = [InstalledModule]()
-    for moduleURL in installed {
-      guard let manifest = try? await installer.validateInstalledModule(at: moduleURL) else {
+    for (moduleURL, bundled) in installed.map({ ($0, false) }) + bundledModuleURLs.map({ ($0, true) }) {
+      let manifest = if bundled {
+        try? await installer.validateBundledModule(at: moduleURL)
+      } else {
+        try? await installer.validateInstalledModule(at: moduleURL)
+      }
+      guard let manifest else {
         continue
       }
       let confidence = await confidence(
@@ -114,24 +135,40 @@ private extension ResourceModuleHost {
         candidates.append(InstalledModule(
           url: moduleURL,
           manifest: manifest,
-          confidence: confidence
+          confidence: confidence,
+          bundled: bundled
         ))
       }
     }
     return candidates.max { lhs, rhs in
-      lhs.confidence < rhs.confidence
+      if lhs.confidence != rhs.confidence {
+        return lhs.confidence < rhs.confidence
+      }
+      let versionOrder = lhs.manifest.version.compare(rhs.manifest.version, options: .numeric)
+      if versionOrder != .orderedSame {
+        return versionOrder == .orderedAscending
+      }
+      return !lhs.bundled && rhs.bundled
     }
   }
 
-  func downloadModuleIfApproved(for url: URL, session: ResourceSession) async -> InstalledModule? {
+  func downloadModuleIfApproved(for url: URL, session: ResourceSession) async -> DownloadResult {
     guard let catalogURL,
-          let catalog = try? await ResourceModuleCatalogClient.fetch(from: catalogURL),
           let descriptor = try? await session.broker.descriptor() else {
-      return nil
+      return DownloadResult(module: nil, catalogUnavailable: false)
+    }
+    let catalog: [ResourceModuleCatalogEntryV1]
+    do {
+      catalog = try await ResourceModuleCatalogClient.fetchModules(
+        from: catalogURL,
+        trustStore: trustStore
+      )
+    } catch {
+      return DownloadResult(module: nil, catalogUnavailable: true)
     }
     let fileExtension = url.pathExtension.lowercased()
     var candidates = [(entry: ResourceModuleCatalogEntryV1, confidence: Int)]()
-    for entry in catalog.modules where isCompatible(entry) {
+    for entry in catalog where isCompatible(entry) {
       let score = await confidence(
         for: entry.probes,
         descriptor: descriptor,
@@ -152,12 +189,16 @@ private extension ResourceModuleHost {
           let manifest = try? await installer.validateInstalledModule(at: moduleURL),
           manifest.id == selected.entry.id,
           manifest.version == selected.entry.version else {
-      return nil
+      return DownloadResult(module: nil, catalogUnavailable: false)
     }
-    return InstalledModule(
-      url: moduleURL,
-      manifest: manifest,
-      confidence: selected.confidence
+    return DownloadResult(
+      module: InstalledModule(
+        url: moduleURL,
+        manifest: manifest,
+        confidence: selected.confidence,
+        bundled: false
+      ),
+      catalogUnavailable: false
     )
   }
 
@@ -169,21 +210,95 @@ private extension ResourceModuleHost {
   ) async -> Int {
     var confidence = 0
     for rule in probes {
-      var score = rule.priority
-      if rule.fileExtensions.contains(where: { $0.caseInsensitiveCompare(fileExtension) == .orderedSame }) {
-        score += 100
+      if let group = rule.group {
+        var conditionMatches = [Bool]()
+        for condition in group.conditions {
+          conditionMatches.append(await matches(
+            condition,
+            descriptor: descriptor,
+            fileExtension: fileExtension,
+            session: session
+          ))
+        }
+        let matched = switch group.mode {
+        case .all:
+          !conditionMatches.isEmpty && conditionMatches.allSatisfy { $0 }
+        case .any:
+          conditionMatches.contains(true)
+        }
+        if matched || group.fallback {
+          confidence = max(confidence, group.score)
+        }
+        continue
       }
-      if let mediaType = descriptor.mediaType,
-         rule.mediaTypes.contains(where: { $0.caseInsensitiveCompare(mediaType) == .orderedSame }) {
-        score += 100
+      let extensionMatches = rule.fileExtensions.contains {
+        $0.caseInsensitiveCompare(fileExtension) == .orderedSame
       }
-      if !rule.directoryMarkers.isEmpty,
-         await containsAll(rule.directoryMarkers, in: session) {
-        score += 200
+      let mediaTypeMatches = if let mediaType = descriptor.mediaType {
+        rule.mediaTypes.contains { $0.caseInsensitiveCompare(mediaType) == .orderedSame }
+      } else {
+        false
       }
-      confidence = max(confidence, score)
+      let directoryMarkersMatch = if rule.directoryMarkers.isEmpty {
+        false
+      } else {
+        await containsAll(rule.directoryMarkers, in: session)
+      }
+      let frontMatterMatches = if let frontMatter = rule.frontMatter {
+        (try? await session.broker.matchesFrontMatter(frontMatter)) == true
+      } else {
+        false
+      }
+      if let score = ResourceProbeMatcher.score(
+        rule: rule,
+        extensionMatches: extensionMatches,
+        mediaTypeMatches: mediaTypeMatches,
+        directoryMarkersMatch: directoryMarkersMatch,
+        frontMatterMatches: frontMatterMatches
+      ) {
+        confidence = max(confidence, score)
+      }
     }
     return confidence
+  }
+
+  func matches(
+    _ condition: ResourceProbeConditionV2,
+    descriptor: ResourceDescriptorV1,
+    fileExtension: String,
+    session: ResourceSession
+  ) async -> Bool {
+    var declared = false
+    if !condition.fileExtensions.isEmpty {
+      declared = true
+      guard condition.fileExtensions.contains(where: {
+        $0.caseInsensitiveCompare(fileExtension) == .orderedSame
+      }) else {
+        return false
+      }
+    }
+    if !condition.mediaTypes.isEmpty {
+      declared = true
+      guard let mediaType = descriptor.mediaType,
+            condition.mediaTypes.contains(where: {
+              $0.caseInsensitiveCompare(mediaType) == .orderedSame
+            }) else {
+        return false
+      }
+    }
+    if !condition.directoryMarkers.isEmpty {
+      declared = true
+      guard await containsAll(condition.directoryMarkers, in: session) else {
+        return false
+      }
+    }
+    if let frontMatter = condition.frontMatter {
+      declared = true
+      guard (try? await session.broker.matchesFrontMatter(frontMatter)) == true else {
+        return false
+      }
+    }
+    return declared
   }
 
   func isCompatible(_ entry: ResourceModuleCatalogEntryV1) -> Bool {
@@ -214,6 +329,7 @@ public final class ResourceViewerWindowController: NSWindowController, NSWindowD
     title: String,
     moduleURL: URL?,
     manifest: ResourceModuleManifestV1?,
+    catalogUnavailable: Bool,
     messages: ResourceUIMessages,
     openInEditor: @escaping @MainActor (URL) -> Void,
     openExternally: @escaping @MainActor (URL) -> Void
@@ -222,6 +338,7 @@ public final class ResourceViewerWindowController: NSWindowController, NSWindowD
       session: session,
       moduleURL: moduleURL,
       manifest: manifest,
+      catalogUnavailable: catalogUnavailable,
       messages: messages,
       openInEditor: openInEditor,
       openExternally: openExternally

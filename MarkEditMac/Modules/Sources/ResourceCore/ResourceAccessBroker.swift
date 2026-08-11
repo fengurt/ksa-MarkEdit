@@ -16,6 +16,7 @@ public actor ResourceAccessBroker {
   private let isDirectory: Bool
   private let securityScopeStarted: Bool
   private var observedEntries = Set<String>()
+  private var directorySnapshots = [String: DirectorySnapshot]()
 
   public init(
     rootURL: URL,
@@ -69,13 +70,7 @@ public actor ResourceAccessBroker {
     let offset = try Self.decodeCursor(cursor)
     let parentPath = parentID ?? ""
     let parentURL = try resolve(relativePath: parentPath, expectsDirectory: true)
-    let urls = try FileManager.default
-      .contentsOfDirectory(
-        at: parentURL,
-        includingPropertiesForKeys: Self.resourceKeys,
-        options: []
-      )
-      .sorted(by: Self.resourceOrder)
+    let urls = try directoryURLs(at: parentURL, relativePath: parentPath)
 
     guard offset <= urls.count else {
       throw ResourceModuleError.invalidCursor
@@ -133,6 +128,60 @@ public actor ResourceAccessBroker {
     return try handle.read(upToCount: Int(available)) ?? Data()
   }
 
+  public func readBatch(_ requests: [ResourceReadRequestV1]) throws -> [ResourceReadResultV1] {
+    guard !requests.isEmpty,
+          requests.count <= ResourceModuleLimits.maximumBatchReadEntries else {
+      throw ResourceModuleError.rangeTooLarge
+    }
+    var total = 0
+    for request in requests {
+      guard request.length >= 0 else {
+        throw ResourceModuleError.rangeTooLarge
+      }
+      let (next, overflow) = total.addingReportingOverflow(request.length)
+      guard !overflow, next <= ResourceModuleLimits.maximumBatchReadBytes else {
+        throw ResourceModuleError.rangeTooLarge
+      }
+      total = next
+    }
+    return try requests.map { request in
+      ResourceReadResultV1(
+        entryID: request.entryID,
+        offset: request.offset,
+        data: try readRange(
+          entryID: request.entryID,
+          offset: request.offset,
+          length: request.length
+        )
+      )
+    }
+  }
+
+  public func matchesFrontMatter(_ probe: ResourceFrontMatterProbeV2) throws -> Bool {
+    try probe.validate()
+    let urls = try frontMatterCandidateURLs(for: probe)
+    for url in urls.prefix(probe.maximumFiles) {
+      try Task.checkCancellation()
+      guard let values = try? Self.frontMatterValues(
+        at: url,
+        maximumBytes: probe.maximumBytesPerFile
+      ) else {
+        continue
+      }
+      let hasKeys = probe.requiredKeys.allSatisfy { values[$0] != nil }
+      let hasValues = probe.allowedValues.allSatisfy { key, allowed in
+        guard let value = values[key] else {
+          return false
+        }
+        return allowed.contains { $0.caseInsensitiveCompare(value) == .orderedSame }
+      }
+      if hasKeys && hasValues {
+        return true
+      }
+    }
+    return false
+  }
+
   public func authorizedFileURL(entryID: String) throws -> URL {
     try resolve(relativePath: entryID, expectsDirectory: false)
   }
@@ -184,6 +233,11 @@ public actor ResourceAccessBroker {
 }
 
 private extension ResourceAccessBroker {
+  struct DirectorySnapshot {
+    let modifiedAt: Date?
+    let urls: [URL]
+  }
+
   static let resourceKeys: [URLResourceKey] = [
     .contentModificationDateKey,
     .contentTypeKey,
@@ -193,6 +247,98 @@ private extension ResourceAccessBroker {
     .isRegularFileKey,
     .isSymbolicLinkKey,
   ]
+
+  func directoryURLs(at url: URL, relativePath: String) throws -> [URL] {
+    let modifiedAt = try url.resourceValues(forKeys: [.contentModificationDateKey])
+      .contentModificationDate
+    if let snapshot = directorySnapshots[relativePath], snapshot.modifiedAt == modifiedAt {
+      return snapshot.urls
+    }
+    let urls = try FileManager.default
+      .contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: Self.resourceKeys,
+        options: []
+      )
+      .sorted(by: Self.resourceOrder)
+    directorySnapshots[relativePath] = DirectorySnapshot(modifiedAt: modifiedAt, urls: urls)
+    return urls
+  }
+
+  func frontMatterCandidateURLs(for probe: ResourceFrontMatterProbeV2) throws -> [URL] {
+    var candidates = [URL]()
+    for path in probe.paths {
+      if let url = try? resolve(relativePath: path, expectsDirectory: false) {
+        candidates.append(url)
+      }
+    }
+    guard candidates.isEmpty, isDirectory, !probe.fileExtensions.isEmpty else {
+      return candidates
+    }
+    let extensions = Set(probe.fileExtensions.map { $0.lowercased() })
+    let excluded = Set(probe.excludedFileNames.map { $0.lowercased() })
+    guard let enumerator = FileManager.default.enumerator(
+      at: rootURL,
+      includingPropertiesForKeys: Self.resourceKeys,
+      options: [.skipsHiddenFiles],
+      errorHandler: { _, _ in true }
+    ) else {
+      return []
+    }
+    for case let url as URL in enumerator {
+      try Task.checkCancellation()
+      if candidates.count >= probe.maximumFiles {
+        break
+      }
+      let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+      if values?.isSymbolicLink == true {
+        enumerator.skipDescendants()
+        continue
+      }
+      guard values?.isDirectory != true,
+            extensions.contains(url.pathExtension.lowercased()),
+            !excluded.contains(url.lastPathComponent.lowercased()),
+            (try? relativePath(for: url)) != nil else {
+        continue
+      }
+      candidates.append(url)
+    }
+    return candidates
+  }
+
+  static func frontMatterValues(at url: URL, maximumBytes: Int) throws -> [String: String]? {
+    let handle = try FileHandle(forReadingFrom: url)
+    defer {
+      try? handle.close()
+    }
+    let data = try handle.read(upToCount: maximumBytes) ?? Data()
+    guard let source = String(data: data, encoding: .utf8),
+          source.hasPrefix("---") else {
+      return nil
+    }
+    let lines = source.split(separator: "\n", omittingEmptySubsequences: false)
+    guard lines.first?.trimmingCharacters(in: .whitespaces) == "---" else {
+      return nil
+    }
+    var values = [String: String]()
+    for line in lines.dropFirst() {
+      let trimmed = line.trimmingCharacters(in: .whitespaces)
+      if trimmed == "---" {
+        return values
+      }
+      guard let first = line.first, !first.isWhitespace,
+            let separator = line.firstIndex(of: ":") else {
+        continue
+      }
+      let key = line[..<separator].trimmingCharacters(in: .whitespaces)
+      let rawValue = line[line.index(after: separator)...].trimmingCharacters(in: .whitespaces)
+      guard !key.isEmpty else {
+        continue
+      }
+      values[key] = rawValue.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+    }
+    return nil
+  }
 
   func resolve(relativePath: String, expectsDirectory: Bool? = nil) throws -> URL {
     if relativePath.isEmpty {

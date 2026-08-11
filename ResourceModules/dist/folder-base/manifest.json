@@ -19,8 +19,8 @@
     },
     {
       "path": "runtime.js",
-      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
-      "size": 5186,
+      "sha256": "284444c0df18fd9a0089ebef32ae58483127c1d2de54cd2d8309c6db59bab9f1",
+      "size": 6580,
       "mediaType": "text/javascript"
     },
     {
@@ -65,6 +65,6 @@
       "priority": 1
     }
   ],
-  "signingKeyID": "official-v1",
-  "signature": "MEUCIAPLqwvsxUXJSbWS8dPuzmRj/Xh++A1lrkj/QaYAl3LTAiEA57yA84yhHj0UOhfKaC36pqlUmSXCFBbmTajlbPc0dR8="
+  "signingKeyID": "official-v2",
+  "signature": "MEYCIQDLBRrsPo5GMNwXzbQTcvkaj2bgwMKxZTV4g7adpD7S+QIhAKN45rWaP7vT+e0MR0vnXvj5E6XTa++6jTr18JfAEiSf"
 }

@@ -9,6 +9,7 @@ import {
   showMetadata,
   text,
 } from './runtime.js';
+import { parseZipDirectory } from './archive-format.js';
 
 installStyles('styles.css');
 
@@ -19,9 +20,11 @@ const RATIO_LIMIT = 1000;
 const CHUNK_SIZE = 8 * 1024 * 1024;
 
 export async function open(resource, root) {
+  const openController = new AbortController();
+  window.addEventListener('pagehide', () => openController.abort(), { once: true });
   const view = layout(root, resource.displayName);
   view.preview.replaceChildren(element('div', 'empty-state', 'Reading archive directory…'));
-  const reader = new BrokerReader(resource.displayName, resource.byteCount ?? 0);
+  const reader = new BrokerReader(resource.displayName, resource.byteCount ?? 0, openController.signal);
   const format = detectFormat(resource.displayName);
   let entries;
 
@@ -50,8 +53,13 @@ export async function open(resource, root) {
     }
   };
 
+  let previewController;
   async function preview(entry) {
     if (entry.kind === 'folder') return;
+    previewController?.abort();
+    previewController = new AbortController();
+    openController.signal.addEventListener('abort', () => previewController.abort(), { once: true });
+    reader.signal = previewController.signal;
     view.preview.replaceChildren(element('div', 'empty-state', `Reading ${entry.path}…`));
     try {
       const bytes = format === 'zip'
@@ -91,9 +99,10 @@ export async function open(resource, root) {
 }
 
 class BrokerReader {
-  constructor(entryID, size) {
+  constructor(entryID, size, signal) {
     this.entryID = entryID;
     this.size = size;
+    this.signal = signal;
   }
 
   async read(offset, length) {
@@ -105,7 +114,12 @@ class BrokerReader {
     const output = new Uint8Array(requested);
     let written = 0;
     while (written < requested) {
-      const chunk = await readBytes(this.entryID, offset + written, Math.min(CHUNK_SIZE, requested - written));
+      const chunk = await readBytes(
+        this.entryID,
+        offset + written,
+        Math.min(CHUNK_SIZE, requested - written),
+        this.signal
+      );
       if (!chunk.length) break;
       output.set(chunk, written);
       written += chunk.length;
@@ -143,21 +157,18 @@ async function readZipDirectory(reader) {
   if (totalEntries > ENTRY_LIMIT) throw new Error('Archive entry limit exceeded');
   if (centralSize > CENTRAL_DIRECTORY_LIMIT || centralOffset + centralSize > reader.size) throw new Error('Invalid or oversized ZIP directory');
   const directory = await reader.read(centralOffset, centralSize);
+  const parsed = typeof Worker === 'function'
+    ? (await archiveWorkerCall(
+        'zipDirectory',
+        directory,
+        { totalEntries },
+        reader.signal,
+        true
+      )).entries
+    : parseZipDirectory(directory, totalEntries);
   const entries = [];
-  let cursor = 0;
-  while (cursor < directory.length && entries.length < totalEntries) {
-    if (cursor + 46 > directory.length || u32(directory, cursor) !== 0x02014b50) throw new Error('Invalid ZIP directory entry');
-    const flags = u16(directory, cursor + 8);
-    const method = u16(directory, cursor + 10);
-    const compressedSize = u32(directory, cursor + 20);
-    const size = u32(directory, cursor + 24);
-    const nameLength = u16(directory, cursor + 28);
-    const extraLength = u16(directory, cursor + 30);
-    const commentLength = u16(directory, cursor + 32);
-    const localOffset = u32(directory, cursor + 42);
-    const end = cursor + 46 + nameLength + extraLength + commentLength;
-    if (end > directory.length) throw new Error('Truncated ZIP directory entry');
-    const path = decodeName(directory.slice(cursor + 46, cursor + 46 + nameLength), Boolean(flags & 0x0800));
+  for (const value of parsed) {
+    const { path, flags, method, checksum, compressedSize, size, localOffset } = value;
     validateArchivePath(path);
     if (flags & 0x0001) throw new Error(`Encrypted ZIP entry is not supported: ${path}`);
     if (![0, 8].includes(method) && !path.endsWith('/')) throw new Error(`Unsupported ZIP compression method ${method}: ${path}`);
@@ -171,10 +182,9 @@ async function readZipDirectory(reader) {
       methodName: method === 0 ? 'Stored' : method === 8 ? 'Deflate' : `Method ${method}`,
       localOffset,
       flags,
+      checksum,
     });
-    cursor = end;
   }
-  if (entries.length !== totalEntries) throw new Error('ZIP entry count does not match its directory');
   return entries;
 }
 
@@ -189,10 +199,12 @@ async function extractZipEntry(reader, entry) {
   const compressed = await reader.read(dataOffset, entry.compressedSize);
   if (entry.method === 0) {
     if (compressed.length !== entry.size) throw new Error('Stored ZIP entry size mismatch');
+    if (await checksum(compressed, reader.signal) !== entry.checksum) throw new Error(`ZIP CRC32 mismatch: ${entry.path}`);
     return compressed;
   }
-  const bytes = await decompressBytes(compressed, 'deflate-raw', entry.size);
+  const bytes = await decompressBytesOffMain(compressed, 'deflate-raw', entry.size, reader.signal);
   if (bytes.length !== entry.size) throw new Error('Inflated ZIP entry size mismatch');
+  if (await checksum(bytes, reader.signal) !== entry.checksum) throw new Error(`ZIP CRC32 mismatch: ${entry.path}`);
   return bytes;
 }
 
@@ -369,6 +381,43 @@ async function decompressBytes(bytes, format, expectedSize) {
   return concatMany(chunks, size);
 }
 
+async function decompressBytesOffMain(bytes, format, expectedSize, signal) {
+  if (typeof Worker !== 'function') return decompressBytes(bytes, format, expectedSize);
+  const result = await archiveWorkerCall('decompress', bytes, { format, expectedSize }, signal);
+  return new Uint8Array(result.bytes);
+}
+
+async function checksum(bytes, signal) {
+  if (bytes.length < 64 * 1024 || typeof Worker !== 'function') return crc32(bytes);
+  const result = await archiveWorkerCall('crc32', bytes, {}, signal);
+  return result.value;
+}
+
+function archiveWorkerCall(method, bytes, fields, signal, transferOwnership = false) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./archive-worker.js', import.meta.url), { type: 'module' });
+    const id = crypto.randomUUID();
+    const finish = action => {
+      signal?.removeEventListener('abort', cancel);
+      worker.terminate();
+      action();
+    };
+    const cancel = () => finish(() => reject(new DOMException('Operation cancelled', 'AbortError')));
+    if (signal?.aborted) return cancel();
+    signal?.addEventListener('abort', cancel, { once: true });
+    worker.addEventListener('error', event => finish(() => reject(new Error(event.message))));
+    worker.addEventListener('message', event => {
+      if (event.data.id !== id) return;
+      if (event.data.error) finish(() => reject(new Error(event.data.error)));
+      else finish(() => resolve(event.data));
+    });
+    const transferable = transferOwnership && bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+      ? bytes.buffer
+      : bytes.slice().buffer;
+    worker.postMessage({ id, method, bytes: transferable, ...fields }, [transferable]);
+  });
+}
+
 function renderPreview(container, entry, bytes) {
   container.replaceChildren();
   const extension = entry.path.split('.').at(-1)?.toLowerCase() ?? '';
@@ -410,11 +459,6 @@ function tarString(bytes) {
   return text(end >= 0 ? bytes.slice(0, end) : bytes).trim();
 }
 
-function decodeName(bytes, utf8) {
-  if (utf8) return text(bytes);
-  try { return new TextDecoder('ibm866', { fatal: true }).decode(bytes); } catch { return text(bytes); }
-}
-
 function isZeroBlock(bytes) {
   return bytes.every(byte => byte === 0);
 }
@@ -443,6 +487,17 @@ function u16(bytes, offset) {
 
 function u32(bytes, offset) {
   return (bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16 | bytes[offset + 3] << 24) >>> 0;
+}
+
+function crc32(bytes) {
+  let value = 0xffffffff;
+  for (const byte of bytes) {
+    value ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value >>> 1 ^ (value & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (value ^ 0xffffffff) >>> 0;
 }
 
 function fold(value) {

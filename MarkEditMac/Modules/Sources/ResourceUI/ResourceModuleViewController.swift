@@ -13,18 +13,21 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   private let session: ResourceSession
   private let moduleURL: URL?
   private let manifest: ResourceModuleManifestV1?
+  private let catalogUnavailable: Bool
   private let messages: ResourceUIMessages
   private let openInEditor: @MainActor (URL) -> Void
   private let openExternally: @MainActor (URL) -> Void
   private var webView: WKWebView?
   private var messageHandler: ResourceModuleMessageHandler?
   private var schemeHandler: ResourceURLSchemeHandler?
+  private var moduleSchemeHandler: ResourceModuleURLSchemeHandler?
   private let statusLabel = NSTextField(wrappingLabelWithString: "")
 
   public init(
     session: ResourceSession,
     moduleURL: URL?,
     manifest: ResourceModuleManifestV1?,
+    catalogUnavailable: Bool,
     messages: ResourceUIMessages,
     openInEditor: @escaping @MainActor (URL) -> Void,
     openExternally: @escaping @MainActor (URL) -> Void
@@ -32,6 +35,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     self.session = session
     self.moduleURL = moduleURL
     self.manifest = manifest
+    self.catalogUnavailable = catalogUnavailable
     self.messages = messages
     self.openInEditor = openInEditor
     self.openExternally = openExternally
@@ -62,7 +66,9 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   override public func viewDidLoad() {
     super.viewDidLoad()
     guard let moduleURL, let manifest else {
-      statusLabel.stringValue = messages.noCompatibleModule
+      statusLabel.stringValue = catalogUnavailable
+        ? "\(messages.noCompatibleModule)\n\(messages.catalogUnavailable)"
+        : messages.noCompatibleModule
       return
     }
     load(moduleURL: moduleURL, manifest: manifest)
@@ -84,7 +90,11 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
       }
       return decisionHandler(.allow)
     }
-    decisionHandler(["about", ResourceURLSchemeHandler.scheme].contains(scheme) ? .allow : .cancel)
+    decisionHandler([
+      "about",
+      ResourceURLSchemeHandler.scheme,
+      ResourceModuleURLSchemeHandler.scheme,
+    ].contains(scheme) ? .allow : .cancel)
   }
 
   public func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
@@ -112,7 +122,12 @@ private extension ResourceModuleViewController {
 
     let configuration = WKWebViewConfiguration()
     let schemeHandler = ResourceURLSchemeHandler(session: session)
+    let moduleSchemeHandler = ResourceModuleURLSchemeHandler(moduleURL: moduleURL, manifest: manifest)
     configuration.setURLSchemeHandler(schemeHandler, forURLScheme: ResourceURLSchemeHandler.scheme)
+    configuration.setURLSchemeHandler(
+      moduleSchemeHandler,
+      forURLScheme: ResourceModuleURLSchemeHandler.scheme
+    )
     configuration.userContentController = contentController
     configuration.websiteDataStore = .nonPersistent()
     configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
@@ -130,6 +145,7 @@ private extension ResourceModuleViewController {
     statusLabel.isHidden = true
     self.messageHandler = messageHandler
     self.schemeHandler = schemeHandler
+    self.moduleSchemeHandler = moduleSchemeHandler
     self.webView = webView
 
     Task { @MainActor [weak self] in
@@ -144,19 +160,20 @@ private extension ResourceModuleViewController {
         guard let descriptorJSON = String(data: descriptorData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
-        let entrypointData = try JSONEncoder().encode(manifest.entrypoint)
+        let entrypointURL = try moduleSchemeHandler.moduleURL(path: manifest.entrypoint)
+        let entrypointData = try JSONEncoder().encode(entrypointURL.absoluteString)
         guard let entrypointJSON = String(data: entrypointData, encoding: .utf8) else {
           throw ResourceModuleError.invalidManifest
         }
         let nonce = UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        webView.loadHTMLString(
-          Self.shell(
-            entrypoint: entrypointJSON,
-            descriptor: descriptorJSON,
-            nonce: nonce,
-            failurePrefix: messages.moduleFailedPrefix
-          ),
-          baseURL: moduleURL
+        moduleSchemeHandler.setShell(Self.shell(
+          entrypoint: entrypointJSON,
+          descriptor: descriptorJSON,
+          nonce: nonce,
+          failurePrefix: messages.moduleFailedPrefix
+        ))
+        webView.load(
+          URLRequest(url: try moduleSchemeHandler.shellURL())
         )
       } catch {
         webView.removeFromSuperview()
@@ -175,13 +192,14 @@ private extension ResourceModuleViewController {
   ) -> String {
     let prefixData = try? JSONEncoder().encode(failurePrefix)
     let prefix = prefixData.flatMap { String(data: $0, encoding: .utf8) } ?? "\"Preview failed\""
+    let policy = Self.contentSecurityPolicy(nonce: nonce)
     return """
     <!doctype html>
     <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ksamint-resource:; media-src 'self' blob: ksamint-resource:; frame-src ksamint-resource:; connect-src ksamint-resource:; font-src 'self'; worker-src 'self' blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
+        <meta http-equiv="Content-Security-Policy" content="\(policy)">
         <style>html,body,#resource-root{height:100%;margin:0}body{font:13px system-ui;color:CanvasText;background:Canvas}</style>
       </head>
       <body>
@@ -201,6 +219,23 @@ private extension ResourceModuleViewController {
     """
   }
 
+  static func contentSecurityPolicy(nonce: String) -> String {
+    [
+      "default-src 'none'",
+      "script-src 'self' 'nonce-\(nonce)'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: ksamint-resource:",
+      "media-src 'self' blob: ksamint-resource:",
+      "frame-src ksamint-resource:",
+      "connect-src ksamint-resource:",
+      "font-src 'self' data: ksamint-resource:",
+      "worker-src 'self' blob:",
+      "form-action 'none'",
+      "base-uri 'none'",
+      "object-src 'none'",
+    ].joined(separator: "; ")
+  }
+
   static let bridgeScript = """
   Object.defineProperty(window, 'ksamintResource', {
     configurable: false,
@@ -216,15 +251,18 @@ private extension ResourceModuleViewController {
 
 public struct ResourceUIMessages: Sendable {
   public let noCompatibleModule: String
+  public let catalogUnavailable: String
   public let moduleStopped: String
   public let moduleFailedPrefix: String
 
   public init(
     noCompatibleModule: String,
+    catalogUnavailable: String,
     moduleStopped: String,
     moduleFailedPrefix: String
   ) {
     self.noCompatibleModule = noCompatibleModule
+    self.catalogUnavailable = catalogUnavailable
     self.moduleStopped = moduleStopped
     self.moduleFailedPrefix = moduleFailedPrefix
   }

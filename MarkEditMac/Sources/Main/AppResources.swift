@@ -164,6 +164,10 @@ enum Localized {
       localized: "No compatible resource preview module is installed.",
       comment: "Resource viewer state when no module is installed"
     )
+    static let catalogUnavailable = String(
+      localized: "The online module catalog is unavailable. Built-in previews remain available.",
+      comment: "Resource viewer state when the signed remote module catalog cannot be reached"
+    )
     static let moduleStopped = String(
       localized: "The preview module stopped unexpectedly. Reopen the resource to retry.",
       comment: "Resource module crash message"

@@ -1,4 +1,5 @@
 import { createHash, sign } from 'node:crypto';
+import { build } from 'esbuild';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 
@@ -9,6 +10,7 @@ const config = JSON.parse(await readFile(join(root, 'modules.json'), 'utf8'));
 const keyPath = process.env.KSAMINT_RESOURCE_MODULE_SIGNING_KEY_FILE;
 const privateKey = process.env.KSAMINT_RESOURCE_MODULE_SIGNING_KEY_PEM
   ?? (keyPath ? await readFile(resolve(keyPath), 'utf8') : undefined);
+const signingKeyID = process.env.KSAMINT_RESOURCE_MODULE_SIGNING_KEY_ID ?? 'official-v2';
 
 if (!privateKey) {
   throw new Error('Set KSAMINT_RESOURCE_MODULE_SIGNING_KEY_PEM or KSAMINT_RESOURCE_MODULE_SIGNING_KEY_FILE');
@@ -16,7 +18,7 @@ if (!privateKey) {
 
 await rm(distRoot, { recursive: true, force: true });
 await mkdir(distRoot, { recursive: true });
-const registry = { schemaVersion: 1, modules: [] };
+const registryModules = [];
 
 for (const definition of config.modules) {
   const moduleRoot = join(distRoot, definition.id);
@@ -24,6 +26,24 @@ for (const definition of config.modules) {
   await cp(join(sourceRoot, definition.id), moduleRoot, { recursive: true });
   await cp(join(sourceRoot, '_shared', 'runtime.js'), join(moduleRoot, 'runtime.js'));
   await cp(join(sourceRoot, '_shared', 'base.css'), join(moduleRoot, 'base.css'));
+  if (definition.id === 'okf') {
+    await mkdir(join(moduleRoot, 'vendor', 'yaml'), { recursive: true });
+    await build({
+      stdin: {
+        contents: "export { load } from 'js-yaml';",
+        resolveDir: root,
+        sourcefile: 'yaml-entry.js',
+      },
+      bundle: true,
+      format: 'esm',
+      minify: true,
+      outfile: join(moduleRoot, 'vendor', 'yaml', 'index.js'),
+      platform: 'browser',
+      target: 'safari15',
+      legalComments: 'none',
+    });
+    await cp(join(root, 'node_modules', 'js-yaml', 'LICENSE'), join(moduleRoot, 'vendor', 'YAML-LICENSE.txt'));
+  }
   const files = [];
   for (const path of await walk(moduleRoot)) {
     const data = await readFile(path);
@@ -43,17 +63,17 @@ for (const definition of config.modules) {
     entrypoint: definition.entrypoint,
     files,
     probes: definition.probes,
-    signingKeyID: 'official-v1',
+    signingKeyID,
   };
   const signature = sign('sha256', Buffer.from(canonicalJSON(unsigned)), privateKey).toString('base64');
   const manifest = { ...unsigned, signature };
   const manifestData = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
   await writeFile(join(moduleRoot, 'manifest.json'), manifestData);
-  registry.modules.push({
+  registryModules.push({
     id: definition.id,
     displayName: definition.displayName,
     version: definition.version,
-    manifestURL: `https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/${definition.id}/manifest.json`,
+    manifestURL: `https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/resource-modules/ResourceModules/dist/${definition.id}/manifest.json`,
     manifestSHA256: sha256(manifestData),
     downloadBytes: files.reduce((sum, file) => sum + file.size, manifestData.byteLength),
     minAppVersion: definition.minAppVersion,
@@ -61,8 +81,13 @@ for (const definition of config.modules) {
   });
 }
 
+const unsignedRegistry = { schemaVersion: 2, modules: registryModules, signingKeyID };
+const registry = {
+  ...unsignedRegistry,
+  signature: sign('sha256', Buffer.from(canonicalJSON(unsignedRegistry)), privateKey).toString('base64'),
+};
 await writeFile(join(distRoot, 'registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
-console.log(`Signed ${registry.modules.length} resource modules.`);
+console.log(`Signed ${registryModules.length} resource modules and catalog.`);
 
 async function walk(directory) {
   const result = [];

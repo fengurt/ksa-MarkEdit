@@ -56,6 +56,7 @@ public struct ResourceModuleManifestV1: Codable, Equatable, Sendable {
     guard !files.isEmpty, files.count <= 10_000 else {
       throw ResourceModuleError.invalidManifest
     }
+    try probes.forEach { try $0.validate() }
     guard files.contains(where: { $0.path == entrypoint }) else {
       throw ResourceModuleError.missingEntrypoint
     }
@@ -100,6 +101,23 @@ public struct ResourceModuleManifestV1: Codable, Equatable, Sendable {
       throw ResourceModuleError.invalidSignature
     }
   }
+
+  /// Resolves the signed entrypoint without allowing a module to escape its root.
+  public func entrypointURL(in moduleURL: URL) throws -> URL {
+    guard ResourcePathPolicy.isSafeRelativePath(entrypoint) else {
+      throw ResourceModuleError.missingEntrypoint
+    }
+    let root = moduleURL.standardizedFileURL.resolvingSymlinksInPath()
+    let resolved = root
+      .appending(path: entrypoint, directoryHint: .notDirectory)
+      .standardizedFileURL
+      .resolvingSymlinksInPath()
+    guard ResourcePathPolicy.isDescendant(resolved, of: root),
+          FileManager.default.fileExists(atPath: resolved.path) else {
+      throw ResourceModuleError.missingEntrypoint
+    }
+    return resolved
+  }
 }
 
 public struct ResourceModuleFileV1: Codable, Equatable, Sendable {
@@ -133,17 +151,157 @@ public struct ResourceProbeRuleV1: Codable, Equatable, Sendable {
   public let directoryMarkers: [String]
   public let mediaTypes: [String]
   public let priority: Int
+  public let frontMatter: ResourceFrontMatterProbeV2?
+  public let group: ResourceProbeGroupV2?
 
   public init(
     fileExtensions: [String] = [],
     directoryMarkers: [String] = [],
     mediaTypes: [String] = [],
-    priority: Int = 0
+    priority: Int = 0,
+    frontMatter: ResourceFrontMatterProbeV2? = nil,
+    group: ResourceProbeGroupV2? = nil
   ) {
     self.fileExtensions = fileExtensions
     self.directoryMarkers = directoryMarkers
     self.mediaTypes = mediaTypes
     self.priority = priority
+    self.frontMatter = frontMatter
+    self.group = group
+  }
+
+  public func validate() throws {
+    try frontMatter?.validate()
+    try group?.validate()
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case fileExtensions
+    case directoryMarkers
+    case mediaTypes
+    case priority
+    case frontMatter
+    case group
+  }
+
+  public init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    fileExtensions = try values.decodeIfPresent([String].self, forKey: .fileExtensions) ?? []
+    directoryMarkers = try values.decodeIfPresent([String].self, forKey: .directoryMarkers) ?? []
+    mediaTypes = try values.decodeIfPresent([String].self, forKey: .mediaTypes) ?? []
+    priority = try values.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+    frontMatter = try values.decodeIfPresent(ResourceFrontMatterProbeV2.self, forKey: .frontMatter)
+    group = try values.decodeIfPresent(ResourceProbeGroupV2.self, forKey: .group)
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(fileExtensions, forKey: .fileExtensions)
+    try values.encode(directoryMarkers, forKey: .directoryMarkers)
+    try values.encode(mediaTypes, forKey: .mediaTypes)
+    try values.encode(priority, forKey: .priority)
+    try values.encodeIfPresent(frontMatter, forKey: .frontMatter)
+    try values.encodeIfPresent(group, forKey: .group)
+  }
+}
+
+public struct ResourceProbeConditionV2: Codable, Equatable, Sendable {
+  public let fileExtensions: [String]
+  public let directoryMarkers: [String]
+  public let mediaTypes: [String]
+  public let frontMatter: ResourceFrontMatterProbeV2?
+
+  public init(
+    fileExtensions: [String] = [],
+    directoryMarkers: [String] = [],
+    mediaTypes: [String] = [],
+    frontMatter: ResourceFrontMatterProbeV2? = nil
+  ) {
+    self.fileExtensions = fileExtensions
+    self.directoryMarkers = directoryMarkers
+    self.mediaTypes = mediaTypes
+    self.frontMatter = frontMatter
+  }
+
+  public func validate() throws {
+    guard !fileExtensions.isEmpty || !directoryMarkers.isEmpty || !mediaTypes.isEmpty || frontMatter != nil else {
+      throw ResourceModuleError.invalidManifest
+    }
+    try frontMatter?.validate()
+  }
+}
+
+public struct ResourceProbeGroupV2: Codable, Equatable, Sendable {
+  public enum Mode: String, Codable, Sendable {
+    case all
+    case any
+  }
+
+  public let mode: Mode
+  public let conditions: [ResourceProbeConditionV2]
+  public let score: Int
+  public let fallback: Bool
+
+  public init(
+    mode: Mode,
+    conditions: [ResourceProbeConditionV2],
+    score: Int,
+    fallback: Bool = false
+  ) {
+    self.mode = mode
+    self.conditions = conditions
+    self.score = score
+    self.fallback = fallback
+  }
+
+  public func validate() throws {
+    guard conditions.count <= 32,
+          fallback || !conditions.isEmpty else {
+      throw ResourceModuleError.invalidManifest
+    }
+    try conditions.forEach { try $0.validate() }
+  }
+}
+
+/// A bounded, declarative content probe evaluated by the native read-only broker.
+/// It never executes module code and never reads more than 32 files or 64 KiB per file.
+public struct ResourceFrontMatterProbeV2: Codable, Equatable, Sendable {
+  public let paths: [String]
+  public let fileExtensions: [String]
+  public let excludedFileNames: [String]
+  public let requiredKeys: [String]
+  public let allowedValues: [String: [String]]
+  public let maximumFiles: Int
+  public let maximumBytesPerFile: Int
+
+  public init(
+    paths: [String] = [],
+    fileExtensions: [String] = [],
+    excludedFileNames: [String] = [],
+    requiredKeys: [String] = [],
+    allowedValues: [String: [String]] = [:],
+    maximumFiles: Int = 32,
+    maximumBytesPerFile: Int = 64 * 1024
+  ) {
+    self.paths = paths
+    self.fileExtensions = fileExtensions
+    self.excludedFileNames = excludedFileNames
+    self.requiredKeys = requiredKeys
+    self.allowedValues = allowedValues
+    self.maximumFiles = maximumFiles
+    self.maximumBytesPerFile = maximumBytesPerFile
+  }
+
+  public func validate() throws {
+    guard !requiredKeys.isEmpty,
+          maximumFiles > 0, maximumFiles <= 32,
+          maximumBytesPerFile > 0, maximumBytesPerFile <= 64 * 1024,
+          paths.allSatisfy(ResourcePathPolicy.isSafeRelativePath),
+          fileExtensions.allSatisfy({ !$0.isEmpty && !$0.contains("/") }),
+          requiredKeys.allSatisfy({ !$0.isEmpty }),
+          allowedValues.keys.allSatisfy(requiredKeys.contains) else {
+      throw ResourceModuleError.invalidManifest
+    }
   }
 }
 
@@ -175,6 +333,43 @@ public struct ResourceModuleTrustStore: Sendable {
   }
 }
 
+/// Shared scoring semantics for V1 manifests and V2 catalogs. A rule contributes
+/// its priority only after at least one declared selector actually matched.
+public enum ResourceProbeMatcher {
+  public static func score(
+    rule: ResourceProbeRuleV1,
+    extensionMatches: Bool,
+    mediaTypeMatches: Bool,
+    directoryMarkersMatch: Bool,
+    frontMatterMatches: Bool
+  ) -> Int? {
+    var score = rule.priority
+    var matched = false
+    if extensionMatches {
+      score += 100
+      matched = true
+    }
+    if mediaTypeMatches {
+      score += 100
+      matched = true
+    }
+    if directoryMarkersMatch {
+      score += 200
+      matched = true
+    }
+    if frontMatterMatches {
+      score += 300
+      matched = true
+    }
+    let fallback = rule.fileExtensions.isEmpty
+      && rule.mediaTypes.isEmpty
+      && rule.directoryMarkers.isEmpty
+      && rule.frontMatter == nil
+      && rule.group == nil
+    return matched || fallback ? score : nil
+  }
+}
+
 public struct ResourceModuleCatalogV1: Codable, Equatable, Sendable {
   public static let supportedSchemaVersion = 1
 
@@ -188,6 +383,58 @@ public struct ResourceModuleCatalogV1: Codable, Equatable, Sendable {
 
   public var isSupported: Bool {
     schemaVersion == Self.supportedSchemaVersion
+  }
+}
+
+public struct ResourceModuleCatalogV2: Codable, Equatable, Sendable {
+  public static let supportedSchemaVersion = 2
+
+  public let schemaVersion: Int
+  public let modules: [ResourceModuleCatalogEntryV1]
+  public let signingKeyID: String
+  public let signature: String
+
+  public init(
+    schemaVersion: Int = Self.supportedSchemaVersion,
+    modules: [ResourceModuleCatalogEntryV1],
+    signingKeyID: String,
+    signature: String
+  ) {
+    self.schemaVersion = schemaVersion
+    self.modules = modules
+    self.signingKeyID = signingKeyID
+    self.signature = signature
+  }
+
+  public func verifySignature(using trustStore: ResourceModuleTrustStore) throws {
+    guard schemaVersion == Self.supportedSchemaVersion,
+          !modules.isEmpty,
+          let publicKey = trustStore.publicKey(for: signingKeyID),
+          let signatureData = Data(base64Encoded: signature),
+          let signature = try? P256.Signing.ECDSASignature(derRepresentation: signatureData),
+          publicKey.isValidSignature(signature, for: try signingPayload()) else {
+      throw ResourceModuleError.invalidSignature
+    }
+    try modules.forEach { try $0.validate() }
+  }
+
+  public func signingPayload() throws -> Data {
+    let payload = UnsignedCatalog(
+      schemaVersion: schemaVersion,
+      modules: modules,
+      signingKeyID: signingKeyID
+    )
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+    return try encoder.encode(payload)
+  }
+}
+
+private extension ResourceModuleCatalogV2 {
+  struct UnsignedCatalog: Codable {
+    let schemaVersion: Int
+    let modules: [ResourceModuleCatalogEntryV1]
+    let signingKeyID: String
   }
 }
 
@@ -232,6 +479,7 @@ public struct ResourceModuleCatalogEntryV1: Codable, Equatable, Sendable {
           downloadBytes <= ResourceModuleLimits.maximumInstalledBytes else {
       throw ResourceModuleError.invalidManifest
     }
+    try probes.forEach { try $0.validate() }
   }
 }
 
@@ -316,6 +564,30 @@ public struct ResourcePageV1: Codable, Equatable, Sendable {
   }
 }
 
+public struct ResourceReadRequestV1: Codable, Equatable, Sendable {
+  public let entryID: String
+  public let offset: UInt64
+  public let length: Int
+
+  public init(entryID: String, offset: UInt64 = 0, length: Int) {
+    self.entryID = entryID
+    self.offset = offset
+    self.length = length
+  }
+}
+
+public struct ResourceReadResultV1: Codable, Equatable, Sendable {
+  public let entryID: String
+  public let offset: UInt64
+  public let data: Data
+
+  public init(entryID: String, offset: UInt64, data: Data) {
+    self.entryID = entryID
+    self.offset = offset
+    self.data = data
+  }
+}
+
 public struct ResourceRenderV1: Codable, Equatable, Sendable {
   public enum Kind: String, Codable, Sendable {
     case html
@@ -353,6 +625,7 @@ public struct ResourceModuleRequestV1: Codable, Equatable, Sendable {
     case open
     case listChildren
     case readRange
+    case readBatch
     case search
     case render
     case openInEditor
@@ -370,6 +643,7 @@ public struct ResourceModuleRequestV1: Codable, Equatable, Sendable {
   public let query: String?
   public let limit: Int?
   public let mode: String?
+  public let reads: [ResourceReadRequestV1]?
 
   public init(
     operationID: String,
@@ -381,7 +655,8 @@ public struct ResourceModuleRequestV1: Codable, Equatable, Sendable {
     length: Int? = nil,
     query: String? = nil,
     limit: Int? = nil,
-    mode: String? = nil
+    mode: String? = nil,
+    reads: [ResourceReadRequestV1]? = nil
   ) {
     self.operationID = operationID
     self.method = method
@@ -393,6 +668,7 @@ public struct ResourceModuleRequestV1: Codable, Equatable, Sendable {
     self.query = query
     self.limit = limit
     self.mode = mode
+    self.reads = reads
   }
 }
 
@@ -421,6 +697,8 @@ public enum ResourceModuleLimits {
   public static let maximumEntries = 200_000
   public static let pageSize = 500
   public static let maximumReadBytes = 10 * 1024 * 1024
+  public static let maximumBatchReadBytes = 4 * 1024 * 1024
+  public static let maximumBatchReadEntries = 64
   public static let maximumPreviewBytes: UInt64 = 100 * 1024 * 1024
   public static let maximumArchiveRatio: Double = 1_000
   public static let maximumArchiveDepth = 2

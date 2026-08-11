@@ -76,21 +76,20 @@ final class ResourceCoreTests: XCTestCase {
       .deletingLastPathComponent()
     let modules = repository.appending(path: "ResourceModules")
     let publicKey = try String(
-      contentsOf: modules.appending(path: "keys/official-v1-public.pem"),
+      contentsOf: modules.appending(path: "keys/official-v2-public.pem"),
       encoding: .utf8
     )
     let manifestData = try Data(
       contentsOf: modules.appending(path: "dist/folder-base/manifest.json")
     )
     let manifest = try JSONDecoder().decode(ResourceModuleManifestV1.self, from: manifestData)
-    let trustStore = try ResourceModuleTrustStore(pemKeys: ["official-v1": publicKey])
+    let trustStore = try ResourceModuleTrustStore(pemKeys: ["official-v2": publicKey])
 
     XCTAssertNoThrow(try manifest.verifySignature(using: trustStore))
     let registryData = try Data(contentsOf: modules.appending(path: "dist/registry.json"))
-    let registry = try JSONDecoder().decode(ResourceModuleCatalogV1.self, from: registryData)
-    XCTAssertTrue(registry.isSupported)
+    let registry = try JSONDecoder().decode(ResourceModuleCatalogV2.self, from: registryData)
+    XCTAssertNoThrow(try registry.verifySignature(using: trustStore))
     XCTAssertEqual(registry.modules.count, 5)
-    XCTAssertNoThrow(try registry.modules.forEach { try $0.validate() })
   }
 
   func testBrokerPagesAndReadsRanges() async throws {

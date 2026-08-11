@@ -25,7 +25,7 @@
     {
       "id": "html-safe",
       "displayName": "Safe HTML Preview",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "entrypoint": "index.js",
       "minAppVersion": "2.1.0",
       "probes": [
@@ -46,7 +46,7 @@
     {
       "id": "okf",
       "displayName": "Google OKF Catalog",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "entrypoint": "index.js",
       "minAppVersion": "2.1.0",
       "probes": [
@@ -67,6 +67,36 @@
           "directoryMarkers": ["knowledge.okf.json"],
           "mediaTypes": [],
           "priority": 450
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 900,
+          "frontMatter": {
+            "paths": ["index.md"],
+            "fileExtensions": [],
+            "excludedFileNames": [],
+            "requiredKeys": ["okf_version"],
+            "allowedValues": {"okf_version": ["0.1", "0.2"]},
+            "maximumFiles": 1,
+            "maximumBytesPerFile": 65536
+          }
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 700,
+          "frontMatter": {
+            "paths": [],
+            "fileExtensions": ["md"],
+            "excludedFileNames": ["index.md", "log.md"],
+            "requiredKeys": ["type"],
+            "allowedValues": {},
+            "maximumFiles": 32,
+            "maximumBytesPerFile": 65536
+          }
         }
       ]
     },
@@ -100,7 +130,7 @@
     {
       "id": "archive-base",
       "displayName": "ZIP, TAR, and TGZ Preview",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "entrypoint": "index.js",
       "minAppVersion": "2.1.0",
       "probes": [
