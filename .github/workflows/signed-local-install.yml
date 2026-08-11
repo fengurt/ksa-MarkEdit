@@ -63,31 +63,52 @@ jobs:
         run: |
           keychain="$RUNNER_TEMP/local-install.keychain-db"
           certificate="$RUNNER_TEMP/developer-id.p12"
+          intermediate="$RUNNER_TEMP/DeveloperIDG2CA.cer"
           printf '%s' "$APPLE_DEVELOPER_ID_P12_BASE64" | base64 --decode > "$certificate"
+          curl --fail --silent --show-error --location \
+            https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer \
+            --output "$intermediate"
           security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
           security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
-          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security -k "$keychain"
+          security import "$intermediate" -k "$keychain"
           security list-keychains -d user -s "$keychain"
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s \
+            -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security find-identity -v -p codesigning "$keychain" | \
+            grep 'Developer ID Application:'
       - name: Archive universal app
         run: |
-          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)"
+          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
           xcodebuild archive \
             -project MarkEdit.xcodeproj \
             -scheme MarkEditMac \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/ksamint.xcarchive" \
             -destination 'generic/platform=macOS' \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$key" \
+            -authenticationKeyID "$APPLE_NOTARY_KEY_ID" \
+            -authenticationKeyIssuerID "$APPLE_NOTARY_ISSUER_ID" \
             ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
             KSAMINT_BUILD_COMMIT='${{ inputs.ref }}' \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_IDENTITY="$identity"
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
-          plutil -insert signingStyle -string manual "$RUNNER_TEMP/ExportOptions.plist"
-          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/ksamint.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingStyle -string automatic "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingCertificate -string 'Developer ID Application' "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/ksamint.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$key" \
+            -authenticationKeyID "$APPLE_NOTARY_KEY_ID" \
+            -authenticationKeyIssuerID "$APPLE_NOTARY_ISSUER_ID"
       - name: Notarize, staple, and verify
         run: |
           app="$RUNNER_TEMP/export/ksamint MarkEdit.app"
