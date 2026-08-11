@@ -85,8 +85,14 @@ jobs:
           security list-keychains -d user -s "$keychain"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s \
             -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
-          security find-identity -v -p codesigning "$keychain" | \
-            grep 'Developer ID Application:'
+          identity_line="$(security find-identity -v -p codesigning "$keychain" | \
+            grep 'Developer ID Application:' | head -1)"
+          test -n "$identity_line"
+          identity_sha1="$(printf '%s\n' "$identity_line" | awk '{print $2}')"
+          case "$identity_sha1" in
+            *[!0-9A-F]*|'') echo 'Unable to resolve Developer ID identity' >&2; exit 1 ;;
+          esac
+          printf 'APPLE_DEVELOPER_ID_SHA1=%s\n' "$identity_sha1" >> "$GITHUB_ENV"
       - name: Archive signed app
         run: |
           key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
@@ -113,7 +119,7 @@ jobs:
           plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert signingStyle -string automatic "$RUNNER_TEMP/ExportOptions.plist"
-          plutil -insert signingCertificate -string 'Developer ID Application' "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingCertificate -string "$APPLE_DEVELOPER_ID_SHA1" "$RUNNER_TEMP/ExportOptions.plist"
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/ksamint.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
