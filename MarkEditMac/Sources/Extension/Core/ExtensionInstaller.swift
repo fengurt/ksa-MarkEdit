@@ -9,7 +9,7 @@ import AppKit
 import ExtensionCore
 import MarkEditKit
 
-/// Handles `markedit://install-extension` deep links.
+/// Handles `ksamint-markedit://install-extension` deep links.
 ///
 /// `?id=` resolves against the reviewed registry, `?url=` is an unreviewed manual install.
 /// Both always confirm with the user, verify or pin the sha256, and offer a relaunch so the
@@ -150,21 +150,21 @@ extension Localized {
     static let authorFormat = String(localized: "**Author:** %@", comment: "Extension author line (format) in the install confirmation")
     static let urlFormat = String(localized: "**URL:** %@", comment: "Extension URL line (format) in the install confirmation")
     static let fullAccessWarning = String(localized: "This extension runs with full editor access.", comment: "Disclosure shown before installing an extension")
-    static let unreviewedWarning = String(localized: "This source is not reviewed by MarkEdit. Only continue if you trust it.", comment: "Caution shown before installing an extension from a raw URL")
+    static let unreviewedWarning = String(localized: "This source is not reviewed by ksamint MarkEdit. Only continue if you trust it.", comment: "Caution shown before installing an extension from a raw URL")
     static let installedTitle = String(localized: "Extension Installed", comment: "Title for the extension installed confirmation")
-    static let installedMessageFormat = String(localized: "Relaunch MarkEdit to start using “%@”.", comment: "Message (format) shown after an extension is installed")
+    static let installedMessageFormat = String(localized: "Relaunch ksamint MarkEdit to start using “%@”.", comment: "Message (format) shown after an extension is installed")
     static let notFoundFormat = String(localized: "Couldn’t find the extension “%@” in the registry.", comment: "Error when a deep-link id does not resolve in the registry")
     static let failedTitle = String(localized: "Failed to install the extension.", comment: "Title for a failed extension installation")
     static let failedMessage = String(localized: "The extension couldn’t be downloaded or verified.", comment: "Message for a failed extension installation")
-    static let incompatibleFormat = String(localized: "This extension requires MarkEdit %@ or later.", comment: "Error (format) when an extension needs a newer app version")
+    static let incompatibleFormat = String(localized: "This extension requires ksamint MarkEdit %@ or later.", comment: "Error (format) when an extension needs a newer app version")
     static let updatesAvailableTitle = String(localized: "Extension Updates Available", comment: "Title for the extension updates prompt")
     static let updateButton = String(localized: "Update", comment: "Button title to install extension updates")
     static let updatedTitle = String(localized: "Extensions Updated", comment: "Title shown after extensions are updated")
-    static let updatedMessage = String(localized: "Relaunch MarkEdit to use the updated extensions.", comment: "Message shown after extensions are updated")
+    static let updatedMessage = String(localized: "Relaunch ksamint MarkEdit to use the updated extensions.", comment: "Message shown after extensions are updated")
 
     // MARK: - Extensions UI
 
-    static let windowTitle = String(localized: "MarkEdit Extensions", comment: "Title of the extension manager window")
+    static let windowTitle = String(localized: "ksamint MarkEdit Extensions", comment: "Title of the extension manager window")
     static let discover = String(localized: "Discover", comment: "Extension manager mode: browse the registry")
     static let installed = String(localized: "Installed", comment: "Extension manager mode: installed extensions")
     static let updates = String(localized: "Updates", comment: "Extension manager mode: installed extensions filtered to those with available updates")

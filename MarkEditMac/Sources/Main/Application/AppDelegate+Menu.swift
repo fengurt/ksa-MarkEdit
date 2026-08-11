@@ -141,7 +141,7 @@ private extension AppDelegate {
     }
 
     for encoding in EditorTextEncoding.allCases {
-      let item = reopenFileMenu?.addItem(withTitle: encoding.description, action: #selector(EditorViewController.reopenWithEncoding(_:)))
+      let item = reopenFileMenu?.addItem(withTitle: encoding.localizedDescription, action: #selector(EditorViewController.reopenWithEncoding(_:)))
       item?.representedObject = encoding
 
       if EditorTextEncoding.groupingCases.contains(encoding) {
@@ -209,10 +209,10 @@ private extension AppDelegate {
   }
 
   @IBAction func openIssueTracker(_ sender: Any?) {
-    NSWorkspace.shared.safelyOpenURL(string: "https://github.com/MarkEdit-app/MarkEdit/issues")
+    NSWorkspace.shared.safelyOpenURL(string: "https://github.com/fengurt/ksa-MarkEdit/issues")
   }
 
   @IBAction func openVersionHistory(_ sender: Any?) {
-    NSWorkspace.shared.safelyOpenURL(string: "https://github.com/MarkEdit-app/MarkEdit/releases")
+    NSWorkspace.shared.safelyOpenURL(string: "https://github.com/fengurt/ksa-MarkEdit/releases")
   }
 }

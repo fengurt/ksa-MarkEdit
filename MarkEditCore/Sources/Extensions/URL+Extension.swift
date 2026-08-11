@@ -21,7 +21,7 @@ public extension URL {
   }
 
   static var sharedContainerURL: URL? {
-    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.app.cyan.markedit")
+    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint.markedit")
   }
 
   /// Files in this directory whose extension is in `types`, sorted by localized filename order.

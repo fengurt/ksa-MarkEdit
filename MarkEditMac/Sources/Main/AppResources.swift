@@ -7,6 +7,7 @@
 
 import Foundation
 import MarkEditCore
+import MarkEditKit
 
 /**
  To make localization work, always use `String(localized:comment:)` directly and add to this file.
@@ -226,8 +227,8 @@ enum Localized {
 
   enum Updater {
     static let upToDateTitle = String(localized: "You’re up-to-date!", comment: "Title for the up-to-date info")
-    static let upToDateMessage = String(localized: "MarkEdit %@ is currently the latest version.", comment: "Message for the up-to-date info")
-    static let newVersionAvailable = String(localized: "MarkEdit %@ is available!", comment: "Title for new version available")
+    static let upToDateMessage = String(localized: "ksamint MarkEdit %@ is currently the latest version.", comment: "Message for the up-to-date info")
+    static let newVersionAvailable = String(localized: "ksamint MarkEdit %@ is available!", comment: "Title for new version available")
     static let updateFailedTitle = String(localized: "Failed to get the update.", comment: "Title for failed to get the update")
     static let updateFailedMessage = String(localized: "Please check your network connection or get the latest release from the version history.", comment: "Message for failed to get the update")
     static let needsOSUpdateMessage = String(localized: "This release requires macOS %@ or later and cannot be installed without upgrading your operating system.", comment: "Message for minimum required OS version")
@@ -238,6 +239,44 @@ enum Localized {
     static let skipThisVersion = String(localized: "Skip This Version", comment: "Title for the \"Skip This Version\" button")
     static let disableUpdateChecks = String(localized: "Disable Update Checks", comment: "Title for the \"Disable Update Checks\" button")
     static let checkVersionHistory = String(localized: "Check Version History", comment: "Title for the \"Check Version History\" button")
+  }
+
+  enum Encoding {
+    static let ascii = String(localized: "ASCII", comment: "Text encoding name")
+    static let nonLossyASCII = String(localized: "Non-lossy ASCII", comment: "Text encoding name")
+    static let utf8 = String(localized: "Unicode (UTF-8)", comment: "Text encoding name")
+    static let utf16 = String(localized: "Unicode (UTF-16)", comment: "Text encoding name")
+    static let utf16BigEndian = String(localized: "Unicode (UTF-16BE)", comment: "Text encoding name")
+    static let utf16LittleEndian = String(localized: "Unicode (UTF-16LE)", comment: "Text encoding name")
+    static let macOSRoman = String(localized: "Western (Mac OS Roman)", comment: "Text encoding name")
+    static let isoLatin1 = String(localized: "Western (ISO Latin 1)", comment: "Text encoding name")
+    static let windowsLatin1 = String(localized: "Western (Windows Latin 1)", comment: "Text encoding name")
+    static let gb18030 = String(localized: "Simplified Chinese (GB 18030)", comment: "Text encoding name")
+    static let big5 = String(localized: "Traditional Chinese (Big 5)", comment: "Text encoding name")
+    static let japaneseEUC = String(localized: "Japanese (EUC)", comment: "Text encoding name")
+    static let shiftJIS = String(localized: "Japanese (Shift JIS)", comment: "Text encoding name")
+    static let koreanEUC = String(localized: "Korean (EUC)", comment: "Text encoding name")
+  }
+}
+
+extension EditorTextEncoding {
+  var localizedDescription: String {
+    switch self {
+    case .ascii: Localized.Encoding.ascii
+    case .nonLossyASCII: Localized.Encoding.nonLossyASCII
+    case .utf8: Localized.Encoding.utf8
+    case .utf16: Localized.Encoding.utf16
+    case .utf16BigEndian: Localized.Encoding.utf16BigEndian
+    case .utf16LittleEndian: Localized.Encoding.utf16LittleEndian
+    case .macOSRoman: Localized.Encoding.macOSRoman
+    case .isoLatin1: Localized.Encoding.isoLatin1
+    case .windowsLatin1: Localized.Encoding.windowsLatin1
+    case .gb18030: Localized.Encoding.gb18030
+    case .big5: Localized.Encoding.big5
+    case .japaneseEUC: Localized.Encoding.japaneseEUC
+    case .shiftJIS: Localized.Encoding.shiftJIS
+    case .koreanEUC: Localized.Encoding.koreanEUC
+    }
   }
 }
 

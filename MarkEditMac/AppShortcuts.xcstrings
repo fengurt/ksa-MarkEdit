@@ -27,6 +27,22 @@
               "在 ${applicationName} 中建立新文件"
             ]
           }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Créer un nouveau document dans ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}で新しいドキュメントを作成"
+            ]
+          }
         }
       }
     },
@@ -54,6 +70,22 @@
             "state" : "translated",
             "values" : [
               "在 ${applicationName} 中執行 JavaScript"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Évaluer JavaScript dans ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} で JavaScript を評価する"
             ]
           }
         }
@@ -85,6 +117,22 @@
               "在 ${applicationName} 中獲取檔案內容"
             ]
           }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} のファイル コンテンツを取得する"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Obtenir le contenu du fichier dans ${applicationName}"
+            ]
+          }
         }
       }
     },
@@ -112,6 +160,22 @@
             "state" : "translated",
             "values" : [
               "在 ${applicationName} 中更新檔案內容"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Mettre à jour le contenu du fichier dans ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} のファイル コンテンツを更新する"
             ]
           }
         }

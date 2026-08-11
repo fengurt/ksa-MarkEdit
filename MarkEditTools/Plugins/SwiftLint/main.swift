@@ -5,7 +5,9 @@
 //
 
 import PackagePlugin
+#if canImport(XcodeProjectPlugin)
 import XcodeProjectPlugin
+#endif
 
 @main
 struct Main: BuildToolPlugin {
@@ -15,6 +17,7 @@ struct Main: BuildToolPlugin {
   }
 }
 
+#if canImport(XcodeProjectPlugin)
 extension Main: XcodeBuildToolPlugin {
   func createBuildCommands(context: XcodePluginContext, target: XcodeTarget) throws -> [Command] {
     [
@@ -37,3 +40,4 @@ extension Main: XcodeBuildToolPlugin {
     ]
   }
 }
+#endif

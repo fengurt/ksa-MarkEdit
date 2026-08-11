@@ -385,7 +385,7 @@ private extension ExtensionsWindowController {
 // MARK: - Toolbar Identifiers
 
 private extension NSToolbarItem.Identifier {
-  static let mode = Self("app.markedit.extension.mode")
-  static let actions = Self("app.markedit.extension.actions")
-  static let search = Self("app.markedit.extension.search")
+  static let mode = Self("art.apuch.ksamint.markedit.extension.mode")
+  static let actions = Self("art.apuch.ksamint.markedit.extension.actions")
+  static let search = Self("art.apuch.ksamint.markedit.extension.search")
 }

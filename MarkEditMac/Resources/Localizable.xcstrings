@@ -15,6 +15,18 @@
             "state" : "translated",
             "value" : "**作者：**%@"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**著者:** %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Auteur :** %@"
+          }
         }
       }
     },
@@ -31,6 +43,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**連結：**%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**URL:** %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**URL :** %@"
           }
         }
       }
@@ -54,6 +78,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$d/%2$d"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d/%2$d"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d ou %2$d"
           }
         }
       }
@@ -102,6 +138,36 @@
               }
             }
           }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 拡張機能"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Extensions %lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Extension %lld"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -118,6 +184,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "⌘ 點選以跟隨"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘クリックしてフォローしてください"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘-cliquez pour suivre"
           }
         }
       }
@@ -136,6 +214,18 @@
             "state" : "translated",
             "value" : "⌘ 點選切換完成狀態"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘ クリックして ToDo を切り替えます"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘-cliquez pour activer ou désactiver la tâche"
+          }
         }
       }
     },
@@ -152,6 +242,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🎉 %@ 已釋出"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 %@ がリリースされました"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 %@ est sorti"
           }
         }
       }
@@ -170,6 +272,18 @@
             "state" : "translated",
             "value" : "1 個制表符"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1タブ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 onglet"
+          }
         }
       }
     },
@@ -186,6 +300,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "2 個空格"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2スペース"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 espaces"
           }
         }
       }
@@ -204,6 +330,18 @@
             "state" : "translated",
             "value" : "2 個制表符"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2つのタブ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 onglets"
+          }
         }
       }
     },
@@ -220,6 +358,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "4 個空格"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4スペース"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 espaces"
           }
         }
       }
@@ -238,6 +388,18 @@
             "state" : "translated",
             "value" : "操作"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクション"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actes"
+          }
         }
       }
     },
@@ -254,6 +416,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "當前行指示器"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブラインインジケーター"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicateur de ligne active"
           }
         }
       }
@@ -272,6 +446,18 @@
             "state" : "translated",
             "value" : "全部"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全て"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous"
+          }
         }
       }
     },
@@ -287,6 +473,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "允許程式碼執行返回一個 Promise 物件。啟用時，JavaScript 程式碼必須返回一個值。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "評価で Promise オブジェクトを返すことができます。有効にした場合、JavaScript は値を返す必要があります。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permet à l’évaluation de renvoyer un objet Promise. Lorsqu'il est activé, le JavaScript doit renvoyer une valeur."
           }
         }
       }
@@ -305,6 +503,18 @@
             "state" : "translated",
             "value" : "總是"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつも"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours"
+          }
         }
       }
     },
@@ -321,6 +531,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "外觀："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外観："
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apparence:"
           }
         }
       }
@@ -339,6 +561,18 @@
             "state" : "translated",
             "value" : "在事件描述符中找不到引數“%@”，該描述符可能格式不正確。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引数「%@」がイベント記述子に見つかりません。記述子の形式が不正である可能性があります。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argument « %@ » introuvable dans le descripteur d'événement, le descripteur est probablement mal formé."
+          }
         }
       }
     },
@@ -355,6 +589,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新前詢問"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新する前に質問する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander avant de mettre à jour"
           }
         }
       }
@@ -373,6 +619,18 @@
             "state" : "translated",
             "value" : "輔助"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アシスタント"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assistant"
+          }
         }
       }
     },
@@ -389,6 +647,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動補全："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オートコンプリート:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisie semi-automatique :"
           }
         }
       }
@@ -407,6 +677,18 @@
             "state" : "translated",
             "value" : "自動"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatique"
+          }
         }
       }
     },
@@ -424,6 +706,18 @@
             "state" : "translated",
             "value" : "粗體"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大胆な"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audacieux"
+          }
         }
       }
     },
@@ -439,6 +733,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "呼叫非同步 JavaScript"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非同期 JavaScript を呼び出す"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appeler Async JavaScript"
           }
         }
       }
@@ -456,6 +762,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取消"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler"
           }
         }
       }
@@ -480,6 +798,18 @@
             "state" : "translated",
             "value" : "不支援匯出“%1$@”格式的檔案，支援的格式：%2$@。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張子「%1$@」のファイルはエクスポートできません。サポートされている拡張子: %2$@。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d'exporter des fichiers avec l'extension \"%1$@\", extensions prises en charge : %2$@."
+          }
         }
       }
     },
@@ -496,6 +826,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "大小寫敏感"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大文字と小文字を区別"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensible aux majuscules et minuscules"
           }
         }
       }
@@ -514,6 +856,18 @@
             "state" : "translated",
             "value" : "字元數量"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャラクター"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personnages"
+          }
         }
       }
     },
@@ -530,6 +884,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檢查版本記錄"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バージョン履歴を確認する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier l'historique des versions"
           }
         }
       }
@@ -548,6 +914,18 @@
             "state" : "translated",
             "value" : "Classic Mac OS (CR)"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラシック Mac OS (CR)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac OS classique (CR)"
+          }
         }
       }
     },
@@ -564,6 +942,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清除最近"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近のデータを消去"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer les récents"
           }
         }
       }
@@ -582,6 +972,18 @@
             "state" : "translated",
             "value" : "欄"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カラム"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colonne"
+          }
         }
       }
     },
@@ -598,6 +1000,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "註解"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コメント"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commentaires"
           }
         }
       }
@@ -616,6 +1030,18 @@
             "state" : "translated",
             "value" : "緊湊"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンパクト"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact"
+          }
         }
       }
     },
@@ -633,6 +1059,18 @@
             "state" : "translated",
             "value" : "單字補全："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了："
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achèvement:"
+          }
         }
       }
     },
@@ -648,6 +1086,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "內容"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンテンツ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenu"
           }
         }
       }
@@ -666,6 +1116,18 @@
             "state" : "translated",
             "value" : "控制字元"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "制御文字"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractère de contrôle"
+          }
         }
       }
     },
@@ -682,6 +1144,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拷貝 Pandoc 指令"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pandocコマンドのコピー"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la commande Pandoc"
           }
         }
       }
@@ -700,6 +1174,18 @@
             "state" : "translated",
             "value" : "找不到用於處理接收到 Apple Event 的指令。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "受信 Apple Event を処理するコマンドが見つかりませんでした。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de trouver une commande pour gérer le Apple Event entrant."
+          }
         }
       }
     },
@@ -716,6 +1202,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在擴充功能目錄中找不到“%@”。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レジストリに拡張子「%@」が見つかりませんでした。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de trouver l'extension « %@ » dans le registre."
           }
         }
       }
@@ -734,6 +1232,18 @@
             "state" : "translated",
             "value" : "無法連接擴充功能目錄。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張レジストリにアクセスできませんでした。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d'accéder au registre d'extensions."
+          }
         }
       }
     },
@@ -750,6 +1260,18 @@
             "state" : "translated",
             "value" : "建立新文件"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいドキュメントの作成"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un nouveau document"
+          }
         }
       }
     },
@@ -765,6 +1287,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新建一個文件，可透過可選變數來設定檔案名和初始內容。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイル名と初期コンテンツを設定するオプションのパラメーターを使用して、新しいドキュメントを作成します。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crée un nouveau document, avec des paramètres facultatifs pour définir le nom du fichier et le contenu initial."
           }
         }
       }
@@ -783,6 +1317,18 @@
             "state" : "translated",
             "value" : "深色"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暗い"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombre"
+          }
         }
       }
     },
@@ -799,6 +1345,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "深色主題："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダークテーマ:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème sombre :"
           }
         }
       }
@@ -817,6 +1375,18 @@
             "state" : "translated",
             "value" : "預設行尾格式："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルトの行末:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fins de lignes par défaut :"
+          }
         }
       }
     },
@@ -833,6 +1403,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設文字編碼："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルトのテキストエンコーディング:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encodage de texte par défaut :"
           }
         }
       }
@@ -851,6 +1433,18 @@
             "state" : "translated",
             "value" : "刪除"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "消去"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
         }
       }
     },
@@ -867,6 +1461,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "忽略變音符"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音記号を区別しない"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insensible aux diacritiques"
           }
         }
       }
@@ -885,6 +1491,18 @@
             "state" : "translated",
             "value" : "按字元對比"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差分文字"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractères différentiels"
+          }
         }
       }
     },
@@ -901,6 +1519,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按行對比"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差分ライン"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lignes de différence"
           }
         }
       }
@@ -919,6 +1549,18 @@
             "state" : "translated",
             "value" : "按單詞對比"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "異なる言葉"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mots différents"
+          }
         }
       }
     },
@@ -935,6 +1577,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "淡化非當前行"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非アクティブな線を暗くする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estomper les lignes inactives"
           }
         }
       }
@@ -953,6 +1607,18 @@
             "state" : "translated",
             "value" : "禁止更新檢查"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新チェックを無効にする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactiver les vérifications de mise à jour"
+          }
         }
       }
     },
@@ -969,6 +1635,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "禁止"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許可されていない"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé"
           }
         }
       }
@@ -987,6 +1665,18 @@
             "state" : "translated",
             "value" : "發現"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発見する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Découvrir"
+          }
         }
       }
     },
@@ -1003,6 +1693,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全文件"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書類"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document"
           }
         }
       }
@@ -1021,6 +1723,18 @@
             "state" : "translated",
             "value" : "完成"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終わり"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fait"
+          }
         }
       }
     },
@@ -1037,6 +1751,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "編輯行為："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集動作:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le comportement :"
           }
         }
       }
@@ -1055,6 +1781,18 @@
             "state" : "translated",
             "value" : "編輯器"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エディタ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éditeur"
+          }
         }
       }
     },
@@ -1071,6 +1809,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已啟用"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有効"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé"
           }
         }
       }
@@ -1089,6 +1839,18 @@
             "state" : "translated",
             "value" : "輸入行號並按下回車鍵"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行番号を入力してReturnキーを押します"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrez le numéro de ligne et appuyez sur Entrée"
+          }
         }
       }
     },
@@ -1104,6 +1866,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "執行 JavaScript"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScriptを評価する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Évaluer JavaScript"
           }
         }
       }
@@ -1122,6 +1896,18 @@
             "state" : "translated",
             "value" : "使用 ${content} 執行 JavaScript"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript を ${content} で評価する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Évaluer JavaScript avec ${content}"
+          }
         }
       }
     },
@@ -1137,6 +1923,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在當前活躍文件執行 JavaScript 並獲取結果，沒有開啟的編輯器時將丟擲異常。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript を評価し、アクティブなドキュメントの結果を取得します。エディターが開いていない場合はエラーがスローされます。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Évalue JavaScript et obtient le résultat sur le document actif ; renvoie une erreur si aucun éditeur n'est ouvert."
           }
         }
       }
@@ -1155,6 +1953,18 @@
             "state" : "translated",
             "value" : "擴充功能已安裝"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能がインストールされました"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension installée"
+          }
         }
       }
     },
@@ -1171,6 +1981,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "有可用的擴充功能更新"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用可能な拡張機能のアップデート"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour d'extension disponibles"
           }
         }
       }
@@ -1189,6 +2011,18 @@
             "state" : "translated",
             "value" : "擴充功能已更新"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能が更新されました"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions mises à jour"
+          }
         }
       }
     },
@@ -1205,6 +2039,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法獲取更新。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートの取得に失敗しました。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d'obtenir la mise à jour."
           }
         }
       }
@@ -1223,6 +2069,18 @@
             "state" : "translated",
             "value" : "無法安裝該擴充功能。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能のインストールに失敗しました。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l'installation de l'extension."
+          }
         }
       }
     },
@@ -1239,6 +2097,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "精選"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "注目の"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En vedette"
           }
         }
       }
@@ -1257,6 +2127,18 @@
             "state" : "translated",
             "value" : "檔案副檔名："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイル拡張子:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension du fichier :"
+          }
         }
       }
     },
@@ -1272,6 +2154,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檔案名"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイル名"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom de fichier"
           }
         }
       }
@@ -1290,6 +2184,18 @@
             "state" : "translated",
             "value" : "檔案大小"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルサイズ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du fichier"
+          }
         }
       }
     },
@@ -1306,6 +2212,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尋找"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検索"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher"
           }
         }
       }
@@ -1324,6 +2242,18 @@
             "state" : "translated",
             "value" : "尋找選中內容"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択範囲の検索"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher la sélection"
+          }
         }
       }
     },
@@ -1340,6 +2270,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "折疊行"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行を折りたたむ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replier la ligne"
           }
         }
       }
@@ -1358,6 +2300,18 @@
             "state" : "translated",
             "value" : "折疊的程式碼"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折りたたまれたコード"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code replié"
+          }
         }
       }
     },
@@ -1374,6 +2328,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "折疊的行"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折りたたまれた行"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lignes repliées"
           }
         }
       }
@@ -1392,6 +2358,18 @@
             "state" : "translated",
             "value" : "字體："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォント："
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fonte:"
+          }
         }
       }
     },
@@ -1409,6 +2387,18 @@
             "state" : "translated",
             "value" : "格式化檔案："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォーマットファイル:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formater les fichiers :"
+          }
         }
       }
     },
@@ -1425,6 +2415,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "儲存時進行格式化。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルを保存するときにフォーマットします。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatez lors de l'enregistrement des fichiers."
           }
         }
       }
@@ -1473,6 +2475,36 @@
               }
             }
           }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld バージョンが見つかりました。削除しますか?"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Versions %lld trouvées, souhaitez-vous les supprimer ?"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Version %lld trouvée, souhaitez-vous la supprimer ?"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1489,6 +2521,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一般"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一般的な"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Général"
           }
         }
       }
@@ -1507,6 +2551,18 @@
             "state" : "translated",
             "value" : "獲取自訂主題…"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カスタムテーマを入手…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenez des thèmes personnalisés…"
+          }
         }
       }
     },
@@ -1523,6 +2579,18 @@
             "state" : "translated",
             "value" : "獲取檔案內容"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルの内容を取得する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir le contenu du fichier"
+          }
         }
       }
     },
@@ -1538,6 +2606,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "獲取當前活躍檔案的內容，沒有開啟的編輯器時將丟擲異常。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブなドキュメントのファイルコンテンツを取得します。エディターが開いていない場合はエラーがスローされます。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtient le contenu du fichier du document actif ; renvoie une erreur si aucun éditeur n'est ouvert."
           }
         }
       }
@@ -1556,6 +2636,18 @@
             "state" : "translated",
             "value" : "跳轉到行"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ラインに移動"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aller à la ligne"
+          }
         }
       }
     },
@@ -1573,6 +2665,18 @@
             "state" : "translated",
             "value" : "授予許可權"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクセスを許可する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accorder l'accès"
+          }
         }
       }
     },
@@ -1588,6 +2692,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粒度"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粒度"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Granularité"
           }
         }
       }
@@ -1606,6 +2722,18 @@
             "state" : "translated",
             "value" : "猜測的單字"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推測された言葉"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mots devinés"
+          }
         }
       }
     },
@@ -1622,6 +2750,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標題"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヘッダー"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En-têtes"
           }
         }
       }
@@ -1640,6 +2780,18 @@
             "state" : "translated",
             "value" : "隱藏"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隠れた"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché"
+          }
         }
       }
     },
@@ -1656,6 +2808,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首頁"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームページ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page d'accueil"
           }
         }
       }
@@ -1674,6 +2838,18 @@
             "state" : "translated",
             "value" : "水平分割線"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "横罫"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Règle horizontale"
+          }
         }
       }
     },
@@ -1691,6 +2867,18 @@
             "state" : "translated",
             "value" : "增加縮排"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "さらにインデントします"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indente plus"
+          }
         }
       }
     },
@@ -1706,6 +2894,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "初始內容"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初期コンテンツ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenu initial"
           }
         }
       }
@@ -1724,6 +2924,18 @@
             "state" : "translated",
             "value" : "預測字詞"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インライン予測"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prédictions en ligne"
+          }
         }
       }
     },
@@ -1740,6 +2952,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "插入程式碼"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コードを挿入"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer le code"
           }
         }
       }
@@ -1758,6 +2982,18 @@
             "state" : "translated",
             "value" : "插入最終換行"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最後の改行を挿入"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer la nouvelle ligne finale"
+          }
         }
       }
     },
@@ -1774,6 +3010,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "插入圖片"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像の挿入"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une image"
           }
         }
       }
@@ -1792,6 +3040,18 @@
             "state" : "translated",
             "value" : "插入換行符"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改行の挿入"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer un saut de ligne"
+          }
         }
       }
     },
@@ -1808,6 +3068,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "插入連結"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リンクの挿入"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer un lien"
           }
         }
       }
@@ -1826,6 +3098,18 @@
             "state" : "translated",
             "value" : "插入制表符"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挿入タブ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer un onglet"
+          }
         }
       }
     },
@@ -1842,6 +3126,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "插入 2 個空格"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スペースを 2 つ挿入します"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insère 2 espaces"
           }
         }
       }
@@ -1860,6 +3156,18 @@
             "state" : "translated",
             "value" : "插入 4 個空格"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スペースを 4 つ挿入します"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insère 4 espaces"
+          }
         }
       }
     },
@@ -1876,6 +3184,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "插入制表符"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タブ文字を挿入します"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insère un caractère de tabulation"
           }
         }
       }
@@ -1894,6 +3214,18 @@
             "state" : "translated",
             "value" : "安裝"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
         }
       }
     },
@@ -1910,6 +3242,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要安裝“%@”嗎？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」をインストールしますか？"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer « %@ » ?"
           }
         }
       }
@@ -1928,6 +3272,18 @@
             "state" : "translated",
             "value" : "從 URL 安裝擴充功能"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URLから拡張機能をインストール"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer l'extension à partir de l'URL"
+          }
         }
       }
     },
@@ -1944,6 +3300,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從 URL 安裝…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URLからインストール…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer à partir de l'URL…"
           }
         }
       }
@@ -1962,6 +3330,18 @@
             "state" : "translated",
             "value" : "已安裝"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール済み"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installé"
+          }
         }
       }
     },
@@ -1979,6 +3359,18 @@
             "state" : "translated",
             "value" : "斜體"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イタリック"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Italique"
+          }
         }
       }
     },
@@ -1995,6 +3387,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "項目"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイテム"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Article"
           }
         }
       }
@@ -2019,6 +3423,18 @@
             "state" : "translated",
             "value" : "JavaScript 執行在第 %1$d 行，第 %2$d 欄失敗：%3$@"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript の評価が行 %1$d、列 %2$d で失敗しました: %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'évaluation JavaScript a échoué à la ligne %1$d, colonne %2$d : %3$@"
+          }
         }
       }
     },
@@ -2035,6 +3451,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "JavaScript 執行因未知原因失敗。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript の評価は不明な理由で失敗しました。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'évaluation JavaScript a échoué pour une raison inconnue."
           }
         }
       }
@@ -2053,6 +3481,18 @@
             "state" : "translated",
             "value" : "保持游標居中"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャレットを中央に置く"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez le curseur au milieu"
+          }
         }
       }
     },
@@ -2069,6 +3509,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "稍後"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "後で"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus tard"
           }
         }
       }
@@ -2087,6 +3539,18 @@
             "state" : "translated",
             "value" : "浅色"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライト"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lumière"
+          }
         }
       }
     },
@@ -2103,6 +3567,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "淺色主題："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライトテーマ:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème Lumière :"
           }
         }
       }
@@ -2121,6 +3597,18 @@
             "state" : "translated",
             "value" : "行高："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行の高さ:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauteur de ligne :"
+          }
         }
       }
     },
@@ -2137,6 +3625,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "行號"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行番号"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numéros de ligne"
           }
         }
       }
@@ -2155,6 +3655,18 @@
             "state" : "translated",
             "value" : "自動折行："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行の折り返し:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour à la ligne :"
+          }
         }
       }
     },
@@ -2171,6 +3683,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "字面尋找"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リテラル検索"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche littérale"
           }
         }
       }
@@ -2189,6 +3713,18 @@
             "state" : "translated",
             "value" : "本機"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地元"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locale"
+          }
         }
       }
     },
@@ -2206,56 +3742,104 @@
             "state" : "translated",
             "value" : "macOS / Unix (LF)"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS / Unix (LF)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS / Unix (LF)"
+          }
         }
       }
     },
-    "MarkEdit %@ is available!" : {
+    "ksamint MarkEdit %@ is available!" : {
       "comment" : "Title for new version available",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit %@ 已发布！"
+            "value" : "查明 MarkEdit %@ 已发布！"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit %@ 已釋出！"
+            "value" : "查明 MarkEdit %@ 已釋出！"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ksamint MarkEdit %@ が利用可能です!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ksamint MarkEdit %@ est disponible !"
           }
         }
       }
     },
-    "MarkEdit %@ is currently the latest version." : {
+    "ksamint MarkEdit %@ is currently the latest version." : {
       "comment" : "Message for the up-to-date info",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit %@ 是目前的最新版本。"
+            "value" : "查明 MarkEdit %@ 是目前的最新版本。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit %@ 是目前的最新版本。"
+            "value" : "查明 MarkEdit %@ 是目前的最新版本。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ksamint MarkEdit %@ が現在の最新バージョンです。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ksamint MarkEdit %@ est actuellement la dernière version."
           }
         }
       }
     },
-    "MarkEdit Extensions" : {
+    "ksamint MarkEdit Extensions" : {
       "comment" : "Title of the extension manager window",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit 扩展功能"
+            "value" : "查明 MarkEdit 扩展功能"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MarkEdit 擴充功能"
+            "value" : "查明 MarkEdit 擴充功能"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ksamint MarkEdit 拡張機能"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions de ksamint MarkEdit"
           }
         }
       }
@@ -2272,6 +3856,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有活躍的文件來進行下一步。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続行するにはアクティブなドキュメントがありません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document actif manquant pour continuer."
           }
         }
       }
@@ -2290,6 +3886,18 @@
             "state" : "translated",
             "value" : "更多字型"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他のフォント"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus de polices"
+          }
         }
       }
     },
@@ -2306,6 +3914,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從不"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一度もない"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais"
           }
         }
       }
@@ -2324,6 +3944,18 @@
             "state" : "translated",
             "value" : "從不檢查"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "決してチェックしないでください"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne jamais vérifier"
+          }
         }
       }
     },
@@ -2341,6 +3973,18 @@
             "state" : "translated",
             "value" : "新增文件"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規書類"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau document"
+          }
         }
       }
     },
@@ -2356,6 +4000,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以 ${initialContent} 新增名為 ${fileName} 的文件"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${initialContent} を含む ${fileName} という名前の新しいドキュメント"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau document nommé ${fileName} avec ${initialContent}"
           }
         }
       }
@@ -2374,6 +4030,18 @@
             "state" : "translated",
             "value" : "新檔案副檔名："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいファイル名拡張子:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvelle extension de nom de fichier :"
+          }
         }
       }
     },
@@ -2390,6 +4058,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新視窗行為："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいウィンドウの動作:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comportement de la nouvelle fenêtre :"
           }
         }
       }
@@ -2408,6 +4088,18 @@
             "state" : "translated",
             "value" : "下一個"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivant"
+          }
         }
       }
     },
@@ -2424,6 +4116,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "找不到用於文件“%@”的編輯器。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドキュメント「%@」の編集者が見つかりません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun éditeur pour le document « %@ » trouvé."
           }
         }
       }
@@ -2442,6 +4146,18 @@
             "state" : "translated",
             "value" : "未找到擴充功能。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張子が見つかりません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune extension trouvée."
+          }
         }
       }
     },
@@ -2458,6 +4174,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未安裝擴充功能。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能がインストールされていません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune extension installée."
           }
         }
       }
@@ -2476,6 +4204,18 @@
             "state" : "translated",
             "value" : "沒有可用更新。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用可能なアップデートはありません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune mise à jour disponible."
+          }
         }
       }
     },
@@ -2492,6 +4232,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有符合條件的版本。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定された条件に一致するバージョンはありません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune version ne correspond à la condition spécifiée."
           }
         }
       }
@@ -2510,6 +4262,18 @@
             "state" : "translated",
             "value" : "正常"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "普通"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normale"
+          }
         }
       }
     },
@@ -2526,6 +4290,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "等下再說"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今じゃない"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas maintenant"
           }
         }
       }
@@ -2544,6 +4320,18 @@
             "state" : "translated",
             "value" : "官方"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正式"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Officiel"
+          }
         }
       }
     },
@@ -2560,6 +4348,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "官方網站"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公式ウェブサイト"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Site officiel"
           }
         }
       }
@@ -2578,6 +4378,18 @@
             "state" : "translated",
             "value" : "打開文件"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドキュメントを開く"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir un document"
+          }
         }
       }
     },
@@ -2595,6 +4407,18 @@
             "state" : "translated",
             "value" : "打開字體面板…"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォントパネルを開く…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le panneau de police…"
+          }
         }
       }
     },
@@ -2611,6 +4435,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打開指令碼目錄"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリプトフォルダーを開く"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le dossier des scripts"
           }
         }
       }
@@ -2632,6 +4468,18 @@
             "state" : "translated",
             "value" : "段落數量"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragraphes"
+          }
         }
       }
     },
@@ -2648,6 +4496,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "請檢查您的網路連線，或從版本記錄中獲取最新版本。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ネットワーク接続を確認するか、バージョン履歴から最新リリースを入手してください。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veuillez vérifier votre connexion réseau ou obtenir la dernière version à partir de l'historique des versions."
           }
         }
       }
@@ -2666,6 +4526,18 @@
             "state" : "translated",
             "value" : "縮排偏好："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以下を使用してインデントを優先します:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préférer l'indentation en utilisant :"
+          }
         }
       }
     },
@@ -2682,6 +4554,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首選"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好ましい"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préféré"
           }
         }
       }
@@ -2700,6 +4584,18 @@
             "state" : "translated",
             "value" : "按下 ⌥ ⎋ 來顯示列表。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ ⎋ を押してパネルを表示します。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyez sur ⌥ ⎋ pour afficher le panneau."
+          }
         }
       }
     },
@@ -2716,6 +4612,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預覽"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プレビュー"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçu"
           }
         }
       }
@@ -2734,6 +4642,18 @@
             "state" : "translated",
             "value" : "上一個"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前の"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Précédent"
+          }
         }
       }
     },
@@ -2750,6 +4670,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "退出時總是保留視窗"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終了すると常にウィンドウが保持されます"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitter garde toujours les fenêtres"
           }
         }
       }
@@ -2768,6 +4700,18 @@
             "state" : "translated",
             "value" : "引用"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引用"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citation"
+          }
         }
       }
     },
@@ -2784,6 +4728,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "閱讀時間"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み取り時間"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heure de lecture"
           }
         }
       }
@@ -2802,6 +4758,18 @@
             "state" : "translated",
             "value" : "最近的搜尋"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近の検索"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherches récentes"
+          }
         }
       }
     },
@@ -2818,6 +4786,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最近使用"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近使用した"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récemment utilisé"
           }
         }
       }
@@ -2836,6 +4816,18 @@
             "state" : "translated",
             "value" : "減少透明度："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透明度を下げる:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réduisez la transparence :"
+          }
         }
       }
     },
@@ -2852,6 +4844,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新整理"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リフレッシュ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rafraîchir"
           }
         }
       }
@@ -2870,6 +4874,18 @@
             "state" : "translated",
             "value" : "重新整理中…"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "爽やか…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rafraîchissant…"
+          }
         }
       }
     },
@@ -2886,6 +4902,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正規表示法"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正規表現"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expression régulière"
           }
         }
       }
@@ -2904,39 +4932,75 @@
             "state" : "translated",
             "value" : "重新啟動"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再起動"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relance"
+          }
         }
       }
     },
-    "Relaunch MarkEdit to start using “%@”." : {
+    "Relaunch ksamint MarkEdit to start using “%@”." : {
       "comment" : "Message (format) shown after an extension is installed",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新启动 MarkEdit 以开始使用“%@”。"
+            "value" : "重新启动 查明 MarkEdit 以开始使用“%@”。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 MarkEdit 以開始使用“%@”。"
+            "value" : "重新啟動 查明 MarkEdit 以開始使用“%@”。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」の使用を開始するには、ksamint MarkEditを再起動します。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relancez ksamint MarkEdit pour commencer à utiliser « %@ »."
           }
         }
       }
     },
-    "Relaunch MarkEdit to use the updated extensions." : {
+    "Relaunch ksamint MarkEdit to use the updated extensions." : {
       "comment" : "Message shown after extensions are updated",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新启动 MarkEdit 以使用更新后的扩展功能。"
+            "value" : "重新启动 查明 MarkEdit 以使用更新后的扩展功能。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 MarkEdit 以使用更新後的擴充功能。"
+            "value" : "重新啟動 查明 MarkEdit 以使用更新後的擴充功能。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新された拡張機能を使用するには、ksamint MarkEdit を再起動します。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relancez ksamint MarkEdit pour utiliser les extensions mises à jour."
           }
         }
       }
@@ -2955,6 +5019,18 @@
             "state" : "translated",
             "value" : "重新啟動以套用變更。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再起動して変更を適用します。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relancez pour appliquer vos modifications."
+          }
         }
       }
     },
@@ -2971,6 +5047,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "寬鬆"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リラックスした"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détendu"
           }
         }
       }
@@ -2989,6 +5077,18 @@
             "state" : "translated",
             "value" : "稍後提醒我"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "後でリマインドする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rappelez-moi plus tard"
+          }
         }
       }
     },
@@ -3005,6 +5105,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除工具列模糊效果"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ツールバーのぼかしを削除する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le flou de la barre d'outils"
           }
         }
       }
@@ -3023,6 +5135,18 @@
             "state" : "translated",
             "value" : "渲染不可見字元："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可視のレンダリング:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendre les invisibles :"
+          }
         }
       }
     },
@@ -3039,6 +5163,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取代"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交換する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer"
           }
         }
       }
@@ -3057,6 +5193,18 @@
             "state" : "translated",
             "value" : "全部取代"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて置換"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer tout"
+          }
         }
       }
     },
@@ -3073,6 +5221,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在所選範圍中全部取代"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択範囲内のすべてを置換"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer tout dans la sélection"
           }
         }
       }
@@ -3091,6 +5251,18 @@
             "state" : "translated",
             "value" : "重試"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リトライ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer"
+          }
         }
       }
     },
@@ -3107,6 +5279,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明らかにする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Révéler"
           }
         }
       }
@@ -3125,6 +5309,18 @@
             "state" : "translated",
             "value" : "回復成此版本"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンに戻す"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir à cette version"
+          }
         }
       }
     },
@@ -3140,6 +5336,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "儲存改動"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更を保存"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les modifications"
           }
         }
       }
@@ -3158,6 +5366,18 @@
             "state" : "translated",
             "value" : "搜尋"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検索"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche"
+          }
         }
       }
     },
@@ -3174,6 +5394,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜尋操作"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検索アクション"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions de recherche"
           }
         }
       }
@@ -3192,6 +5424,18 @@
             "state" : "translated",
             "value" : "全選"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて選択"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner tout"
+          }
         }
       }
     },
@@ -3208,6 +5452,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在所選範圍中進行全選"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択範囲内のすべてを選択"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner tout dans la sélection"
           }
         }
       }
@@ -3226,6 +5482,18 @@
             "state" : "translated",
             "value" : "選擇所有相同項"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての出現箇所を選択"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner toutes les occurrences"
+          }
         }
       }
     },
@@ -3242,6 +5510,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択してください…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner…"
           }
         }
       }
@@ -3260,6 +5540,18 @@
             "state" : "translated",
             "value" : "已選擇"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択済み"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisi"
+          }
         }
       }
     },
@@ -3276,6 +5568,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選中區域"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélection"
           }
         }
       }
@@ -3294,6 +5598,18 @@
             "state" : "translated",
             "value" : "選擇狀態"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選定状況"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statut de sélection"
+          }
         }
       }
     },
@@ -3310,6 +5626,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "句子數量"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phrases"
           }
         }
       }
@@ -3328,6 +5656,18 @@
             "state" : "translated",
             "value" : "分享此文件"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このドキュメントを共有する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager ce document"
+          }
         }
       }
     },
@@ -3344,6 +5684,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示可用更新"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用可能なアップデートを表示"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les mises à jour disponibles"
           }
         }
       }
@@ -3362,6 +5714,18 @@
             "state" : "translated",
             "value" : "顯示隱藏檔案"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隠しファイルを表示"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les fichiers cachés"
+          }
         }
       }
     },
@@ -3378,6 +5742,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示書寫工具"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き込みツールを表示する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les outils d'écriture"
           }
         }
       }
@@ -3396,6 +5772,18 @@
             "state" : "translated",
             "value" : "顯示："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "見せる："
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Montrer:"
+          }
         }
       }
     },
@@ -3412,6 +5800,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "跳過這個版本"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンをスキップする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer cette version"
           }
         }
       }
@@ -3430,6 +5830,18 @@
             "state" : "translated",
             "value" : "標準單字"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "標準語"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mots standards"
+          }
         }
       }
     },
@@ -3446,6 +5858,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "統計數字"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "統計"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistiques"
           }
         }
       }
@@ -3464,6 +5888,18 @@
             "state" : "translated",
             "value" : "刪除線"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取り消し線"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barré"
+          }
         }
       }
     },
@@ -3480,6 +5916,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提交擴充功能…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延長を送信してください…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soumettre une extension…"
           }
         }
       }
@@ -3498,6 +5946,18 @@
             "state" : "translated",
             "value" : "鍵入時提供補全"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力中に提案する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggérer en tapant"
+          }
         }
       }
     },
@@ -3514,6 +5974,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系統"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システム"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système"
           }
         }
       }
@@ -3532,6 +6004,18 @@
             "state" : "translated",
             "value" : "系統預設"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのデフォルト"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système par défaut"
+          }
         }
       }
     },
@@ -3548,6 +6032,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系統等寬"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムモノラル"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système Mono"
           }
         }
       }
@@ -3566,6 +6062,18 @@
             "state" : "translated",
             "value" : "系統圓潤"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "丸みを帯びたシステム"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système arrondi"
+          }
         }
       }
     },
@@ -3582,6 +6090,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系統襯線"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムセリフ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système Serif"
           }
         }
       }
@@ -3600,6 +6120,18 @@
             "state" : "translated",
             "value" : "制表鍵："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タブキー:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touche de tabulation :"
+          }
         }
       }
     },
@@ -3616,6 +6148,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標籤模式："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タブ移動モード:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode de tabulation :"
           }
         }
       }
@@ -3634,6 +6178,18 @@
             "state" : "translated",
             "value" : "表格"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーブル"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tableau"
+          }
         }
       }
     },
@@ -3650,6 +6206,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "內容目錄"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目次"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table des matières"
           }
         }
       }
@@ -3668,6 +6236,18 @@
             "state" : "translated",
             "value" : "文字編碼："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキストエンコーディング:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encodage du texte :"
+          }
         }
       }
     },
@@ -3684,6 +6264,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文字格式"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキスト形式"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format du texte"
           }
         }
       }
@@ -3702,6 +6294,18 @@
             "state" : "translated",
             "value" : "無法下載或驗證該擴充功能。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能をダウンロードまたは検証できませんでした。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'extension n'a pas pu être téléchargée ou vérifiée."
+          }
         }
       }
     },
@@ -3719,22 +6323,46 @@
             "state" : "translated",
             "value" : "此操作無法被撤銷。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この操作は元に戻すことができません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette action ne peut pas être annulée."
+          }
         }
       }
     },
-    "This extension requires MarkEdit %@ or later." : {
+    "This extension requires ksamint MarkEdit %@ or later." : {
       "comment" : "Error (format) when an extension needs a newer app version",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此扩展功能需要 MarkEdit %@ 或更高版本。"
+            "value" : "此扩展功能需要 查明 MarkEdit %@ 或更高版本。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此擴充功能需要 MarkEdit %@ 或更高版本。"
+            "value" : "此擴充功能需要 查明 MarkEdit %@ 或更高版本。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この拡張機能には、ksamint MarkEdit %@ 以降が必要です。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette extension nécessite ksamint MarkEdit %@ ou version ultérieure."
           }
         }
       }
@@ -3753,6 +6381,18 @@
             "state" : "translated",
             "value" : "此擴充功能擁有對編輯器的完整取用權限。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この拡張機能は、完全なエディター アクセス権で実行されます。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette extension fonctionne avec un accès complet à l'éditeur."
+          }
         }
       }
     },
@@ -3769,6 +6409,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此更新需要 macOS %@ 或更高版本，在升級您的系統版本之前無法安裝。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリリースには macOS %@ 以降が必要で、オペレーティング システムをアップグレードしないとインストールできません。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette version nécessite macOS %@ ou une version ultérieure et ne peut pas être installée sans mettre à niveau votre système d'exploitation."
           }
         }
       }
@@ -3787,22 +6439,46 @@
             "state" : "translated",
             "value" : "這會從指令碼目錄中移除它的指令碼。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これにより、そのスクリプトが script フォルダーから削除されます。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela supprime son script du dossier scripts."
+          }
         }
       }
     },
-    "This source is not reviewed by MarkEdit. Only continue if you trust it." : {
+    "This source is not reviewed by ksamint MarkEdit. Only continue if you trust it." : {
       "comment" : "Caution shown before installing an extension from a raw URL",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此来源未经 MarkEdit 审核，请仅在信任该来源时继续。"
+            "value" : "此来源未经 查明 MarkEdit 审核，请仅在信任该来源时继续。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此來源未經 MarkEdit 審核，請僅在信任該來源時繼續。"
+            "value" : "此來源未經 查明 MarkEdit 審核，請僅在信任該來源時繼續。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このソースは ksamint MarkEdit によってレビューされていません。信頼できる場合のみ続行してください。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette source n'est pas examinée par ksamint MarkEdit. Ne continuez que si vous lui faites confiance."
           }
         }
       }
@@ -3821,6 +6497,18 @@
             "state" : "translated",
             "value" : "緊湊"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "きつい"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serré"
+          }
         }
       }
     },
@@ -3837,6 +6525,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標題"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトル"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "titre"
           }
         }
       }
@@ -3855,6 +6555,18 @@
             "state" : "translated",
             "value" : "切換列表"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リストの切り替え"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basculer la liste"
+          }
         }
       }
     },
@@ -3871,6 +6583,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工具列模式："
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ツールバーモード:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode barre d'outils :"
           }
         }
       }
@@ -3889,6 +6613,18 @@
             "state" : "translated",
             "value" : "尾部空白"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレーリング"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À la traîne"
+          }
         }
       }
     },
@@ -3905,6 +6641,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除尾部空白"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "末尾の空白をトリミングする"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couper les espaces de fin"
           }
         }
       }
@@ -3923,6 +6671,18 @@
             "state" : "translated",
             "value" : "關閉後仍保留擴充功能，但使其不啟用"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拡張機能をインストールしたまま非アクティブにするにはオフにします"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivez-le pour conserver l'extension installée mais inactive"
+          }
         }
       }
     },
@@ -3939,6 +6699,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "展開"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplier"
           }
         }
       }
@@ -3957,6 +6729,18 @@
             "state" : "translated",
             "value" : "展開行"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行を展開"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplier la ligne"
+          }
         }
       }
     },
@@ -3973,6 +6757,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "展開的行"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開された行"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lignes dépliées"
           }
         }
       }
@@ -3991,6 +6787,18 @@
             "state" : "translated",
             "value" : "解除安裝"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アンインストール"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désinstaller"
+          }
         }
       }
     },
@@ -4007,6 +6815,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要解除安裝“%@”嗎？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」をアンインストールしますか?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désinstaller « %@ » ?"
           }
         }
       }
@@ -4025,6 +6845,18 @@
             "state" : "translated",
             "value" : "更新"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデート"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour"
+          }
         }
       }
     },
@@ -4041,6 +6873,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全部更新"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて更新"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout mettre à jour"
           }
         }
       }
@@ -4059,6 +6903,18 @@
             "state" : "translated",
             "value" : "自動更新"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動的に更新する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour automatiquement"
+          }
         }
       }
     },
@@ -4076,6 +6932,18 @@
             "state" : "translated",
             "value" : "更新行為"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新動作"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comportement de mise à jour"
+          }
         }
       }
     },
@@ -4091,6 +6959,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新檔案內容"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルの内容を更新する"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le contenu du fichier"
           }
         }
       }
@@ -4109,6 +6989,18 @@
             "state" : "translated",
             "value" : "使用 ${content} 更新檔案"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${content}でファイルを更新"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le fichier avec ${content}"
+          }
         }
       }
     },
@@ -4125,6 +7017,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新到 %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ にアップデート"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour vers %@"
           }
         }
       }
@@ -4143,6 +7047,18 @@
             "state" : "translated",
             "value" : "更新"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデート"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour"
+          }
         }
       }
     },
@@ -4158,6 +7074,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新當前活躍檔案的內容，沒有開啟的編輯器時將丟擲異常。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブなドキュメントのファイル内容を更新します。エディターが開いていない場合はエラーがスローされます。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Met à jour le contenu du fichier du document actif ; renvoie une erreur si aucun éditeur n'est ouvert."
           }
         }
       }
@@ -4176,6 +7104,18 @@
             "state" : "translated",
             "value" : "更新中…"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新中…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour…"
+          }
         }
       }
     },
@@ -4192,6 +7132,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檢視釋出頁面"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リリースページを見る"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la page de version"
           }
         }
       }
@@ -4210,6 +7162,18 @@
             "state" : "translated",
             "value" : "新功能"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新着情報"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quoi de neuf"
+          }
         }
       }
     },
@@ -4225,6 +7189,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "整個文件"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文書全体"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document entier"
           }
         }
       }
@@ -4243,6 +7219,18 @@
             "state" : "translated",
             "value" : "整詞尋找"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全文"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mot entier"
+          }
         }
       }
     },
@@ -4259,6 +7247,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "視窗"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウィンドウ"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenêtre"
           }
         }
       }
@@ -4277,6 +7277,18 @@
             "state" : "translated",
             "value" : "視窗恢復："
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窓の修復："
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restauration des fenêtres :"
+          }
         }
       }
     },
@@ -4290,6 +7302,18 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows (CRLF)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows (CRLF)"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Windows (CRLF)"
@@ -4311,6 +7335,18 @@
             "state" : "translated",
             "value" : "單字數量"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "言葉"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mots"
+          }
         }
       }
     },
@@ -4327,6 +7363,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文件中的單字"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文書内の単語"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mots dans le document"
           }
         }
       }
@@ -4345,6 +7393,18 @@
             "state" : "translated",
             "value" : "按編輯器的寬度換行"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エディタの幅に合わせて行を折り返す"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enrouler les lignes à la largeur de l'éditeur"
+          }
         }
       }
     },
@@ -4361,6 +7421,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "書寫工具"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆記用具"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outils d'écriture"
           }
         }
       }
@@ -4385,6 +7457,18 @@
             "state" : "translated",
             "value" : "“%1$@”型別的副檔名錯誤，請使用“.%2$@”。"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%1$@」タイプのファイル拡張子が間違っています。代わりに「.%2$@」を使用してください。"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension de fichier incorrecte pour le type \"%1$@\", utilisez plutôt \".%2$@\"."
+          }
         }
       }
     },
@@ -4401,6 +7485,424 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您已安裝最新版本！"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新情報を入手してください!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous êtes à jour !"
+          }
+        }
+      }
+    },
+    "ASCII" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII"
+          }
+        }
+      }
+    },
+    "Non-lossy ASCII" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无损 ASCII"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無損 ASCII"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非損失 ASCII"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII sans perte"
+          }
+        }
+      }
+    },
+    "Unicode (UTF-8)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-8）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-8）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユニコード (UTF-8)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode (UTF-8)"
+          }
+        }
+      }
+    },
+    "Unicode (UTF-16)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユニコード (UTF-16)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode (UTF-16)"
+          }
+        }
+      }
+    },
+    "Unicode (UTF-16BE)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16BE）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16BE）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユニコード (UTF-16BE)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode (UTF-16BE)"
+          }
+        }
+      }
+    },
+    "Unicode (UTF-16LE)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16LE）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode（UTF-16LE）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユニコード (UTF-16LE)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode (UTF-16LE)"
+          }
+        }
+      }
+    },
+    "Western (Mac OS Roman)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西欧（Mac OS Roman）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西歐（Mac OS Roman）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西洋 (Mac OS Roman)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouest (Mac OS Roman)"
+          }
+        }
+      }
+    },
+    "Western (ISO Latin 1)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西欧（ISO Latin 1）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西歐（ISO Latin 1）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西洋 (ISO Latin 1)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouest (ISO Latin 1)"
+          }
+        }
+      }
+    },
+    "Western (Windows Latin 1)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西欧（Windows Latin 1）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西歐（Windows Latin 1）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西洋語 (Windows ラテン語 1)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occidental (Windows latin 1)"
+          }
+        }
+      }
+    },
+    "Simplified Chinese (GB 18030)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简体中文（GB 18030）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "簡體中文（GB 18030）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "簡体字中国語 (GB 18030)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinois simplifié (GB 18030)"
+          }
+        }
+      }
+    },
+    "Traditional Chinese (Big 5)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繁体中文（Big 5）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繁體中文（Big 5）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繁体字中国語 (Big 5)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinois traditionnel (Big 5)"
+          }
+        }
+      }
+    },
+    "Japanese (EUC)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日语（EUC）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日文（EUC）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日本語 (EUC)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japonais (EUC)"
+          }
+        }
+      }
+    },
+    "Japanese (Shift JIS)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日语（Shift JIS）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日文（Shift JIS）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日本語 (Shift JIS)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japonais (Shift JIS)"
+          }
+        }
+      }
+    },
+    "Korean (EUC)" : {
+      "comment" : "Text encoding name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "韩语（EUC）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "韓文（EUC）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "韓国語 (EUC)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coréen (EUC)"
           }
         }
       }

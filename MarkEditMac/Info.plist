@@ -30,9 +30,9 @@
 			<array>
 				<string>net.daringfireball.markdown</string>
 				<string>net.ia.markdown</string>
-				<string>app.markedit.md</string>
-				<string>app.markedit.markdown</string>
-				<string>app.markedit.txt</string>
+				<string>art.apuch.ksamint.markedit.md</string>
+				<string>art.apuch.ksamint.markedit.markdown</string>
+				<string>art.apuch.ksamint.markedit.txt</string>
 				<string>public.markdown</string>
 				<string>org.quarto.qmarkdown</string>
 				<string>com.unknown.md</string>
@@ -144,10 +144,10 @@
 			<key>CFBundleURLIconFile</key>
 			<string></string>
 			<key>CFBundleURLName</key>
-			<string>markedit</string>
+			<string>ksamint-markedit</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>markedit</string>
+				<string>ksamint-markedit</string>
 			</array>
 		</dict>
 	</array>
@@ -213,7 +213,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown</string>
 			<key>UTTypeIdentifier</key>
-			<string>app.markedit.md</string>
+			<string>art.apuch.ksamint.markedit.md</string>
 			<key>UTTypeReferenceURL</key>
 			<string>https://daringfireball.net/projects/markdown/</string>
 			<key>UTTypeTagSpecification</key>
@@ -233,7 +233,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown</string>
 			<key>UTTypeIdentifier</key>
-			<string>app.markedit.markdown</string>
+			<string>art.apuch.ksamint.markedit.markdown</string>
 			<key>UTTypeReferenceURL</key>
 			<string>https://daringfireball.net/projects/markdown/</string>
 			<key>UTTypeTagSpecification</key>
@@ -252,7 +252,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown</string>
 			<key>UTTypeIdentifier</key>
-			<string>app.markedit.txt</string>
+			<string>art.apuch.ksamint.markedit.txt</string>
 			<key>UTTypeReferenceURL</key>
 			<string>https://daringfireball.net/projects/markdown/</string>
 			<key>UTTypeTagSpecification</key>

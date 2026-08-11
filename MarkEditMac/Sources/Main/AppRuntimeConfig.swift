@@ -296,7 +296,7 @@ struct CustomToolbarItem: Codable {
       menuName,
     ].compactMap { $0 }.joined(separator: "-")
 
-    let prefix = "app.markedit.custom"
+    let prefix = "art.apuch.ksamint.markedit.custom"
     return NSToolbarItem.Identifier(rawValue: "\(prefix).\(components.sha256Hash)")
   }
 }
