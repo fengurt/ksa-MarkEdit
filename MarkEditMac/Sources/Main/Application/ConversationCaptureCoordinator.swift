@@ -1,18 +1,12 @@
 import AppKit
-import CryptoKit
-import Security
 import ServiceManagement
 
-// The capture concerns are extracted into document and queue modules in the
-// immediately following system-integration change.
-// swiftlint:disable type_body_length
 @MainActor
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
   static let agentArgument = "--conversation-capture-agent"
 
   private static let maximumClipboardBytes = 5 * 1024 * 1024
-  private static let pendingRetention: TimeInterval = 30 * 24 * 60 * 60
   private static let passwordManagerBundleIDs = [
     "com.1password.1password",
     "com.agilebits.onepassword7",
@@ -28,12 +22,13 @@ final class ConversationCaptureCoordinator: NSObject {
   private var captureNextCopy = false
   private var lastSavedURL: URL?
   private var isAgentProcess = false
+  private let documentCodec = ConversationCaptureDocument()
+  private let pendingQueue = ConversationCaptureQueue()
 
   func configureFromPreferences() {
+    synchronizeHelperConfiguration()
     guard AppPreferences.General.conversationCaptureEnabled else { return }
-    if !registerLoginAgent() {
-      start()
-    }
+    _ = registerLoginAgent()
   }
 
   func startAgentProcess() {
@@ -52,9 +47,8 @@ final class ConversationCaptureCoordinator: NSObject {
       AppPreferences.General.conversationCaptureEnabled = enabled
     }
     if enabled {
-      if !registerLoginAgent() {
-        start()
-      }
+      synchronizeHelperConfiguration()
+      _ = registerLoginAgent()
     } else {
       timer?.invalidate()
       timer = nil
@@ -69,22 +63,29 @@ final class ConversationCaptureCoordinator: NSObject {
   }
 
   var pendingCount: Int {
-    ((try? FileManager.default.contentsOfDirectory(
-      at: pendingDirectory,
-      includingPropertiesForKeys: nil,
-      options: [.skipsHiddenFiles]
-    )) ?? []).filter { $0.pathExtension == "ksc" }.count
+    pendingQueue.count
   }
 
   func showInbox() {
     reviewNextPendingCapture()
   }
 
+  func importConversationResources(_ urls: [URL]) throws {
+    var imported = false
+    for url in urls where !url.hasDirectoryPath {
+      let values = try url.resourceValues(forKeys: [.fileSizeKey])
+      guard (values.fileSize ?? 0) <= Self.maximumClipboardBytes else { continue }
+      guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
+      imported = saveConversation(text, sourceName: url.lastPathComponent, sourceBundleID: nil) || imported
+    }
+    if !imported { throw CocoaError(.fileReadUnsupportedScheme) }
+  }
+
   private func start() {
     guard timer == nil else { return }
     lastChangeCount = NSPasteboard.general.changeCount
     installStatusItem()
-    purgeExpiredPendingCaptures()
+    pendingQueue.purgeExpired()
     schedulePoll(after: 0.75)
   }
 
@@ -162,9 +163,7 @@ final class ConversationCaptureCoordinator: NSObject {
   }
 
   private func isHighConfidenceConversation(_ text: String) -> Bool {
-    guard text.precomposedStringWithCompatibilityMapping.count >= 200 else { return false }
-    let roles = turns(in: text).map(\.role)
-    return roles.count >= 2 && roles.contains("user") && roles.contains("assistant")
+    documentCodec.isHighConfidenceConversation(text)
   }
 
   @discardableResult
@@ -174,8 +173,8 @@ final class ConversationCaptureCoordinator: NSObject {
       return false
     }
     defer { rootURL.stopAccessingSecurityScopedResource() }
-    let normalized = normalize(text)
-    let digest = sha256(normalized)
+    let normalized = documentCodec.normalize(text)
+    let digest = documentCodec.digest(normalized)
     let calendar = Calendar(identifier: .gregorian)
     let timeZone = TimeZone(secondsFromGMT: 0) ?? .current
     let parts = calendar.dateComponents(in: timeZone, from: Date())
@@ -188,8 +187,8 @@ final class ConversationCaptureCoordinator: NSObject {
     guard !FileManager.default.fileExists(atPath: fileURL.path) else { return true }
     do {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-      let markdown = conversationMarkdown(
-        normalized,
+      let markdown = documentCodec.markdown(
+        for: normalized,
         digest: digest,
         sourceName: sourceName,
         sourceBundleID: sourceBundleID
@@ -205,138 +204,19 @@ final class ConversationCaptureCoordinator: NSObject {
     }
   }
 
-  private func conversationMarkdown(
-    _ text: String,
-    digest: String,
-    sourceName: String?,
-    sourceBundleID: String?
-  ) -> String {
-    let now = ISO8601DateFormatter().string(from: Date())
-    let source = sourceName ?? "Clipboard"
-    var output = """
-    ---
-    type: Conversation
-    source: "clipboard"
-    imported_at: \(now)
-    message_count: \(turns(in: text).count)
-    content_digest: \(digest)
-    category: "Conversations/Clipboard"
-    tags: ["conversation", "clipboard"]
-    captured_from: \(jsonString(source))
-    """
-    if let sourceBundleID {
-      output += "\ncaptured_bundle_id: \(jsonString(sourceBundleID))"
-    }
-    output += "\n---\n\n# \(source) conversation\n\n"
-    let capturedTurns = turns(in: text)
-    if capturedTurns.isEmpty {
-      output += messageMarkdown(role: "unknown", content: text)
-    } else {
-      output += capturedTurns.map { messageMarkdown(role: $0.role, content: $0.content) }.joined()
-    }
-    return output + "\n"
-  }
-
-  private func messageMarkdown(role: String, content: String) -> String {
-    let digest = sha256("\(role)\n\(normalize(content))")
-    let marker = ["id": digest, "digest": digest, "role": role]
-    let markerData = try? JSONSerialization.data(withJSONObject: marker, options: [.sortedKeys])
-    let encoded = markerData?.base64EncodedString()
-      .replacingOccurrences(of: "+", with: "-")
-      .replacingOccurrences(of: "/", with: "_")
-      .replacingOccurrences(of: "=", with: "") ?? ""
-    return "<!-- ksamint-message-v1 \(encoded) -->\n## \(role.capitalized)\n\n\(content.trimmingCharacters(in: .whitespacesAndNewlines))\n\n"
-  }
-
-  private func turns(in text: String) -> [CapturedTurn] {
-    let pattern = #"(?im)^(?:#{1,4}\s*)?(User|Human|You|Assistant|Claude|ChatGPT|System|Tool)\s*(?:(?:·|said)[^\n:]*)?:\s*|^(?:#{1,4}\s+)(User|Human|You|Assistant|Claude|ChatGPT|System|Tool)(?:\s*(?:·|said)[^\n]*)?\s*$"#
-    guard let expression = try? NSRegularExpression(pattern: pattern) else { return [] }
-    let range = NSRange(text.startIndex..<text.endIndex, in: text)
-    let matches = expression.matches(in: text, range: range)
-    return matches.enumerated().compactMap { index, match in
-      guard let markerRange = Range(match.range, in: text) else { return nil }
-      let roleRange = match.range(at: 1).location != NSNotFound ? match.range(at: 1) : match.range(at: 2)
-      guard let roleStringRange = Range(roleRange, in: text) else { return nil }
-      let contentEnd = index + 1 < matches.count ? matches[index + 1].range.location : range.length
-      let contentRange = NSRange(location: match.range.location + match.range.length, length: contentEnd - match.range.location - match.range.length)
-      guard let stringContentRange = Range(contentRange, in: text) else { return nil }
-      let role = canonicalRole(String(text[roleStringRange]))
-      let content = String(text[stringContentRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-      _ = markerRange
-      return content.isEmpty ? nil : CapturedTurn(role: role, content: content)
-    }
-  }
-
-  private func canonicalRole(_ value: String) -> String {
-    switch value.lowercased() {
-    case "user", "human", "you": "user"
-    case "assistant", "claude", "chatgpt": "assistant"
-    case "system": "system"
-    case "tool": "tool"
-    default: "unknown"
-    }
-  }
-
   private func savePending(_ text: String, sourceName: String?, sourceBundleID: String?) {
     do {
-      let directory = pendingDirectory
-      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-      let capture = PendingCapture(
+      let capture = PendingConversationCapture(
         capturedAt: Date(),
         sourceName: sourceName,
         sourceBundleID: sourceBundleID,
         content: text
       )
-      let data = try JSONEncoder().encode(capture)
-      let sealed = try AES.GCM.seal(data, using: pendingKey())
-      guard let combined = sealed.combined else { throw CaptureError.encryption }
-      try combined.write(
-        to: directory.appending(path: "\(UUID().uuidString).ksc"),
-        options: [.atomic, .completeFileProtectionUnlessOpen]
-      )
+      try pendingQueue.save(capture)
       updateStatusMenu()
     } catch {
       NSSound.beep()
     }
-  }
-
-  private func purgeExpiredPendingCaptures() {
-    let cutoff = Date().addingTimeInterval(-Self.pendingRetention)
-    let urls = (try? FileManager.default.contentsOfDirectory(
-      at: pendingDirectory,
-      includingPropertiesForKeys: [.contentModificationDateKey],
-      options: [.skipsHiddenFiles]
-    )) ?? []
-    for url in urls {
-      let modified = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-      if modified.map({ $0 < cutoff }) == true { try? FileManager.default.removeItem(at: url) }
-    }
-  }
-
-  private func pendingKey() throws -> SymmetricKey {
-    let service = "art.apuch.ksamint-markedit.conversation-capture"
-    let account = "pending-queue-v1"
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-      kSecReturnData as String: true,
-    ]
-    var result: CFTypeRef?
-    if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-       let data = result as? Data, data.count == 32 {
-      return SymmetricKey(data: data)
-    }
-    let data = Data(SymmetricKey(size: .bits256).withUnsafeBytes(Array.init))
-    let add: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-      kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-      kSecValueData as String: data,
-    ]
-    guard SecItemAdd(add as CFDictionary, nil) == errSecSuccess else { throw CaptureError.keychain }
-    return SymmetricKey(data: data)
   }
 
   private func authorizedWorkspaceRoot() -> URL? {
@@ -350,7 +230,9 @@ final class ConversationCaptureCoordinator: NSObject {
     ), url.startAccessingSecurityScopedResource() else { return nil }
     return url.standardizedFileURL
   }
+}
 
+extension ConversationCaptureCoordinator {
   private func installStatusItem() {
     guard statusItem == nil else { return }
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -414,8 +296,8 @@ final class ConversationCaptureCoordinator: NSObject {
   }
 
   private func reviewNextPendingCapture() {
-    purgeExpiredPendingCaptures()
-    guard let url = pendingCaptureURLs().first else {
+    pendingQueue.purgeExpired()
+    guard let url = pendingQueue.urls.first else {
       if let root = authorizedWorkspaceRoot() {
         let folder = root.appending(path: "Conversations", directoryHint: .isDirectory)
         root.stopAccessingSecurityScopedResource()
@@ -423,8 +305,8 @@ final class ConversationCaptureCoordinator: NSObject {
       }
       return
     }
-    guard let capture = decryptPendingCapture(at: url) else {
-      try? FileManager.default.removeItem(at: url)
+    guard let capture = pendingQueue.capture(at: url) else {
+      pendingQueue.remove(url)
       reviewNextPendingCapture()
       return
     }
@@ -446,37 +328,15 @@ final class ConversationCaptureCoordinator: NSObject {
         sourceName: capture.sourceName,
         sourceBundleID: capture.sourceBundleID
       ) {
-        try? FileManager.default.removeItem(at: url)
+        pendingQueue.remove(url)
         reviewNextPendingCapture()
       }
     case .alertThirdButtonReturn:
-      try? FileManager.default.removeItem(at: url)
+      pendingQueue.remove(url)
       reviewNextPendingCapture()
     default:
       break
     }
-  }
-
-  private func pendingCaptureURLs() -> [URL] {
-    ((try? FileManager.default.contentsOfDirectory(
-      at: pendingDirectory,
-      includingPropertiesForKeys: [.contentModificationDateKey],
-      options: [.skipsHiddenFiles]
-    )) ?? [])
-      .filter { $0.pathExtension == "ksc" }
-      .sorted {
-        let left = try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        let right = try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        return (left ?? .distantPast) < (right ?? .distantPast)
-      }
-  }
-
-  private func decryptPendingCapture(at url: URL) -> PendingCapture? {
-    guard let data = try? Data(contentsOf: url),
-          let box = try? AES.GCM.SealedBox(combined: data),
-          let plaintext = try? AES.GCM.open(box, using: pendingKey()),
-          let capture = try? JSONDecoder().decode(PendingCapture.self, from: plaintext) else { return nil }
-    return capture
   }
 
   @objc private func undoLastCapture() {
@@ -498,10 +358,18 @@ final class ConversationCaptureCoordinator: NSObject {
   @discardableResult
   private func registerLoginAgent() -> Bool {
     guard #available(macOS 13, *) else { return false }
-    let service = SMAppService.agent(plistName: "art.apuch.ksamint-markedit.conversation-capture.plist")
+    let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     do {
       if service.status == .notRegistered { try service.register() }
-      return service.status == .enabled || service.status == .requiresApproval
+      switch service.status {
+      case .enabled:
+        return true
+      case .requiresApproval:
+        showLoginItemApprovalRequired()
+        return false
+      default:
+        return false
+      }
     } catch {
       return false
     }
@@ -509,57 +377,66 @@ final class ConversationCaptureCoordinator: NSObject {
 
   private func unregisterLoginAgent() {
     guard #available(macOS 13, *) else { return }
-    let service = SMAppService.agent(
-      plistName: "art.apuch.ksamint-markedit.conversation-capture.plist"
-    )
+    let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     try? service.unregister()
   }
 
-  private var pendingDirectory: URL {
-    URL.applicationSupportDirectory
-      .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
-      .appending(path: "ConversationInbox/Pending", directoryHint: .isDirectory)
+  /// Mirrors the containing app's identifier so both Debug (`.dev`) and
+  /// Release builds address the login item actually embedded in that app.
+  private var captureHelperIdentifier: String {
+    let appIdentifier = Bundle.main.bundleIdentifier ?? "art.apuch.ksamint.markedit"
+    return "\(appIdentifier).conversation-capture-helper"
   }
 
-  private func normalize(_ value: String) -> String {
-    value
-      .replacingOccurrences(of: "\r\n", with: "\n")
-      .replacingOccurrences(of: "\r", with: "\n")
-      .precomposedStringWithCompatibilityMapping
-      .trimmingCharacters(in: .whitespacesAndNewlines)
+  func synchronizeHelperConfiguration() {
+    guard let defaults = UserDefaults(suiteName: "group.art.apuch.ksamint-markedit") else { return }
+    defaults.set(AppPreferences.General.conversationCaptureEnabled, forKey: "conversationCaptureEnabled")
+    defaults.set(AppPreferences.General.workspaceFolderBookmark, forKey: "workspaceBookmark")
+    var paths = Set<String>()
+    if let bookmark = AppPreferences.General.workspaceFolderBookmark {
+      var stale = false
+      if let url = try? URL(
+        resolvingBookmarkData: bookmark,
+        options: [.withSecurityScope],
+        relativeTo: nil,
+        bookmarkDataIsStale: &stale
+      ) {
+        paths.insert(url.standardizedFileURL.path)
+      }
+    }
+    defaults.set(paths.sorted(), forKey: "workspacePaths")
+    // The helper and Finder extension are intentionally scoped to the single
+    // authorized workspace root, never every document bookmark the app knows.
+    defaults.set(
+      [AppPreferences.General.workspaceFolderBookmark].compactMap { $0 },
+      forKey: "workspaceBookmarks"
+    )
+    DistributedNotificationCenter.default().post(name: .captureSettingsChanged, object: nil)
   }
 
-  private func sha256(_ value: String) -> String {
-    SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+  private func showLoginItemApprovalRequired() {
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Enable Conversation Capture")
+    alert.informativeText = String(
+      localized: "Allow ksamint Conversation Capture in System Settings › General › Login Items."
+    )
+    alert.addButton(withTitle: String(localized: "Open System Settings"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    if let settings = URL(
+      string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
+    ) {
+      NSWorkspace.shared.open(settings)
+    }
   }
-
-  private func jsonString(_ value: String) -> String {
-    guard let data = try? JSONSerialization.data(withJSONObject: [value]),
-          let array = String(data: data, encoding: .utf8) else { return "\"\"" }
-    return String(array.dropFirst().dropLast())
-  }
-}
-// swiftlint:enable type_body_length
-
-private struct CapturedTurn {
-  let role: String
-  let content: String
-}
-
-private struct PendingCapture: Codable {
-  let capturedAt: Date
-  let sourceName: String?
-  let sourceBundleID: String?
-  let content: String
-}
-
-private enum CaptureError: Error {
-  case encryption
-  case keychain
 }
 
 private extension Notification.Name {
   static let conversationCaptureDisabled = Notification.Name(
     "art.apuch.ksamint-markedit.conversation-capture-disabled"
+  )
+  static let captureSettingsChanged = Notification.Name(
+    "art.apuch.ksamint.capture-settings-changed"
   )
 }

@@ -3,7 +3,6 @@ import {
   latestManifest,
   listVaults,
   listVaultObjects,
-  registerDevice,
   registerObject,
   requestTemporaryCosGrant,
   uploadManifest,
@@ -30,10 +29,11 @@ import {
 import {
   loadOrCreateVaultIdentity,
   loadVaultSyncState,
-  markVaultIdentityAuthorized,
   saveVaultSyncState,
   type VaultSyncState,
 } from './VaultKeyStore';
+import { ensureVaultDeviceSession } from './VaultEnrollment';
+import { prepareRecoveryPackage, VaultRecoverySetupRequiredError } from './VaultRecovery';
 import { mergeWorkspaceFiles } from './VaultMerge';
 
 export type VaultSyncReport = {
@@ -66,22 +66,16 @@ export async function syncWorkspaceToPrivateCloud({
     const vaultId = await resolveVaultID(state, workspaceName);
     state.vaultId = vaultId;
     await saveVaultSyncState(workspaceId, state);
-    const remoteManifest = await latestManifest(vaultId);
-    assertDeviceAuthorized(identity.syncAuthorized, remoteManifest);
-    const signingPublicKey = new Uint8Array(
-      await crypto.subtle.exportKey('raw', identity.signingPublicKey),
-    );
-    const agreementPublicKey = new Uint8Array(
-      await crypto.subtle.exportKey('raw', identity.agreementPublicKey),
-    );
-    await registerDevice({
-      vaultId,
-      deviceId: identity.deviceId,
-      hpkePublicKey: base64(agreementPublicKey),
-      signingPublicKey: base64(signingPublicKey),
-      wrappedGrant: base64(identity.wrappedMasterKey),
-    });
-    await markVaultIdentityAuthorized(workspaceId);
+    const deviceSession = await ensureVaultDeviceSession({ workspaceId, vaultId });
+    const remoteManifest = await latestManifest(vaultId, deviceSession.token);
+    if (!remoteManifest && !state.recoveryConfigured) {
+      const setup = await prepareRecoveryPackage(workspaceId, vaultId);
+      throw new VaultRecoverySetupRequiredError(
+        setup.recoveryPackage,
+        setup.challenge,
+        deviceSession.token,
+      );
+    }
 
     if (!remoteManifest && state.previousDigest) {
       throw new Error('The remote Vault history is unavailable; upload was stopped');
@@ -94,8 +88,8 @@ export async function syncWorkspaceToPrivateCloud({
     let conflictRecords: ConflictRecord[] = [];
     let grant: TemporaryCosGrant | undefined;
     if (remoteManifest && remoteManifest.digest !== state.previousDigest) {
-      grant = await requestTemporaryCosGrant(vaultId);
-      const catalog = await listVaultObjects(vaultId);
+      grant = await requestTemporaryCosGrant(vaultId, deviceSession.token);
+      const catalog = await listVaultObjects(vaultId, deviceSession.token);
       const remote = await loadRemoteSnapshot({
         vaultId,
         manifest: remoteManifest,
@@ -148,7 +142,7 @@ export async function syncWorkspaceToPrivateCloud({
 
     const sequence = (remoteManifest?.sequence ?? 0) + 1;
     const previousDigest = remoteManifest?.digest;
-    grant ??= await requestTemporaryCosGrant(vaultId);
+    grant ??= await requestTemporaryCosGrant(vaultId, deviceSession.token);
     const nextState: VaultSyncState = {
       vaultId,
       sequence,
@@ -173,6 +167,7 @@ export async function syncWorkspaceToPrivateCloud({
           kind: item.kind,
           cipherSize: item.object.length,
           digest: item.objectDigest,
+          deviceToken: deviceSession.token,
         });
         uploadedObjects += 1;
       }
@@ -234,6 +229,7 @@ export async function syncWorkspaceToPrivateCloud({
       previousDigest,
       digest,
       signedCbor: base64(signedManifest),
+      deviceToken: deviceSession.token,
     });
     nextState.previousDigest = digest;
     await saveVaultSyncState(workspaceId, nextState);

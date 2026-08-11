@@ -13,11 +13,12 @@ pub use cbor::{canonical_cbor, decode_cbor, digest_cbor};
 pub use crypto::{
     HpkeKeyPair, VaultMasterKey, decrypt_object, decrypt_path, encrypt_object,
     encrypt_object_with_nonce, encrypt_path, encrypt_path_with_nonce, generate_hpke_keypair,
-    hpke_open, hpke_seal, recovery_phrase, sign_manifest, verify_manifest,
+    hpke_open, hpke_seal, recovery_phrase, sign_device_grant, sign_manifest, verify_device_grant,
+    verify_manifest,
 };
 pub use error::{ProtocolError, Result};
 pub use types::{
-    CapabilityGrantV1, CipherSuiteV1, DeviceGrantV1, EncryptedPathV1, FileID, HpkeEnvelopeV1,
-    ManifestEntryV1, ObjectKindV1, PermissionV1, SignedManifestV1, TombstoneV1, VaultManifestV1,
-    VaultObjectV1, VersionID,
+    CapabilityGrantV1, CipherSuiteV1, DeviceGrantAuthorizationV1, DeviceGrantV1, EncryptedPathV1,
+    FileID, HpkeEnvelopeV1, ManifestEntryV1, ObjectKindV1, PermissionV1, SignedDeviceGrantV1,
+    SignedManifestV1, TombstoneV1, VaultManifestV1, VaultObjectV1, VersionID,
 };

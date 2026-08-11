@@ -1,0 +1,112 @@
+name: Signed local install artifact
+run-name: Signed local ${{ inputs.ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact commit SHA to build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  signed-local:
+    runs-on: macos-26
+    environment: release
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_DEVELOPER_ID_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
+      APPLE_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+      APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+      APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+      APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+      APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Verify exact immutable commit
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.ref }}"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+      - uses: dtolnay/rust-toolchain@1.97
+        with:
+          components: clippy,rustfmt
+      - name: Validate Web and cloud
+        run: |
+          cd WebApp
+          npm ci
+          npm audit --omit=dev --audit-level=high
+          npm run lint
+          npm test
+          npm run build
+          npm run build:mac
+          npm run validate:mac-bundle
+          cd ../Cloud
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+      - name: Build CoreEditor
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
+          yarn test
+      - name: Import Developer ID certificate
+        run: |
+          keychain="$RUNNER_TEMP/local-install.keychain-db"
+          certificate="$RUNNER_TEMP/developer-id.p12"
+          printf '%s' "$APPLE_DEVELOPER_ID_P12_BASE64" | base64 --decode > "$certificate"
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security list-keychains -d user -s "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+      - name: Archive universal app
+        run: |
+          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)"
+          xcodebuild archive \
+            -project MarkEdit.xcodeproj \
+            -scheme MarkEditMac \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/ksamint.xcarchive" \
+            -destination 'generic/platform=macOS' \
+            ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
+            KSAMINT_BUILD_COMMIT='${{ inputs.ref }}' \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_IDENTITY="$identity"
+          plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingStyle -string manual "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/ksamint.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+      - name: Notarize, staple, and verify
+        run: |
+          app="$RUNNER_TEMP/export/ksamint MarkEdit.app"
+          before="$RUNNER_TEMP/notarization.zip"
+          ditto -c -k --keepParent "$app" "$before"
+          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
+          xcrun notarytool submit "$before" --key "$key" --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" --wait
+          xcrun stapler staple "$app"
+          xcrun stapler validate "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl --assess --type execute -vv "$app"
+          Scripts/verify-universal.sh "$app"
+          test -d "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app"
+          test -d "$app/Contents/PlugIns/QuickActionExtension.appex"
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-signed-local.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ksamint-MarkEdit-signed-local
+          path: ${{ runner.temp }}/ksamint-MarkEdit-signed-local.zip
+          if-no-files-found: error
+          retention-days: 7

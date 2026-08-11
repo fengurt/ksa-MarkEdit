@@ -107,16 +107,37 @@ GitHub App token broker, deployment files, and independent recovery CLI live in
 [`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
 in the app or Web PWA.
 
-The current Web release binds an encrypted Vault to its first authorized
-browser identity. Until the device-approval and recovery-package UI ships, an
-unknown browser fails closed instead of registering a different Vault Master
-Key or overwriting encrypted history. The GitHub App token broker and recovery
-protocol are present, but automatic GitHub commit scheduling and history
-restore are not yet exposed as finished backup features. Web Deep Search is
-also pending; the downloadable semantic index currently applies to the Mac app.
-Conversation import currently retains a JSON export as a document-level source
-attachment, but provider-specific per-message attachment extraction and the
-preview toggle for omitting the original export are still pending.
+The v2.4 code line authorizes a new browser with a five-minute, signed device
+grant from an existing Vault device, or with the 24-word package generated from
+the active Vault Master Key. Both devices independently derive the displayed
+eight-digit verification code from the enrollment keys. Device sessions are
+short lived and revocation immediately removes manifest, object, and STS
+access. First sync is blocked until the recovery package has been downloaded
+and four random words have been verified.
+
+Encrypted GitHub snapshots are queued after every accepted manifest and batched
+for five minutes. GitHub installation tokens remain on the service; the backup
+branch contains only encrypted Markdown objects, a signed manifest, and an
+opaque recovery catalog. The Web history view decrypts a selected snapshot on
+the device and offers current, historical-as-new-version, keep-both, and merge
+choices without rewriting Git history. Message-level Claude and ChatGPT
+attachments are content-addressed, shown in the import preview, and can be
+selected independently from the original export package.
+
+Web Deep Search is opt-in and lazy. It downloads a checksum-pinned,
+first-party-hosted multilingual E5 model only after confirmation, uses WebGPU
+with a WASM SIMD fallback, stores Float16 shards in OPFS, reuses unchanged
+embeddings, and uses an HNSW graph for larger workspaces. The initial PWA shell
+does not contain the model or ONNX runtime worker.
+
+The Mac v2.4 targets include an independent sandboxed clipboard Login Item, a
+workspace-scoped Finder Sync menu, and a Finder Quick Action for selections
+outside the workspace. These components share only signed App Group requests;
+scanning, Agent access, conversion, and writes happen in the main app. Local
+text, HTML, structured data, directory, and ZIP/TAR manifest conversion is
+implemented. PDF/image conversion remains disabled unless a Tencent-hosted
+MinerU Precision VLM provider using the audited Data Merge wrapper is configured;
+there is no tokenless or lower-quality fallback.
 
 The Web PWA encrypts files and paths before direct upload. It can import
 Markdown, UTF-8 text, and safe HTML from files, complete browser-selected

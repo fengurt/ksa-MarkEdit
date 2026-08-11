@@ -15,10 +15,12 @@ getrandom = "0.3.4"
 hmac = "0.12.1"
 hex.workspace = true
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+p256 = { version = "0.13.2", features = ["ecdsa"] }
 reqwest = { version = "0.12.24", default-features = false, features = ["http2", "json", "rustls-tls"] }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
+sha1 = "0.10"
 sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "macros", "migrate", "postgres", "runtime-tokio-rustls", "uuid"] }
 thiserror.workspace = true
 tokio.workspace = true

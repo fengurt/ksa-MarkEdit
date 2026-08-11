@@ -32,16 +32,13 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Create a self-custodied 24-word recovery package.
-    GenerateKit {
+    /// Initialize a brand-new empty Vault and its recovery package.
+    /// Never use this command to create a package for an existing Vault.
+    InitNewVault {
         #[arg(long)]
         vault_id: Uuid,
-        #[arg(long, default_value = "https://api.notes.apuch.cn")]
-        api_base: String,
         #[arg(long)]
         output: PathBuf,
-        #[arg(long)]
-        github_repository: Option<String>,
     },
     /// Validate a package without contacting a backup provider.
     VerifyKit {
@@ -91,13 +88,30 @@ enum Source {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct RecoveryKitV1 {
+struct RecoveryKit {
     protocol_version: u16,
     vault_id: Uuid,
+    #[serde(default = "default_api_base")]
     api_base: String,
     recovery_phrase: String,
     recovery_token: String,
+    #[serde(default)]
     github_repository: Option<String>,
+    #[serde(default)]
+    created_at: Option<String>,
+    #[serde(default)]
+    checksum: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RecoveryPackageV2 {
+    protocol_version: u16,
+    vault_id: Uuid,
+    recovery_phrase: String,
+    recovery_token: String,
+    created_at: String,
+    checksum: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -173,12 +187,7 @@ type BackupPayload = (Vec<u8>, BTreeMap<Uuid, Vec<u8>>, u64);
 #[tokio::main]
 async fn main() -> Result<()> {
     match Args::parse().command {
-        Command::GenerateKit {
-            vault_id,
-            api_base,
-            output,
-            github_repository,
-        } => generate_kit(vault_id, api_base, output, github_repository),
+        Command::InitNewVault { vault_id, output } => init_new_vault(vault_id, output),
         Command::VerifyKit { kit } => {
             let kit = read_kit(&kit)?;
             VaultMasterKey::from_recovery_phrase(&kit.recovery_phrase)
@@ -254,7 +263,7 @@ async fn main() -> Result<()> {
 }
 
 fn create_agent_grant(
-    kit: RecoveryKitV1,
+    kit: RecoveryKit,
     agent_public_key: &str,
     expires_hours: u64,
     output: PathBuf,
@@ -311,29 +320,29 @@ fn create_agent_grant(
     Ok(())
 }
 
-fn generate_kit(
-    vault_id: Uuid,
-    api_base: String,
-    output: PathBuf,
-    github_repository: Option<String>,
-) -> Result<()> {
+fn init_new_vault(vault_id: Uuid, output: PathBuf) -> Result<()> {
     if output.exists() {
         bail!("refusing to overwrite existing recovery package");
     }
     let key = VaultMasterKey::generate()?;
     let mut token = [0_u8; 32];
     getrandom::fill(&mut token).map_err(|_| anyhow!("secure randomness unavailable"))?;
-    let kit = RecoveryKitV1 {
-        protocol_version: 1,
+    let recovery_phrase = recovery_phrase(&key)?;
+    let recovery_token = STANDARD.encode(token);
+    let created_at = chrono::Utc::now().to_rfc3339();
+    let checksum =
+        recovery_package_checksum(vault_id, &recovery_phrase, &recovery_token, &created_at)?;
+    let kit = RecoveryPackageV2 {
+        protocol_version: 2,
         vault_id,
-        api_base: api_base.trim_end_matches('/').to_owned(),
-        recovery_phrase: recovery_phrase(&key)?,
-        recovery_token: STANDARD.encode(token),
-        github_repository,
+        recovery_phrase,
+        recovery_token,
+        created_at,
+        checksum,
     };
     write_private_json(&output, &kit)?;
     println!(
-        "Recovery package created at {}. Store it offline; it is never uploaded.",
+        "New empty Vault recovery package created at {}. It is not a package for any existing Vault.",
         output.display()
     );
     Ok(())
@@ -357,14 +366,49 @@ fn write_private_json(path: &Path, value: &impl Serialize) -> Result<()> {
     Ok(())
 }
 
-fn read_kit(path: &Path) -> Result<RecoveryKitV1> {
-    let kit: RecoveryKitV1 =
+fn read_kit(path: &Path) -> Result<RecoveryKit> {
+    let kit: RecoveryKit =
         serde_json::from_slice(&fs::read(path).context("read recovery package")?)
             .context("parse recovery package")?;
-    if kit.protocol_version != 1 {
+    if !matches!(kit.protocol_version, 1 | 2) {
         bail!("unsupported recovery package version");
     }
+    if kit.protocol_version == 2 {
+        let created_at = kit
+            .created_at
+            .as_deref()
+            .ok_or_else(|| anyhow!("recovery package creation time is missing"))?;
+        let expected = recovery_package_checksum(
+            kit.vault_id,
+            &kit.recovery_phrase,
+            &kit.recovery_token,
+            created_at,
+        )?;
+        if kit.checksum.as_deref() != Some(expected.as_str()) {
+            bail!("recovery package checksum mismatch");
+        }
+    }
     Ok(kit)
+}
+
+fn recovery_package_checksum(
+    vault_id: Uuid,
+    recovery_phrase: &str,
+    recovery_token: &str,
+    created_at: &str,
+) -> Result<String> {
+    let value = BTreeMap::from([
+        ("createdAt", serde_json::json!(created_at)),
+        ("protocolVersion", serde_json::json!(2)),
+        ("recoveryPhrase", serde_json::json!(recovery_phrase)),
+        ("recoveryToken", serde_json::json!(recovery_token)),
+        ("vaultId", serde_json::json!(vault_id)),
+    ]);
+    Ok(hex::encode(Sha256::digest(serde_json::to_vec(&value)?)))
+}
+
+fn default_api_base() -> String {
+    "https://api.notes.apuch.cn".to_owned()
 }
 
 fn prepare_output(path: &Path, overwrite: bool) -> Result<()> {
@@ -381,7 +425,7 @@ fn prepare_output(path: &Path, overwrite: bool) -> Result<()> {
     Ok(())
 }
 
-async fn fetch_cos(client: &reqwest::Client, kit: &RecoveryKitV1) -> Result<BackupPayload> {
+async fn fetch_cos(client: &reqwest::Client, kit: &RecoveryKit) -> Result<BackupPayload> {
     let response = client
         .post(format!(
             "{}/api/v1/recovery/{}/catalog",
@@ -541,7 +585,7 @@ async fn github_content(
     );
     let content: Content = client
         .get(format!(
-            "https://api.github.com/repos/{repository}/contents/{path}"
+            "https://api.github.com/repos/{repository}/contents/{path}?ref=ksamint-backup"
         ))
         .headers(headers)
         .send()
@@ -575,7 +619,7 @@ fn fetch_directory(directory: &Path) -> Result<BackupPayload> {
 }
 
 fn restore(
-    kit: &RecoveryKitV1,
+    kit: &RecoveryKit,
     output: &Path,
     signed_manifest: &[u8],
     objects: &BTreeMap<Uuid, Vec<u8>>,
@@ -756,13 +800,15 @@ mod tests {
         let signing_key = SigningKey::from_slice(&[6; 32]).expect("key");
         let signed =
             canonical_cbor(&sign_manifest(manifest, &signing_key).expect("sign")).expect("cbor");
-        let kit = RecoveryKitV1 {
+        let kit = RecoveryKit {
             protocol_version: 1,
             vault_id,
             api_base: String::new(),
             recovery_phrase: recovery_phrase(&key).expect("phrase"),
             recovery_token: STANDARD.encode([9; 32]),
             github_repository: None,
+            created_at: None,
+            checksum: None,
         };
         let temporary = std::env::temp_dir().join(format!("ksamint-{}", Uuid::new_v4()));
         fs::create_dir_all(&temporary).expect("mkdir");
@@ -780,13 +826,15 @@ mod tests {
     fn agent_grant_wraps_the_recovery_key() {
         let vault_id = Uuid::from_u128(31);
         let key = VaultMasterKey::from_bytes([12; 32]);
-        let kit = RecoveryKitV1 {
+        let kit = RecoveryKit {
             protocol_version: 1,
             vault_id,
             api_base: String::new(),
             recovery_phrase: recovery_phrase(&key).expect("phrase"),
             recovery_token: STANDARD.encode([4; 32]),
             github_repository: None,
+            created_at: None,
+            checksum: None,
         };
         let agent = vault_protocol::generate_hpke_keypair();
         let temporary = std::env::temp_dir().join(format!("ksamint-{}", Uuid::new_v4()));

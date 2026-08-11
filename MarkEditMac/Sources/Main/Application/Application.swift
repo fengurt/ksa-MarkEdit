@@ -15,15 +15,6 @@ import SharedUI
 @main
 final class Application: NSApplication {
   static func main() {
-    if CommandLine.arguments.contains(ConversationCaptureCoordinator.agentArgument) {
-      let application = Self.shared
-      application.setActivationPolicy(.accessory)
-      let delegate = ConversationCaptureAgentDelegate()
-      application.delegate = delegate
-      application.run()
-      return
-    }
-
     if let socketIndex = CommandLine.arguments.firstIndex(of: "--mcp-live-socket"),
        let capabilityIndex = CommandLine.arguments.firstIndex(of: "--mcp-capability-file"),
        CommandLine.arguments.indices.contains(socketIndex + 1),
@@ -101,13 +92,6 @@ final class Application: NSApplication {
     }
 
     return super.sendAction(action, to: target, from: sender)
-  }
-}
-
-@MainActor
-private final class ConversationCaptureAgentDelegate: NSObject, NSApplicationDelegate {
-  func applicationDidFinishLaunching(_ notification: Notification) {
-    ConversationCaptureCoordinator.shared.startAgentProcess()
   }
 }
 

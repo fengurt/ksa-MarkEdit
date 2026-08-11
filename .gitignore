@@ -13,3 +13,6 @@ WebApp/*.tsbuildinfo
 WebApp/vite.config.js
 WebApp/vite.config.d.ts
 .private/
+WebApp/public/models/multilingual-e5-small/*.onnx
+WebApp/public/models/multilingual-e5-small/tokenizer.json
+WebApp/public/models/multilingual-e5-small/tokenizer_config.json

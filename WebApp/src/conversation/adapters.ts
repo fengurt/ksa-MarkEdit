@@ -11,7 +11,9 @@ import type {
   ConversationImportSource,
   ConversationMessageV1,
 } from './types';
-import { extractZipTextEntries } from './zip';
+import { openZipArchive } from './zip';
+
+type AttachmentResolver = (reference: string) => Promise<{ path: string; bytes: Uint8Array } | undefined>;
 
 export async function parseConversationSource(
   source: ConversationImportSource,
@@ -29,28 +31,47 @@ export async function parseConversationSource(
       digest,
       bytes,
     };
-    const entries = await extractZipTextEntries(bytes);
-    if (!entries.length) throw new Error('ZIP does not contain a supported conversation export');
+    const archive = openZipArchive(bytes);
+    if (!archive.textCandidatePaths.length) throw new Error('ZIP does not contain a supported conversation export');
+    const resolver: AttachmentResolver = async reference => {
+      const normalized = reference.replaceAll('\\', '/').replace(/^\.\//u, '');
+      const exact = archive.paths.find(path => path === normalized);
+      const byBasename = archive.paths.filter(path => path.split('/').at(-1) === normalized.split('/').at(-1));
+      const path = exact ?? (byBasename.length === 1 ? byBasename[0] : undefined);
+      return path ? archive.read(path) : undefined;
+    };
     const conversations: ConversationDocumentV1[] = [];
-    for (const entry of entries) {
-      conversations.push(...await parseConversationSource({
-        kind: 'file',
-        name: entry.path,
-        mimeType: mimeType(entry.path),
-        read: async () => entry.bytes,
-      }, now));
+    for (const path of archive.textCandidatePaths) {
+      const entry = await archive.read(path);
+      if (!entry) continue;
+      conversations.push(...await parseConversationBytes(
+        entry.bytes,
+        { kind: 'file', name: entry.path, mimeType: mimeType(entry.path), read: async () => entry.bytes },
+        now,
+        resolver,
+      ));
     }
     return conversations.map(conversation => ({
       ...conversation,
-      attachments: [...conversation.attachments, original],
+      sourcePackage: original,
     }));
   }
+  return parseConversationBytes(bytes, source, now);
+}
+
+async function parseConversationBytes(
+  bytes: Uint8Array,
+  source: ConversationImportSource,
+  now: number,
+  resolveAttachment?: AttachmentResolver,
+): Promise<ConversationDocumentV1[]> {
+  const extension = source.name.split('.').at(-1)?.toLocaleLowerCase('en-US') ?? '';
   if (bytes.length > 250 * 1024 * 1024) {
     throw new Error('Conversation source exceeds the 250 MB text-entry limit');
   }
   const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   if (extension === 'json' || source.mimeType?.includes('json')) {
-    const conversations = await parseJSON(text, source.name, now);
+    const conversations = await parseJSON(text, source.name, now, resolveAttachment);
     const digest = await sha256(bytes);
     const original: ConversationAttachmentV1 = {
       id: digest,
@@ -62,7 +83,7 @@ export async function parseConversationSource(
     };
     return conversations.map(conversation => ({
       ...conversation,
-      attachments: [...conversation.attachments, original],
+      sourcePackage: original,
     }));
   }
   const normalized = extension === 'html' || extension === 'htm' || source.mimeType?.includes('html')
@@ -81,7 +102,12 @@ function mimeType(path: string): string {
   return 'text/markdown';
 }
 
-async function parseJSON(text: string, sourceName: string, now: number): Promise<ConversationDocumentV1[]> {
+async function parseJSON(
+  text: string,
+  sourceName: string,
+  now: number,
+  resolveAttachment?: AttachmentResolver,
+): Promise<ConversationDocumentV1[]> {
   const value = JSON.parse(text) as unknown;
   const values = Array.isArray(value)
     ? value
@@ -89,10 +115,10 @@ async function parseJSON(text: string, sourceName: string, now: number): Promise
       ? value.conversations
       : [value];
   if (values.some(isClaudeConversation)) {
-    return Promise.all(values.filter(isClaudeConversation).map(item => claudeConversation(item, sourceName, now)));
+    return Promise.all(values.filter(isClaudeConversation).map(item => claudeConversation(item, sourceName, now, resolveAttachment)));
   }
   if (values.some(isChatGPTConversation)) {
-    return Promise.all(values.filter(isChatGPTConversation).map(item => chatGPTConversation(item, sourceName, now)));
+    return Promise.all(values.filter(isChatGPTConversation).map(item => chatGPTConversation(item, sourceName, now, resolveAttachment)));
   }
   return [await genericConversation(JSON.stringify(value, null, 2), sourceName, now, false)];
 }
@@ -113,6 +139,7 @@ async function claudeConversation(
   value: Record<string, unknown>,
   sourceName: string,
   now: number,
+  resolveAttachment?: AttachmentResolver,
 ): Promise<ConversationDocumentV1> {
   const rawMessages = array(value.chat_messages ?? value.messages);
   const messages: ConversationMessageV1[] = [];
@@ -120,6 +147,7 @@ async function claudeConversation(
     if (!isRecord(raw)) continue;
     const content = claudeContent(raw);
     if (!content.trim()) continue;
+    const warnings: string[] = [];
     messages.push(await buildMessage({
       sourceMessageId: string(raw.uuid ?? raw.id),
       parentMessageId: string(raw.parent_message_uuid ?? raw.parent_id),
@@ -127,6 +155,7 @@ async function claudeConversation(
       createdAt: timestamp(raw.created_at ?? raw.createdAt),
       content,
       fallbackId: `claude-${index}`,
+      attachments: await messageAttachments(raw, resolveAttachment, warnings),
     }));
   }
   return finalize({
@@ -138,7 +167,9 @@ async function claudeConversation(
     importedAt: now,
     messages,
     confidence: 'high',
-    warnings: [],
+    warnings: messages.flatMap(message => message.attachments.some(attachment => !attachment.bytes)
+      ? [`Some attachments for message ${message.sourceMessageId ?? message.id} are missing`]
+      : []),
   });
 }
 
@@ -146,6 +177,7 @@ async function chatGPTConversation(
   value: Record<string, unknown>,
   sourceName: string,
   now: number,
+  resolveAttachment?: AttachmentResolver,
 ): Promise<ConversationDocumentV1> {
   const mapping = record(value.mapping);
   const messages: ConversationMessageV1[] = [];
@@ -164,6 +196,7 @@ async function chatGPTConversation(
     const raw = rawNode.message;
     const content = chatGPTContent(raw.content);
     if (!content.trim()) continue;
+    const warnings: string[] = [];
     messages.push(await buildMessage({
       sourceMessageId: string(raw.id) || nodeId,
       parentMessageId: nodeMessageIDs.get(string(rawNode.parent)) ?? string(rawNode.parent),
@@ -171,6 +204,7 @@ async function chatGPTConversation(
       createdAt: timestamp(raw.create_time),
       content,
       fallbackId: nodeId,
+      attachments: await messageAttachments(raw, resolveAttachment, warnings),
     }));
   }
   return finalize({
@@ -182,7 +216,9 @@ async function chatGPTConversation(
     importedAt: now,
     messages,
     confidence: 'high',
-    warnings: [],
+    warnings: messages.flatMap(message => message.attachments.some(attachment => !attachment.bytes)
+      ? [`Some attachments for message ${message.sourceMessageId ?? message.id} are missing`]
+      : []),
   });
 }
 
@@ -223,6 +259,7 @@ async function buildMessage(input: {
   createdAt?: number;
   content: string;
   fallbackId: string;
+  attachments?: ConversationAttachmentV1[];
 }): Promise<ConversationMessageV1> {
   const content = normalizeConversationText(input.content);
   const digest = await messageDigest({ role: input.role, content });
@@ -234,8 +271,49 @@ async function buildMessage(input: {
     createdAt: input.createdAt,
     content,
     digest,
-    attachments: [],
+    attachments: input.attachments ?? [],
   };
+}
+
+async function messageAttachments(
+  raw: Record<string, unknown>,
+  resolver: AttachmentResolver | undefined,
+  warnings: string[],
+): Promise<ConversationAttachmentV1[]> {
+  const candidates = [
+    ...array(raw.attachments),
+    ...array(raw.files),
+    ...array(isRecord(raw.metadata) ? raw.metadata.attachments : undefined),
+    ...array(raw.content).filter(part => isRecord(part) && ['file', 'image', 'attachment'].includes(string(part.type))),
+    ...array(isRecord(raw.content) ? raw.content.parts : undefined)
+      .filter(part => isRecord(part) && ['file', 'image', 'attachment', 'file_attachment'].includes(string(part.type))),
+  ];
+  const output: ConversationAttachmentV1[] = [];
+  for (const candidate of candidates) {
+    if (!isRecord(candidate)) continue;
+    const reference = string(
+      candidate.file_path ?? candidate.path ?? candidate.file_name ?? candidate.filename
+      ?? candidate.name ?? candidate.file_id ?? candidate.id,
+    );
+    if (!reference) continue;
+    const resolved = await resolver?.(reference);
+    const bytes = resolved?.bytes;
+    const digest = bytes ? await sha256(bytes) : await sha256(`missing:${reference}`);
+    if (!bytes) warnings.push(`Missing attachment: ${reference}`);
+    output.push({
+      id: string(candidate.file_id ?? candidate.id) || digest,
+      name: string(candidate.file_name ?? candidate.filename ?? candidate.name)
+        || resolved?.path.split('/').at(-1)
+        || reference.split('/').at(-1)
+        || 'attachment.bin',
+      mimeType: string(candidate.mime_type ?? candidate.mimeType ?? candidate.content_type)
+        || mimeType(reference),
+      byteSize: bytes?.length ?? (Number(candidate.size ?? candidate.byte_size) || 0),
+      digest,
+      bytes,
+    });
+  }
+  return [...new Map(output.map(attachment => [attachment.digest, attachment])).values()];
 }
 
 async function finalize(input: Omit<ConversationDocumentV1, 'version' | 'id' | 'contentDigest' | 'simhash' | 'attachments'>): Promise<ConversationDocumentV1> {

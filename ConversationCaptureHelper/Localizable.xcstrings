@@ -1,0 +1,66 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Capture Next Copy" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer la prochaine copie" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のコピーを取り込む" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "捕捉下一次复制" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "擷取下一次複製" } }
+    } },
+    "Conversation capture is on" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "La capture des conversations est activée" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みはオンです" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话收集已开启" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "對話收集已開啟" } }
+    } },
+    "Conversation capture is paused" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "La capture des conversations est en pause" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みは一時停止中です" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话收集已暂停" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "對話收集已暫停" } }
+    } },
+    "Conversation Inbox" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Boîte de réception des conversations" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話受信箱" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话收件箱" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "對話收件匣" } }
+    } },
+    "Open Conversation Inbox" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir la boîte de réception" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話受信箱を開く" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开对话收件箱" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟對話收件匣" } }
+    } },
+    "Pause Capture" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre la capture en pause" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込みを一時停止" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停收集" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "暫停收集" } }
+    } },
+    "Permission Settings…" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réglages des autorisations…" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "権限設定…" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "权限设置…" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "權限設定…" } }
+    } },
+    "Resume Capture" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reprendre la capture" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込みを再開" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续收集" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "繼續收集" } }
+    } },
+    "Turn Off Conversation Capture" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désactiver la capture des conversations" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みをオフにする" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭对话收集" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "關閉對話收集" } }
+    } },
+    "Undo Last Capture" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler la dernière capture" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "直前の取り込みを取り消す" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销上次收集" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "撤銷上次收集" } }
+    } }
+  },
+  "version" : "1.0"
+}

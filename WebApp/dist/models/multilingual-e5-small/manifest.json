@@ -1,0 +1,25 @@
+{
+  "protocolVersion": 1,
+  "dimension": 384,
+  "source": "intfloat/multilingual-e5-small",
+  "files": [
+    {
+      "name": "model_quantized.onnx",
+      "url": "/models/multilingual-e5-small/model_quantized.onnx",
+      "sha256": "dd476dd0c2514e9b9be83aeb3853fac0763e0bdf4a71645407587d77c48a2d88",
+      "byteSize": 118346824
+    },
+    {
+      "name": "tokenizer.json",
+      "url": "/models/multilingual-e5-small/tokenizer.json",
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "byteSize": 17082730
+    },
+    {
+      "name": "tokenizer_config.json",
+      "url": "/models/multilingual-e5-small/tokenizer_config.json",
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "byteSize": 443
+    }
+  ]
+}

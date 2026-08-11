@@ -160,6 +160,41 @@ describe('ConversationInbox interface', () => {
     expect(workspace.files[0].content).toContain('`a1`, `a2`');
   });
 
+  it('surfaces message-level attachments and honors the original-package switch', async () => {
+    const workspace = new MemoryWorkspace();
+    const inbox = new ConversationInbox(workspace);
+    const plan = await inbox.plan([source('chatgpt-export.json', [{
+      id: 'gpt-attachments',
+      title: 'Attachment fidelity',
+      mapping: {
+        root: {
+          parent: null,
+          message: {
+            id: 'm-file',
+            author: { role: 'user' },
+            content: { parts: [
+              'Review this file',
+              { type: 'file_attachment', file_id: 'file-1', file_name: '数据.csv', size: 42 },
+            ] },
+          },
+        },
+      },
+    }])]);
+
+    expect(plan.items[0].conversation.attachments).toMatchObject([{
+      id: 'file-1', name: '数据.csv', byteSize: 42,
+    }]);
+    expect(plan.items[0].conversation.warnings).toContain('Some attachments for message m-file are missing');
+    await inbox.apply(plan, [{
+      itemId: plan.items[0].id,
+      action: 'apply',
+      selectedAttachmentIDs: [],
+      retainOriginalPackage: false,
+    }]);
+    expect(workspace.files[0].content).not.toContain('数据.csv');
+    expect(workspace.files[0].content).not.toContain('Original export package');
+  });
+
   it('marks long copied transcripts as high confidence and can undo an import', async () => {
     const workspace = new MemoryWorkspace();
     const inbox = new ConversationInbox(workspace);

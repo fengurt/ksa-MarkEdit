@@ -1,0 +1,48 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Add to Workspace" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter à l’espace de travail" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "ワークスペースに追加" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "加入工作区" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "加入工作區" } }
+    } },
+    "Analyze with Local Agent" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Analyser avec l’Agent local" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "ローカル Agent で分析" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用本地 Agent 分析" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "使用本機 Agent 分析" } }
+    } },
+    "Convert to Markdown" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir en Markdown" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown に変換" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转换为 Markdown" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "轉換為 Markdown" } }
+    } },
+    "Import to Conversation Inbox" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importer dans la boîte de réception des conversations" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話受信箱に読み込む" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入对话收件箱" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "匯入對話收件匣" } }
+    } },
+    "Open in ksamint MarkEdit" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir dans ksamint MarkEdit" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "ksamint MarkEdit で開く" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ksamint MarkEdit 中打开" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在 ksamint MarkEdit 中開啟" } }
+    } },
+    "Quick Preview" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aperçu rapide" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "クイックプレビュー" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "极速预览" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "快速預覽" } }
+    } },
+    "Save as Reference" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer comme référence" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "参考資料として保存" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存为参考资料" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "儲存為參考資料" } }
+    } }
+  },
+  "version" : "1.0"
+}

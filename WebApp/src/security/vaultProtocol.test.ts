@@ -2,17 +2,23 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   authenticatedData,
+  decodeSignedDeviceGrant,
   decodeAndVerifySignedManifest,
   decodeVaultObject,
   encodeVaultManifest,
   encodeVaultObject,
   hex,
+  hpkeOpenP256,
+  hpkeSealP256,
   openVaultObject,
   openVaultPath,
   sealVaultPath,
   signVaultManifest,
+  signDeviceGrant,
   sealVaultObject,
   unhex,
+  verifySignedDeviceGrant,
+  vaultUUIDBytes,
 } from './vaultProtocol';
 
 type Vector = {
@@ -180,5 +186,66 @@ describe('VaultObjectV1 cross-language vector', () => {
       kind: object.kind,
       mimeType: object.mimeType,
     })).resolves.toEqual(bytes);
+  });
+});
+
+describe('SignedDeviceGrantV1', () => {
+  it('wraps the actual Vault key and verifies the authorizing device signature', async () => {
+    const recipient = await crypto.subtle.generateKey(
+      { name: 'ECDH', namedCurve: 'P-256' },
+      true,
+      ['deriveBits'],
+    );
+    const authorizer = await crypto.subtle.generateKey(
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['sign', 'verify'],
+    );
+    const recipientPublicKey = new Uint8Array(
+      await crypto.subtle.exportKey('raw', recipient.publicKey),
+    );
+    const authorizerPublicKey = new Uint8Array(
+      await crypto.subtle.exportKey('raw', authorizer.publicKey),
+    );
+    const grantId = '00000000-0000-0000-0000-000000000031';
+    const masterKey = crypto.getRandomValues(new Uint8Array(32));
+    const wrappedMasterKey = await hpkeSealP256({
+      recipientPublicKey,
+      plaintext: masterKey,
+      aad: vaultUUIDBytes(grantId),
+    });
+    const signed = await signDeviceGrant({
+      authorizerDeviceId: '00000000-0000-0000-0000-000000000032',
+      signingKey: authorizer.privateKey,
+      grant: {
+        grantId,
+        deviceId: '00000000-0000-0000-0000-000000000033',
+        deviceHpkePublicKey: recipientPublicKey,
+        deviceSigningPublicKey: authorizerPublicKey,
+        permission: 'read_write',
+        keyVersion: 1,
+        createdUnixMs: 1_700_000_000_000,
+        wrappedMasterKey,
+      },
+    });
+
+    expect(decodeSignedDeviceGrant(signed).grant.deviceId)
+      .toBe('00000000-0000-0000-0000-000000000033');
+    const verified = await verifySignedDeviceGrant({
+      value: signed,
+      authorizerSigningPublicKey: authorizerPublicKey,
+    });
+    await expect(hpkeOpenP256({
+      recipientPrivateKey: recipient.privateKey,
+      recipientPublicKey,
+      envelope: verified.grant.wrappedMasterKey,
+      aad: vaultUUIDBytes(grantId),
+    })).resolves.toEqual(masterKey);
+
+    signed[signed.length - 1] ^= 1;
+    await expect(verifySignedDeviceGrant({
+      value: signed,
+      authorizerSigningPublicKey: authorizerPublicKey,
+    })).rejects.toThrow('Invalid device grant signature');
   });
 });

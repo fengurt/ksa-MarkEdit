@@ -31,6 +31,7 @@ export type ConversationDocumentV1 = {
   importedAt: number;
   messages: ConversationMessageV1[];
   attachments: ConversationAttachmentV1[];
+  sourcePackage?: ConversationAttachmentV1;
   contentDigest: string;
   simhash: string;
   confidence: 'high' | 'medium' | 'low';
@@ -109,6 +110,8 @@ export type ConversationImportDecision = {
   title?: string;
   category?: string;
   tags?: string[];
+  retainOriginalPackage?: boolean;
+  selectedAttachmentIDs?: string[];
 };
 
 export type ConversationImportReport = {

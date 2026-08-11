@@ -45,6 +45,10 @@ import type {
   NoteFile,
   SearchHit,
 } from './types';
+import type { RecoveryChallenge, RecoveryPackageV2 } from './security/VaultRecovery';
+import { VaultRecoveryDialog } from './security/VaultRecoveryDialog';
+import { VaultDevicesDialog } from './security/VaultDevicesDialog';
+import { BackupHistoryDialog, type BackupRestoreChoice } from './security/BackupHistoryDialog';
 
 type Route = 'hub' | 'editor' | 'mindmap';
 type SidebarMode = 'files' | 'search' | 'tags' | 'preview';
@@ -60,6 +64,9 @@ const MindmapStation = lazy(() => import('./graph/MindmapStation').then(module =
 })));
 const ConversationImportDialog = lazy(() => import('./conversation/ConversationImportDialog').then(module => ({
   default: module.ConversationImportDialog,
+})));
+const DeepSearchPanel = lazy(() => import('./search/DeepSearchPanel').then(module => ({
+  default: module.DeepSearchPanel,
 })));
 
 export default function App() {
@@ -84,6 +91,13 @@ export default function App() {
   const [conflictManagerOpen, setConflictManagerOpen] = useState(false);
   const [conversationPlan, setConversationPlan] = useState<ConversationImportPlan>();
   const [conversationUndo, setConversationUndo] = useState<string>();
+  const [recoverySetup, setRecoverySetup] = useState<{
+    recoveryPackage: RecoveryPackageV2;
+    challenge: RecoveryChallenge[];
+    deviceToken: string;
+  }>();
+  const [devicesOpen, setDevicesOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
   const conversationInbox = useRef<ConversationInboxModule | undefined>(undefined);
   const pendingFileSave = useRef<PendingFileSave<NoteFile> | undefined>(undefined);
   const openFileRequest = useRef(0);
@@ -156,6 +170,24 @@ export default function App() {
       setRoute(loaded.length ? 'editor' : 'hub');
       setNotice(undefined);
     } catch (error) {
+      if (
+        error instanceof Error
+        && error.name === 'VaultRecoverySetupRequiredError'
+        && 'recoveryPackage' in error
+      ) {
+        const setup = error as Error & {
+          recoveryPackage: RecoveryPackageV2;
+          challenge: RecoveryChallenge[];
+          deviceToken: string;
+        };
+        setRecoverySetup({
+          recoveryPackage: setup.recoveryPackage,
+          challenge: setup.challenge,
+          deviceToken: setup.deviceToken,
+        });
+        setNotice(undefined);
+        return;
+      }
       setNotice(error instanceof Error ? error.message : String(error));
     }
   }
@@ -206,6 +238,41 @@ export default function App() {
     if (request !== openFileRequest.current) return;
     setSelectedId(id);
     setRoute('editor');
+  }
+
+  async function restoreBackupChoices(choices: BackupRestoreChoice[]) {
+    if (!storage) return;
+    await flushPendingEdit();
+    setSaving(true);
+    try {
+      for (const choice of choices) {
+        if (choice.strategy === 'historical') {
+          if (choice.current) {
+            await storage.writeFile(choice.current.id, choice.historical.content);
+            if (choice.current.path !== choice.historical.path) {
+              await storage.renameFile(choice.current.id, choice.historical.path);
+            }
+          } else {
+            await storage.createFile(choice.historical.path, choice.historical.content);
+          }
+        } else if (choice.strategy === 'both') {
+          await storage.createFile(historyCopyPath(choice.historical.path), choice.historical.content);
+        } else if (choice.strategy === 'combine' && choice.current) {
+          const combined = choice.current.content === choice.historical.content
+            ? choice.current.content
+            : `${choice.current.content.trimEnd()}\n\n---\n\n${choice.historical.content.trimStart()}`;
+          await storage.writeFile(choice.current.id, combined);
+        }
+      }
+      const loaded = await Promise.all(storage.listFiles().map(file => storage.readFile(file.id)));
+      setFiles(loaded);
+      setBackupOpen(false);
+      setNotice('Historical versions restored; the next sync will create new encrypted versions.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function flushPendingEdit() {
@@ -658,6 +725,16 @@ export default function App() {
             {syncing ? t('syncing') : t('syncNow')}
           </button>
         )}
+        {cloudEnabled && (
+          <button className="quiet-button" type="button" onClick={() => setDevicesOpen(true)}>
+            Devices
+          </button>
+        )}
+        {cloudEnabled && (
+          <button className="quiet-button" type="button" onClick={() => setBackupOpen(true)}>
+            Backup
+          </button>
+        )}
         <button className="quiet-button" type="button" onClick={() => setRoute('mindmap')}>
           {t('mindmap')}
         </button>
@@ -841,8 +918,44 @@ export default function App() {
           onApply={selectedIds => void applyReplace(replacePlan, selectedIds)}
         />
       )}
+      {recoverySetup && (
+        <VaultRecoveryDialog
+          workspaceId={storage.workspace().id}
+          deviceToken={recoverySetup.deviceToken}
+          recoveryPackage={recoverySetup.recoveryPackage}
+          challenge={recoverySetup.challenge}
+          onClose={() => setRecoverySetup(undefined)}
+          onConfigured={() => {
+            setRecoverySetup(undefined);
+            void syncNow();
+          }}
+        />
+      )}
+      {devicesOpen && (
+        <VaultDevicesDialog
+          workspaceId={storage.workspace().id}
+          onClose={() => setDevicesOpen(false)}
+        />
+      )}
+      {backupOpen && (
+        <BackupHistoryDialog
+          workspaceId={storage.workspace().id}
+          files={files}
+          onClose={() => setBackupOpen(false)}
+          onRestore={restoreBackupChoices}
+        />
+      )}
     </div>
   );
+}
+
+function historyCopyPath(path: string): string {
+  const dot = path.lastIndexOf('.');
+  const slash = path.lastIndexOf('/');
+  const stem = dot > slash ? path.slice(0, dot) : path;
+  const extension = dot > slash ? path.slice(dot) : '.md';
+  const timestamp = new Date().toISOString().replaceAll(':', '-').replace('.000Z', 'Z');
+  return `${stem} (historical ${timestamp})${extension}`;
 }
 
 function Welcome({
@@ -945,12 +1058,9 @@ function Hub({
             {tags.slice(0, 18).map(item => <span key={item.identity}>{item.name}<b>{item.count}</b></span>)}
           </div>
         </article>
-        <article className="hub-panel action-panel">
-          <p className="eyebrow">{t('deepSearch')}</p>
-          <h2>{t('modelNotDownloaded')}</h2>
-          <p>multilingual-e5-small · 384 dimensions · device only</p>
-          <button type="button" disabled>{t('downloadModel')}</button>
-        </article>
+        <Suspense fallback={<article className="hub-panel action-panel"><p>{t('deepSearch')}…</p></article>}>
+          <DeepSearchPanel files={files} onOpen={onOpen} />
+        </Suspense>
         <article className="hub-panel action-panel">
           <p className="eyebrow">Graph</p>
           <h2>Mindmap Station</h2>

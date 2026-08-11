@@ -39,6 +39,8 @@ services:
       TENCENT_COS_BUCKET: ${TENCENT_COS_BUCKET:?TENCENT_COS_BUCKET is required}
       TENCENT_COS_REGION: ${TENCENT_COS_REGION:-ap-singapore}
       TENCENT_APP_ID: ${TENCENT_APP_ID:?TENCENT_APP_ID is required}
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_APP_PRIVATE_KEY_PEM: ${GITHUB_APP_PRIVATE_KEY_PEM:-}
       RUST_LOG: ksamint_api=info,tower_http=info
     expose:
       - "8080"

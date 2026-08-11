@@ -7,6 +7,8 @@ const catalogs = [
   "MarkEditMac/mul.lproj/Main.xcstrings",
   "MarkEditMac/AppShortcuts.xcstrings",
   "FinderExtension/Localizable.xcstrings",
+  "ConversationCaptureHelper/Localizable.xcstrings",
+  "QuickActionExtension/Localizable.xcstrings",
 ];
 const locales = ["zh-Hans", "zh-Hant", "ja", "fr"];
 const failures = [];

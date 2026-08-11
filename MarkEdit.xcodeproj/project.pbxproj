@@ -7,24 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AB1100013000000000000001 /* WorkspaceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100023000000000000001 /* WorkspaceSession.swift */; };
-		AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100043000000000000001 /* WorkspaceSidebarView.swift */; };
-		AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100063000000000000001 /* EditorViewController+Workspace.swift */; };
-		AB1200013000000000000001 /* WorkspacePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1200023000000000000001 /* WorkspacePreviewView.swift */; };
-		AB1200033000000000000001 /* rendered-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = AB1200043000000000000001 /* rendered-preview.html */; };
-		AB1300013000000000000001 /* KnowledgeHub in Resources */ = {isa = PBXBuildFile; fileRef = AB1300023000000000000001 /* KnowledgeHub */; };
-		AB2100013000000000000001 /* ResourceCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100023000000000000001 /* ResourceCore */; };
-		AB2100033000000000000001 /* ResourceUI in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100043000000000000001 /* ResourceUI */; };
-		AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200023000000000000001 /* EditorViewController+Agent.swift */; };
-		AB2200033000000000000001 /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200043000000000000001 /* AgentPanelView.swift */; };
-		AB2300013000000000000001 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB2300023000000000000001 /* Icon.png */; };
-		AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400023000000000000001 /* DocumentOutlineView.swift */; };
-		AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */; };
-		AB2500013000000000000001 /* WorkspaceHubSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */; };
-		AB2600013000000000000001 /* okf in Resources */ = {isa = PBXBuildFile; fileRef = AB2600023000000000000001 /* okf */; };
-		AB2600033000000000000001 /* html-safe in Resources */ = {isa = PBXBuildFile; fileRef = AB2600043000000000000001 /* html-safe */; };
-		AB2600053000000000000001 /* archive-base in Resources */ = {isa = PBXBuildFile; fileRef = AB2600063000000000000001 /* archive-base */; };
-		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
+		3EA22E606448F0FE568FB44F /* ConversationCaptureQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */; };
+		44364087E6BCA571BA044F80 /* QuickActionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */; };
+		661F95743B36C0F38ED812EE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 352C0D29372D6300A5A0F153 /* Localizable.xcstrings */; };
+		6AA1D7E79DB1F060FA87DC5A /* ConversationCaptureHelper.app in Embed Login Items */ = {isa = PBXBuildFile; fileRef = 961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7C53EC8A4F5A20EF7338851A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BBFEBC2ADC29DE511CE74941 /* Localizable.xcstrings */; };
+		826BEBFDED71A42A9E90D357 /* QuickActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
 		87067E2729755D5C0052E795 /* EditorStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87067E2629755D5C0052E795 /* EditorStatusView.swift */; };
@@ -35,8 +23,6 @@
 		870A51B9294702AF0095C7EB /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B4294702AF0095C7EB /* EditorViewController.swift */; };
 		870A51BA294702AF0095C7EB /* EditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B5294702AF0095C7EB /* EditorWindowController.swift */; };
 		870A51BC294702AF0095C7EB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B7294702AF0095C7EB /* AppDelegate.swift */; };
-		AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */; };
-		AB3000043000000000000001 /* conversation-capture.plist in Embed Conversation Capture Agent */ = {isa = PBXBuildFile; fileRef = AB3000033000000000000001 /* conversation-capture.plist */; };
 		870A51BD294702AF0095C7EB /* EditorDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870A51B8294702AF0095C7EB /* EditorDocument.swift */; };
 		870A51C9294752530095C7EB /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 870A51C8294752530095C7EB /* index.html */; };
 		870C59C72EC61261003882BD /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 870C59C62EC61261003882BD /* Localizable.xcstrings */; };
@@ -131,7 +117,28 @@
 		87F2B5F429ACF56E0027103E /* EditorViewController+Completion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F2B5F329ACF56E0027103E /* EditorViewController+Completion.swift */; };
 		87F2B61429AF2F3A0027103E /* NSSpellChecker+Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F2B61329AF2F3A0027103E /* NSSpellChecker+Extras.swift */; };
 		87FAFFD72BE0B6A300FA509D /* AppDelegate+FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FAFFD62BE0B6A300FA509D /* AppDelegate+FileSystem.swift */; };
+		A1EEAD3FEA142D4271B06B70 /* ConversationCaptureDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17373C04C5108A6F2F7D4A61 /* ConversationCaptureDocument.swift */; };
+		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
+		AB1100013000000000000001 /* WorkspaceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100023000000000000001 /* WorkspaceSession.swift */; };
+		AB1100033000000000000001 /* WorkspaceSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100043000000000000001 /* WorkspaceSidebarView.swift */; };
+		AB1100053000000000000001 /* EditorViewController+Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100063000000000000001 /* EditorViewController+Workspace.swift */; };
+		AB1200013000000000000001 /* WorkspacePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1200023000000000000001 /* WorkspacePreviewView.swift */; };
+		AB1200033000000000000001 /* rendered-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = AB1200043000000000000001 /* rendered-preview.html */; };
+		AB1300013000000000000001 /* KnowledgeHub in Resources */ = {isa = PBXBuildFile; fileRef = AB1300023000000000000001 /* KnowledgeHub */; };
+		AB2100013000000000000001 /* ResourceCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100023000000000000001 /* ResourceCore */; };
+		AB2100033000000000000001 /* ResourceUI in Frameworks */ = {isa = PBXBuildFile; productRef = AB2100043000000000000001 /* ResourceUI */; };
+		AB2200013000000000000001 /* EditorViewController+Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200023000000000000001 /* EditorViewController+Agent.swift */; };
+		AB2200033000000000000001 /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200043000000000000001 /* AgentPanelView.swift */; };
+		AB2300013000000000000001 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB2300023000000000000001 /* Icon.png */; };
+		AB2400013000000000000001 /* DocumentOutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400023000000000000001 /* DocumentOutlineView.swift */; };
+		AB2400033000000000000001 /* WorkspacePreviewPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */; };
+		AB2500013000000000000001 /* WorkspaceHubSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */; };
+		AB2600013000000000000001 /* okf in Resources */ = {isa = PBXBuildFile; fileRef = AB2600023000000000000001 /* okf */; };
+		AB2600033000000000000001 /* html-safe in Resources */ = {isa = PBXBuildFile; fileRef = AB2600043000000000000001 /* html-safe */; };
+		AB2600053000000000000001 /* archive-base in Resources */ = {isa = PBXBuildFile; fileRef = AB2600063000000000000001 /* archive-base */; };
+		AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */; };
 		B0E02F682D8F77A50060DEA5 /* MarkEdit.sdef in Resources */ = {isa = PBXBuildFile; fileRef = B0E02F672D8F77A50060DEA5 /* MarkEdit.sdef */; };
+		B5086474EC0968B8E2FC20C4 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA5D42A42431B42A426528D /* main.swift */; };
 		CC000002300000000000001A /* EditorDocument+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002300000000000001B /* EditorDocument+ClosedTab.swift */; };
 		CC000003300000000000001A /* AppDelegate+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000003300000000000001B /* AppDelegate+ClosedTab.swift */; };
 		CC000004300000000000001A /* EditorSelectionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004300000000000001B /* EditorSelectionHistory.swift */; };
@@ -144,6 +151,7 @@
 		EE100012EEEE000000000012 /* ExtensionsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100011EEEE000000000011 /* ExtensionsRowView.swift */; };
 		EE100014EEEE000000000014 /* ExtensionsOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100013EEEE000000000013 /* ExtensionsOverlays.swift */; };
 		EE200001EEEE000000000001 /* ExtensionCore in Frameworks */ = {isa = PBXBuildFile; productRef = EE200002EEEE000000000002 /* ExtensionCore */; };
+		F8811E9130C2FE922A26C468 /* QuickActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -161,18 +169,32 @@
 			remoteGlobalIDString = 872923FF2951525C007156B1;
 			remoteInfo = PreviewExtension;
 		};
+		EA70C8F4CF25C63896AE7E1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 870A519A294700DE0095C7EB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6905FF735E4D06A886895980;
+			remoteInfo = QuickActionExtension;
+		};
+		F43ACFA08CFAED6D9CDDD551 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 870A519A294700DE0095C7EB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B3A972CDA261163602B6B02;
+			remoteInfo = ConversationCaptureHelper;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		AB3000053000000000000001 /* Embed Conversation Capture Agent */ = {
+		127C4650C188DDED248D2991 /* Embed Login Items */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Contents/Library/LaunchAgents;
+			dstPath = Contents/Library/LoginItems;
 			dstSubfolderSpec = 1;
 			files = (
-				AB3000043000000000000001 /* conversation-capture.plist in Embed Conversation Capture Agent */,
+				6AA1D7E79DB1F060FA87DC5A /* ConversationCaptureHelper.app in Embed Login Items */,
 			);
-			name = "Embed Conversation Capture Agent";
+			name = "Embed Login Items";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		872924112951525C007156B1 /* Embed Foundation Extensions */ = {
@@ -183,6 +205,7 @@
 			files = (
 				872924102951525C007156B1 /* PreviewExtension.appex in Embed Foundation Extensions */,
 				87152BA12EC599CA00B39F06 /* FinderExtension.appex in Embed Foundation Extensions */,
+				F8811E9130C2FE922A26C468 /* QuickActionExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -190,24 +213,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		AB1100023000000000000001 /* WorkspaceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSession.swift; sourceTree = "<group>"; };
-		AB1100043000000000000001 /* WorkspaceSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarView.swift; sourceTree = "<group>"; };
-		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
-		AB1200023000000000000001 /* WorkspacePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewView.swift; sourceTree = "<group>"; };
-		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
-		AB2400023000000000000001 /* DocumentOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutlineView.swift; sourceTree = "<group>"; };
-		AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewPaneView.swift; sourceTree = "<group>"; };
-		AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceHubSchemeHandler.swift; sourceTree = "<group>"; };
-		AB2600023000000000000001 /* okf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = okf; path = ResourceModules/dist/okf; sourceTree = SOURCE_ROOT; };
-		AB2600043000000000000001 /* html-safe */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "html-safe"; path = "ResourceModules/dist/html-safe"; sourceTree = SOURCE_ROOT; };
-		AB2600063000000000000001 /* archive-base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "archive-base"; path = "ResourceModules/dist/archive-base"; sourceTree = SOURCE_ROOT; };
-		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
-		AB2200023000000000000001 /* EditorViewController+Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Agent.swift"; sourceTree = "<group>"; };
-		AB2200043000000000000001 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
-		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA0000040000000000000001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		17373C04C5108A6F2F7D4A61 /* ConversationCaptureDocument.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConversationCaptureDocument.swift; sourceTree = "<group>"; };
+		200052792AFC3629E3243183 /* Info.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
+		26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuickActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		352C0D29372D6300A5A0F153 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWritingTools.swift; sourceTree = "<group>"; };
 		87067E2629755D5C0052E795 /* EditorStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStatusView.swift; sourceTree = "<group>"; };
 		87091B992A963C6B00F5EF0D /* EditorTextInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTextInput.swift; sourceTree = "<group>"; };
@@ -219,8 +228,6 @@
 		870A51B4294702AF0095C7EB /* EditorViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
 		870A51B5294702AF0095C7EB /* EditorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorWindowController.swift; sourceTree = "<group>"; };
 		870A51B7294702AF0095C7EB /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationCaptureCoordinator.swift; sourceTree = "<group>"; };
-		AB3000033000000000000001 /* conversation-capture.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "art.apuch.ksamint-markedit.conversation-capture.plist"; sourceTree = "<group>"; };
 		870A51B8294702AF0095C7EB /* EditorDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorDocument.swift; sourceTree = "<group>"; };
 		870A51BE294702FD0095C7EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		870A51C8294752530095C7EB /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = index.html; path = CoreEditor/dist/index.html; sourceTree = SOURCE_ROOT; };
@@ -251,7 +258,6 @@
 		873D6401295FCC3E0095DEF7 /* AppResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppResources.swift; sourceTree = "<group>"; };
 		874065782BB505F500B5CE5A /* EditorViewController+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Events.swift"; sourceTree = "<group>"; };
 		8743B26229593B2000F83DAE /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
-		AB2300023000000000000001 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = SOURCE_ROOT; };
 		874788612C85E11D00ECF05B /* EditorChunkLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorChunkLoader.swift; sourceTree = "<group>"; };
 		874AAE2D2959F197000E0E84 /* EditorReplacePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorReplacePanel.swift; sourceTree = "<group>"; };
 		874BE6F329BB37FA002F83BA /* IntentProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentProvider.swift; sourceTree = "<group>"; };
@@ -318,11 +324,41 @@
 		87F2B5F329ACF56E0027103E /* EditorViewController+Completion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Completion.swift"; sourceTree = "<group>"; };
 		87F2B61329AF2F3A0027103E /* NSSpellChecker+Extras.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSSpellChecker+Extras.swift"; sourceTree = "<group>"; };
 		87FAFFD62BE0B6A300FA509D /* AppDelegate+FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+FileSystem.swift"; sourceTree = "<group>"; };
+		90660E8F27F98A8E10F3E0D5 /* Info.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
+		961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ConversationCaptureHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConversationCaptureQueue.swift; sourceTree = "<group>"; };
+		A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionCoordinator.swift; sourceTree = "<group>"; };
+		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA0000040000000000000001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA32445D68BD683B5ED9B4A1 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB1100023000000000000001 /* WorkspaceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSession.swift; sourceTree = "<group>"; };
+		AB1100043000000000000001 /* WorkspaceSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarView.swift; sourceTree = "<group>"; };
+		AB1100063000000000000001 /* EditorViewController+Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Workspace.swift"; sourceTree = "<group>"; };
+		AB1200023000000000000001 /* WorkspacePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewView.swift; sourceTree = "<group>"; };
+		AB1200043000000000000001 /* rendered-preview.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "rendered-preview.html"; path = "CoreEditor/src/@preview/dist/rendered-preview.html"; sourceTree = SOURCE_ROOT; };
+		AB1300023000000000000001 /* KnowledgeHub */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KnowledgeHub; path = "WebApp/dist-mac"; sourceTree = SOURCE_ROOT; };
+		AB2200023000000000000001 /* EditorViewController+Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Agent.swift"; sourceTree = "<group>"; };
+		AB2200043000000000000001 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
+		AB2300023000000000000001 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = SOURCE_ROOT; };
+		AB2400023000000000000001 /* DocumentOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutlineView.swift; sourceTree = "<group>"; };
+		AB2400043000000000000001 /* WorkspacePreviewPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePreviewPaneView.swift; sourceTree = "<group>"; };
+		AB2500023000000000000001 /* WorkspaceHubSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceHubSchemeHandler.swift; sourceTree = "<group>"; };
+		AB2600023000000000000001 /* okf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = okf; path = ResourceModules/dist/okf; sourceTree = SOURCE_ROOT; };
+		AB2600043000000000000001 /* html-safe */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "html-safe"; path = "ResourceModules/dist/html-safe"; sourceTree = SOURCE_ROOT; };
+		AB2600063000000000000001 /* archive-base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "archive-base"; path = "ResourceModules/dist/archive-base"; sourceTree = SOURCE_ROOT; };
+		AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationCaptureCoordinator.swift; sourceTree = "<group>"; };
+		AB3000033000000000000001 /* art.apuch.ksamint-markedit.conversation-capture.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "art.apuch.ksamint-markedit.conversation-capture.plist"; sourceTree = "<group>"; };
 		B0E02F672D8F77A50060DEA5 /* MarkEdit.sdef */ = {isa = PBXFileReference; lastKnownFileType = text; path = MarkEdit.sdef; sourceTree = "<group>"; };
+		B8782CD1AC62B06DEFEB2EF8 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BBFEBC2ADC29DE511CE74941 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CC000002300000000000001B /* EditorDocument+ClosedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorDocument+ClosedTab.swift"; sourceTree = "<group>"; };
 		CC000003300000000000001B /* AppDelegate+ClosedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ClosedTab.swift"; sourceTree = "<group>"; };
 		CC000004300000000000001B /* EditorSelectionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSelectionHistory.swift; sourceTree = "<group>"; };
 		CC000006300000000000001B /* EditorClosedTabHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorClosedTabHistory.swift; sourceTree = "<group>"; };
+		D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionViewController.swift; sourceTree = "<group>"; };
+		DCA5D42A42431B42A426528D /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		EE100007EEEE000000000007 /* ExtensionInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionInstaller.swift; sourceTree = "<group>"; };
 		EE100009EEEE000000000009 /* ExtensionUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionUpdater.swift; sourceTree = "<group>"; };
 		EE10000BEEEE00000000000B /* ExtensionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsModel.swift; sourceTree = "<group>"; };
@@ -332,6 +368,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		5CD69931339CD2A846A127EF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		870A519F294700DE0095C7EB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -369,9 +412,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A9DABF6DE8065D20BEA88225 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1B856C1F3B2635AE498B508E /* ConversationCaptureHelper */ = {
+			isa = PBXGroup;
+			children = (
+				DCA5D42A42431B42A426528D /* main.swift */,
+				B8782CD1AC62B06DEFEB2EF8 /* Info.plist */,
+				200052792AFC3629E3243183 /* Info.entitlements */,
+				352C0D29372D6300A5A0F153 /* Localizable.xcstrings */,
+			);
+			name = ConversationCaptureHelper;
+			path = ConversationCaptureHelper;
+			sourceTree = "<group>";
+		};
 		870A5199294700DE0095C7EB = {
 			isa = PBXGroup;
 			children = (
@@ -385,6 +447,8 @@
 				870A51A3294700DE0095C7EB /* Products */,
 				874823CC29B0BD980067EC49 /* Frameworks */,
 				8743B26229593B2000F83DAE /* Build.xcconfig */,
+				1B856C1F3B2635AE498B508E /* ConversationCaptureHelper */,
+				9F4FECC9F0C2E0DE41A16AD0 /* QuickActionExtension */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -398,6 +462,8 @@
 				870A51A2294700DE0095C7EB /* ksamint MarkEdit.app */,
 				872924002951525C007156B1 /* PreviewExtension.appex */,
 				87152B9A2EC599CA00B39F06 /* FinderExtension.appex */,
+				961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */,
+				26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -428,7 +494,7 @@
 		870A51C229470D5C0095C7EB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				AB3000033000000000000001 /* conversation-capture.plist */,
+				AB3000033000000000000001 /* art.apuch.ksamint-markedit.conversation-capture.plist */,
 				AB1200043000000000000001 /* rendered-preview.html */,
 				AB1300023000000000000001 /* KnowledgeHub */,
 				AB2600023000000000000001 /* okf */,
@@ -514,6 +580,9 @@
 				871C995C2973F20E003FF3A7 /* AppDelegate+Menu.swift */,
 				871C995A2973F1E6003FF3A7 /* AppDelegate+Document.swift */,
 				CC000003300000000000001B /* AppDelegate+ClosedTab.swift */,
+				A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */,
+				17373C04C5108A6F2F7D4A61 /* ConversationCaptureDocument.swift */,
+				9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */,
 			);
 			path = Application;
 			sourceTree = "<group>";
@@ -573,6 +642,7 @@
 		874823CC29B0BD980067EC49 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B7DD60EECF6D0A4B4C8E65B6 /* OS X */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -740,9 +810,62 @@
 			path = Replace;
 			sourceTree = "<group>";
 		};
+		9F4FECC9F0C2E0DE41A16AD0 /* QuickActionExtension */ = {
+			isa = PBXGroup;
+			children = (
+				D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */,
+				AA32445D68BD683B5ED9B4A1 /* Info.plist */,
+				90660E8F27F98A8E10F3E0D5 /* Info.entitlements */,
+				BBFEBC2ADC29DE511CE74941 /* Localizable.xcstrings */,
+			);
+			name = QuickActionExtension;
+			path = QuickActionExtension;
+			sourceTree = "<group>";
+		};
+		B7DD60EECF6D0A4B4C8E65B6 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4B3A972CDA261163602B6B02 /* ConversationCaptureHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C02E4F76FDCC7B58B15AECF4 /* Build configuration list for PBXNativeTarget "ConversationCaptureHelper" */;
+			buildPhases = (
+				5B610CD70922D1A750210DE4 /* Sources */,
+				A9DABF6DE8065D20BEA88225 /* Frameworks */,
+				E3C98482EA2F3D77A1CCE9A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ConversationCaptureHelper;
+			productName = ConversationCaptureHelper;
+			productReference = 961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6905FF735E4D06A886895980 /* QuickActionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD01676FB712E1EA0FCE85B9 /* Build configuration list for PBXNativeTarget "QuickActionExtension" */;
+			buildPhases = (
+				2DF98C94E14EE7AA4B2CBEDD /* Sources */,
+				5CD69931339CD2A846A127EF /* Frameworks */,
+				A7DC216197835A6169ACFA3A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QuickActionExtension;
+			productName = QuickActionExtension;
+			productReference = 26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		870A51A1294700DE0095C7EB /* MarkEditMac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 870A51B1294700E00095C7EB /* Build configuration list for PBXNativeTarget "MarkEditMac" */;
@@ -751,8 +874,8 @@
 				870A519E294700DE0095C7EB /* Sources */,
 				870A519F294700DE0095C7EB /* Frameworks */,
 				870A51A0294700DE0095C7EB /* Resources */,
-				AB3000053000000000000001 /* Embed Conversation Capture Agent */,
 				872924112951525C007156B1 /* Embed Foundation Extensions */,
+				127C4650C188DDED248D2991 /* Embed Login Items */,
 			);
 			buildRules = (
 			);
@@ -760,6 +883,8 @@
 				87BFF24E298AB754006C31E4 /* PBXTargetDependency */,
 				8729240F2951525C007156B1 /* PBXTargetDependency */,
 				87152BA02EC599CA00B39F06 /* PBXTargetDependency */,
+				B59A108AF56921FA8EA2C3B2 /* PBXTargetDependency */,
+				7097FDF5A374702B7D4DF878 /* PBXTargetDependency */,
 			);
 			name = MarkEditMac;
 			packageProductDependencies = (
@@ -796,8 +921,6 @@
 			dependencies = (
 			);
 			name = FinderExtension;
-			packageProductDependencies = (
-			);
 			productName = FinderExtension;
 			productReference = 87152B9A2EC599CA00B39F06 /* FinderExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -865,6 +988,8 @@
 				870A51A1294700DE0095C7EB /* MarkEditMac */,
 				872923FF2951525C007156B1 /* PreviewExtension */,
 				87152B992EC599CA00B39F06 /* FinderExtension */,
+				4B3A972CDA261163602B6B02 /* ConversationCaptureHelper */,
+				6905FF735E4D06A886895980 /* QuickActionExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -905,6 +1030,22 @@
 			files = (
 				8729240B2951525C007156B1 /* Main.xib in Resources */,
 				876578FA2993853500A1388A /* index.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7DC216197835A6169ACFA3A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C53EC8A4F5A20EF7338851A /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3C98482EA2F3D77A1CCE9A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				661F95743B36C0F38ED812EE /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -956,6 +1097,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2DF98C94E14EE7AA4B2CBEDD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				826BEBFDED71A42A9E90D357 /* QuickActionViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5B610CD70922D1A750210DE4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B5086474EC0968B8E2FC20C4 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		870A519E294700DE0095C7EB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1055,6 +1212,9 @@
 				874065792BB505F500B5CE5A /* EditorViewController+Events.swift in Sources */,
 				87067E2729755D5C0052E795 /* EditorStatusView.swift in Sources */,
 				87ACB6942BD8CA8400CE6F9E /* Application.swift in Sources */,
+				44364087E6BCA571BA044F80 /* QuickActionCoordinator.swift in Sources */,
+				A1EEAD3FEA142D4271B06B70 /* ConversationCaptureDocument.swift in Sources */,
+				3EA22E606448F0FE568FB44F /* ConversationCaptureQueue.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1081,6 +1241,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7097FDF5A374702B7D4DF878 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = QuickActionExtension;
+			target = 6905FF735E4D06A886895980 /* QuickActionExtension */;
+			targetProxy = EA70C8F4CF25C63896AE7E1B /* PBXContainerItemProxy */;
+		};
 		87152BA02EC599CA00B39F06 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 87152B992EC599CA00B39F06 /* FinderExtension */;
@@ -1093,22 +1259,17 @@
 		};
 		87BFF24E298AB754006C31E4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 87BFF24D298AB754006C31E4 /* SwiftLint */;
+			productRef = 87BFF24D298AB754006C31E4 /* plugin:SwiftLint */;
+		};
+		B59A108AF56921FA8EA2C3B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ConversationCaptureHelper;
+			target = 4B3A972CDA261163602B6B02 /* ConversationCaptureHelper */;
+			targetProxy = F43ACFA08CFAED6D9CDDD551 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		AA0000090000000000000001 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				AA0000010000000000000001 /* zh-Hans */,
-				AA0000020000000000000001 /* zh-Hant */,
-				AA0000030000000000000001 /* ja */,
-				AA0000040000000000000001 /* fr */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		870A51AB294700E00095C7EB /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1127,9 +1288,66 @@
 			name = Main.xib;
 			sourceTree = "<group>";
 		};
+		AA0000090000000000000001 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AA0000010000000000000001 /* zh-Hans */,
+				AA0000020000000000000001 /* zh-Hant */,
+				AA0000030000000000000001 /* ja */,
+				AA0000040000000000000001 /* fr */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		55FFCC0685B5782ABCDBC66A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ConversationCaptureHelper/Info.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ConversationCaptureHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 2.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.conversation-capture-helper";
+				PRODUCT_NAME = ConversationCaptureHelper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5F5819BD0373AD11C971DE0E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ConversationCaptureHelper/Info.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ConversationCaptureHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 2.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.dev.conversation-capture-helper";
+				PRODUCT_NAME = ConversationCaptureHelper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		870A51AF294700E00095C7EB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8743B26229593B2000F83DAE /* Build.xcconfig */;
@@ -1493,6 +1711,44 @@
 			};
 			name = Release;
 		};
+		C32F8DEAC3FC09D0EA660DE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = QuickActionExtension/Info.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = QuickActionExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 2.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.quick-actions";
+				PRODUCT_NAME = QuickActionExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E71F86F6E8E80385CACB0933 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = QuickActionExtension/Info.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = QuickActionExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 2.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.dev.quick-actions";
+				PRODUCT_NAME = QuickActionExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1528,6 +1784,24 @@
 			buildConfigurations = (
 				872924122951525C007156B1 /* Debug */,
 				872924132951525C007156B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C02E4F76FDCC7B58B15AECF4 /* Build configuration list for PBXNativeTarget "ConversationCaptureHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				55FFCC0685B5782ABCDBC66A /* Release */,
+				5F5819BD0373AD11C971DE0E /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DD01676FB712E1EA0FCE85B9 /* Build configuration list for PBXNativeTarget "QuickActionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C32F8DEAC3FC09D0EA660DE7 /* Release */,
+				E71F86F6E8E80385CACB0933 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1575,7 +1849,7 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = DiffKit;
 		};
-		87BFF24D298AB754006C31E4 /* SwiftLint */ = {
+		87BFF24D298AB754006C31E4 /* plugin:SwiftLint */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = "plugin:SwiftLint";
 		};
@@ -1587,14 +1861,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = MarkEditCore;
 		};
-		CC000020300000000000FD02 /* FileDrop */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FileDrop;
-		};
-		EE200002EEEE000000000002 /* ExtensionCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ExtensionCore;
-		};
 		AB2100023000000000000001 /* ResourceCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ResourceCore;
@@ -1602,6 +1868,14 @@
 		AB2100043000000000000001 /* ResourceUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ResourceUI;
+		};
+		CC000020300000000000FD02 /* FileDrop */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FileDrop;
+		};
+		EE200002EEEE000000000002 /* ExtensionCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ExtensionCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -35,6 +35,34 @@ export type VaultObjectSummary = {
   objectKey: string;
 };
 
+export type VaultDevice = {
+  id: string;
+  displayName: string;
+  keyVersion: number;
+  signingPublicKey: string;
+  createdAt: string;
+  lastUsedAt?: string;
+  revokedAt?: string;
+};
+
+export type PendingDeviceEnrollment = {
+  requestId: string;
+  deviceId: string;
+  displayName: string;
+  verificationCode: string;
+  hpkePublicKey: string;
+  signingPublicKey: string;
+  expiresAt: string;
+};
+
+export type DeviceEnrollmentStatus = PendingDeviceEnrollment & {
+  vaultId: string;
+  status: 'pending' | 'approved' | 'consumed' | 'rejected' | 'expired';
+  signedGrant?: string;
+};
+
+export type DeviceSession = { token: string; expiresAt: string };
+
 type PublicKeyOptionsJSON = Omit<
   PublicKeyCredentialCreationOptions,
   'challenge' | 'user' | 'excludeCredentials'
@@ -145,9 +173,12 @@ export async function createVault(displayName: string): Promise<{ id: string }> 
   });
 }
 
-export async function latestManifest(vaultId: string): Promise<LatestManifest | undefined> {
+export async function latestManifest(
+  vaultId: string,
+  deviceToken: string,
+): Promise<LatestManifest | undefined> {
   try {
-    return await apiRequest(`/api/v1/vaults/${vaultId}/manifest`, { method: 'GET' });
+    return await deviceRequest(`/api/v1/vaults/${vaultId}/manifest`, deviceToken, { method: 'GET' });
   } catch (error) {
     if (error instanceof AccountServiceError && error.status === 404) {
       return undefined;
@@ -162,16 +193,116 @@ export async function registerDevice({
   hpkePublicKey,
   signingPublicKey,
   wrappedGrant,
+  displayName,
+  unixMs,
+  proof,
 }: {
   vaultId: string;
   deviceId: string;
   hpkePublicKey: string;
   signingPublicKey: string;
   wrappedGrant: string;
-}): Promise<void> {
-  await apiRequest(`/api/v1/vaults/${vaultId}/devices/${deviceId}`, {
+  displayName: string;
+  unixMs: number;
+  proof: string;
+}): Promise<DeviceSession> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/devices/${deviceId}`, {
     method: 'PUT',
-    body: JSON.stringify({ hpkePublicKey, signingPublicKey, wrappedGrant }),
+    body: JSON.stringify({
+      hpkePublicKey, signingPublicKey, wrappedGrant, displayName, unixMs, proof,
+    }),
+  });
+}
+
+export async function exchangeDeviceSession({
+  vaultId,
+  deviceId,
+  unixMs,
+  signature,
+}: {
+  vaultId: string;
+  deviceId: string;
+  unixMs: number;
+  signature: string;
+}): Promise<DeviceSession> {
+  return apiRequest('/api/v1/device-sessions/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ vaultId, deviceId, unixMs, signature }),
+  });
+}
+
+export async function listVaultDevices(vaultId: string): Promise<{
+  devices: VaultDevice[];
+  pending: PendingDeviceEnrollment[];
+}> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/devices`, { method: 'GET' });
+}
+
+export async function createDeviceEnrollment({
+  vaultId,
+  deviceId,
+  displayName,
+  hpkePublicKey,
+  signingPublicKey,
+}: {
+  vaultId: string;
+  deviceId: string;
+  displayName: string;
+  hpkePublicKey: string;
+  signingPublicKey: string;
+}): Promise<PendingDeviceEnrollment & { vaultId: string }> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/enrollments`, {
+    method: 'POST',
+    body: JSON.stringify({ deviceId, displayName, hpkePublicKey, signingPublicKey }),
+  });
+}
+
+export async function deviceEnrollmentStatus(
+  vaultId: string,
+  requestId: string,
+): Promise<DeviceEnrollmentStatus> {
+  return apiRequest(`/api/v1/vaults/${vaultId}/enrollments/${requestId}`, { method: 'GET' });
+}
+
+export async function approveDeviceEnrollment(
+  vaultId: string,
+  requestId: string,
+  signedGrant: string,
+): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/enrollments/${requestId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ signedGrant }),
+  });
+}
+
+export async function recoverDeviceEnrollment(
+  vaultId: string,
+  requestId: string,
+  recoveryToken: string,
+  signedGrant: string,
+): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/enrollments/${requestId}/recover`, {
+    method: 'POST',
+    body: JSON.stringify({ recoveryToken, signedGrant }),
+  });
+}
+
+export async function rejectDeviceEnrollment(vaultId: string, requestId: string): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/enrollments/${requestId}`, { method: 'DELETE' });
+}
+
+export async function revokeVaultDevice(vaultId: string, deviceId: string): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/devices/${deviceId}`, { method: 'DELETE' });
+}
+
+export async function renameVaultDevice(
+  vaultId: string,
+  deviceId: string,
+  displayName: string,
+): Promise<void> {
+  await apiRequest(`/api/v1/vaults/${vaultId}/devices/${deviceId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ displayName }),
   });
 }
 
@@ -181,25 +312,31 @@ export async function registerObject({
   kind,
   cipherSize,
   digest,
+  deviceToken,
 }: {
   vaultId: string;
   objectId: string;
   kind: 'markdown' | 'attachment' | 'vector_shard' | 'manifest';
   cipherSize: number;
   digest: string;
+  deviceToken: string;
 }): Promise<{ objectKey: string }> {
-  return apiRequest(`/api/v1/vaults/${vaultId}/objects`, {
+  return deviceRequest(`/api/v1/vaults/${vaultId}/objects`, deviceToken, {
     method: 'POST',
     body: JSON.stringify({ objectId, kind, cipherSize, digest }),
   });
 }
 
-export async function listVaultObjects(vaultId: string): Promise<VaultObjectSummary[]> {
+export async function listVaultObjects(
+  vaultId: string,
+  deviceToken: string,
+): Promise<VaultObjectSummary[]> {
   const objects: VaultObjectSummary[] = [];
   let after = 0;
   for (;;) {
-    const page = await apiRequest<VaultObjectSummary[]>(
+    const page = await deviceRequest<VaultObjectSummary[]>(
       `/api/v1/vaults/${vaultId}/objects?after=${after}&limit=500`,
+      deviceToken,
       { method: 'GET' },
     );
     objects.push(...page);
@@ -214,8 +351,22 @@ export async function listVaultObjects(vaultId: string): Promise<VaultObjectSumm
   }
 }
 
-export async function requestTemporaryCosGrant(vaultId: string): Promise<TemporaryCosGrant> {
-  return apiRequest(`/api/v1/vaults/${vaultId}/sts`, { method: 'POST' });
+export async function requestTemporaryCosGrant(
+  vaultId: string,
+  deviceToken: string,
+): Promise<TemporaryCosGrant> {
+  return deviceRequest(`/api/v1/vaults/${vaultId}/sts`, deviceToken, { method: 'POST' });
+}
+
+export async function setVaultRecoveryToken(
+  vaultId: string,
+  deviceToken: string,
+  recoveryToken: string,
+): Promise<void> {
+  await deviceRequest(`/api/v1/vaults/${vaultId}/recovery`, deviceToken, {
+    method: 'PUT',
+    body: JSON.stringify({ recoveryToken }),
+  });
 }
 
 export async function uploadManifest({
@@ -224,25 +375,74 @@ export async function uploadManifest({
   previousDigest,
   digest,
   signedCbor,
+  deviceToken,
 }: {
   vaultId: string;
   sequence: number;
   previousDigest?: string;
   digest: string;
   signedCbor: string;
+  deviceToken: string;
 }): Promise<void> {
-  await apiRequest(`/api/v1/vaults/${vaultId}/manifest`, {
+  await deviceRequest(`/api/v1/vaults/${vaultId}/manifest`, deviceToken, {
     method: 'PUT',
     body: JSON.stringify({ sequence, previousDigest, digest, signedCbor }),
   });
 }
 
-export async function requestGitHubToken(vaultId: string): Promise<{
-  token: string;
-  expiresAt: string;
+export type GitHubBackupSnapshot = { commit: string; sequence: number; createdAt: string };
+
+export async function configureGitHubBackup({
+  vaultId,
+  deviceToken,
+  installationId,
+  owner,
+  repository,
+}: {
+  vaultId: string;
+  deviceToken: string;
+  installationId: number;
+  owner: string;
   repository: string;
+}): Promise<void> {
+  await deviceRequest(`/api/v1/vaults/${vaultId}/github`, deviceToken, {
+    method: 'PUT',
+    body: JSON.stringify({ installationId, owner, repository }),
+  });
+}
+
+export async function triggerGitHubBackup(vaultId: string, deviceToken: string): Promise<void> {
+  await deviceRequest(`/api/v1/vaults/${vaultId}/github/backups`, deviceToken, { method: 'POST' });
+}
+
+export async function listGitHubBackups(vaultId: string, deviceToken: string): Promise<{
+  backups: GitHubBackupSnapshot[];
+  pending?: { sequence: number; notBefore: string; attempts: number; lastError?: string };
 }> {
-  return apiRequest(`/api/v1/vaults/${vaultId}/github/token`, { method: 'POST' });
+  return deviceRequest(`/api/v1/vaults/${vaultId}/github/backups`, deviceToken, { method: 'GET' });
+}
+
+export async function githubBackupCatalog(vaultId: string, commit: string, deviceToken: string): Promise<{
+  protocolVersion: 1;
+  sequence: number;
+  manifestDigest: string;
+  signedManifest: string;
+  objects: VaultObjectSummary[];
+}> {
+  return deviceRequest(`/api/v1/vaults/${vaultId}/github/backups/${commit}/catalog`, deviceToken, { method: 'GET' });
+}
+
+export async function githubBackupObject(
+  vaultId: string,
+  commit: string,
+  objectId: string,
+  deviceToken: string,
+): Promise<{ objectId: string; ciphertext: string }> {
+  return deviceRequest(
+    `/api/v1/vaults/${vaultId}/github/backups/${commit}/objects/${objectId}`,
+    deviceToken,
+    { method: 'GET' },
+  );
 }
 
 export class AccountServiceError extends Error {
@@ -268,6 +468,17 @@ export async function apiRequest<T = unknown>(path: string, init: RequestInit): 
   }
   const text = await response.text();
   return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function deviceRequest<T = unknown>(
+  path: string,
+  deviceToken: string,
+  init: RequestInit,
+): Promise<T> {
+  return apiRequest<T>(path, {
+    ...init,
+    headers: { ...init.headers, Authorization: `Bearer ${deviceToken}` },
+  });
 }
 
 function credentialJSON(credential: PublicKeyCredential): unknown {

@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A new Markdown result will be created. Source files are not modified." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un nouveau résultat Markdown sera créé. Les fichiers sources ne seront pas modifiés." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しい Markdown 結果を作成します。元のファイルは変更されません。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将创建新的 Markdown 结果，不会修改源文件。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "將建立新的 Markdown 結果，不會修改來源檔案。" } }
+      }
+    },
+    "Convert" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "変換" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转换" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "轉換" } }
+      }
+    },
+    "Convert to Markdown" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir en Markdown" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown に変換" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转换为 Markdown" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "轉換為 Markdown" } }
+      }
+    },
+    "Enable Conversation Capture" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer la capture des conversations" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "会話の取り込みを有効にする" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用对话收集" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "啟用對話收集" } }
+      }
+    },
+    "Quick Action Failed" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec de l’action rapide" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クイックアクションに失敗しました" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速操作失败" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "快速動作失敗" } }
+      }
+    },
+    "The selected PDF or document image will be uploaded over TLS to the configured Tencent MinerU Precision VLM service. The source is deleted after submission and results expire after one hour." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le PDF ou l’image de document sélectionné sera envoyé via TLS au service Tencent MinerU Precision VLM configuré. La source est supprimée après l’envoi et le résultat expire après une heure." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "選択した PDF または文書画像は、設定済みの Tencent MinerU Precision VLM サービスへ TLS でアップロードされます。元データは送信後に削除され、結果は1時間後に期限切れになります。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选 PDF 或文档图片将通过 TLS 上传到已配置的腾讯 MinerU Precision VLM 服务。源文件提交后立即删除，结果一小时后过期。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "所選 PDF 或文件圖片將透過 TLS 上傳至已設定的騰訊 MinerU Precision VLM 服務。來源檔案提交後立即刪除，結果一小時後到期。" } }
+      }
+    },
     "Capture conversations from clipboard" : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer les conversations depuis le presse-papiers" } },
@@ -9630,6 +9678,15 @@
         "zh-Hant": { "stringUnit": { "state": "translated", "value": "深度搜尋無法使用" } },
         "ja": { "stringUnit": { "state": "translated", "value": "ディープ検索を利用できません" } },
         "fr": { "stringUnit": { "state": "translated", "value": "Recherche approfondie indisponible" } }
+      }
+    },
+    "Open System Settings": {
+      "comment": "Open Login Items settings for helper approval",
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开系统设置" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟系統設定" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "システム設定を開く" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir Réglages Système" } }
       }
     },
     "Workspace Operation Failed": {

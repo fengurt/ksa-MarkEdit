@@ -143,9 +143,37 @@ export class ConversationInbox {
         }
         const keepBoth = decision?.action === 'keep-both';
         const path = keepBoth ? conversationPath(item.conversation, `-imported-${this.clock()}`) : item.proposedPath;
-        const baseContent = item.action === 'create' || keepBoth
-          ? renderConversationMarkdown(item.conversation, decision)
-          : item.proposedContent;
+        const selectedAttachmentIDs = new Set(
+          decision?.selectedAttachmentIDs ?? item.conversation.attachments.map(attachment => attachment.id),
+        );
+        const retainedConversation = {
+          ...item.conversation,
+          sourcePackage: decision?.retainOriginalPackage === false
+            ? undefined
+            : item.conversation.sourcePackage,
+          messages: item.conversation.messages.map(message => ({
+            ...message,
+            attachments: message.attachments.filter(attachment => selectedAttachmentIDs.has(attachment.id)),
+          })),
+          attachments: item.conversation.attachments.filter(attachment => selectedAttachmentIDs.has(attachment.id)),
+        };
+        let baseContent: string;
+        if (item.action === 'create' || keepBoth || !item.existing) {
+          baseContent = renderConversationMarkdown(retainedConversation, decision);
+        } else {
+          const existing = parseConversationMarkdown(item.existing.content);
+          const knownIDs = new Set(existing.messages.map(message => message.id));
+          const knownDigests = new Set(existing.messages.map(message => message.digest));
+          const selectedNewMessages = retainedConversation.messages.filter(message => (
+            !knownIDs.has(message.sourceMessageId ?? message.id)
+            && !knownDigests.has(message.digest)
+          ));
+          baseContent = appendMessages(
+            item.existing.content,
+            selectedNewMessages,
+            retainedConversation,
+          );
+        }
         const content = applyConversationMetadata(baseContent, decision ?? {});
         if (item.existing && !keepBoth) transaction.previous.push(item.existing);
         const file = await this.workspace.writeConversation({
@@ -156,7 +184,11 @@ export class ConversationInbox {
         });
         files.push(file);
         if (!item.existing || keepBoth) transaction.createdIds.push(file.id);
-        for (const attachment of item.conversation.attachments) {
+        const attachments = [
+          ...retainedConversation.attachments,
+          ...(retainedConversation.sourcePackage ? [retainedConversation.sourcePackage] : []),
+        ];
+        for (const attachment of attachments) {
           if (!this.workspace.writeAttachment || !attachment.bytes) continue;
           const attachmentPath = assetPath(attachment.name, attachment.digest);
           const exists = await this.workspace.attachmentExists?.(attachmentPath) ?? false;

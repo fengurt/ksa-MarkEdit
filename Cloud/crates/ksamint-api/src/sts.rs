@@ -1,7 +1,7 @@
 use crate::{
     config::CosConfig,
     error::{ApiError, ApiResult},
-    session::AccountSession,
+    session::VaultDeviceSession,
     state::AppState,
 };
 use axum::{
@@ -51,18 +51,11 @@ struct TencentError {
 
 pub async fn temporary_credentials(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
 ) -> ApiResult<Json<Value>> {
-    let exists = sqlx::query_scalar::<_, bool>(
-        "SELECT EXISTS(SELECT 1 FROM vaults WHERE id = $1 AND account_id = $2)",
-    )
-    .bind(vault_id)
-    .bind(session.account_id)
-    .fetch_one(&state.pool)
-    .await?;
-    if !exists {
-        return Err(ApiError::NotFound);
+    if session.vault_id != vault_id {
+        return Err(ApiError::Forbidden);
     }
     let config = state
         .config
@@ -146,7 +139,7 @@ pub async fn recovery_catalog(
 
 pub async fn set_recovery_token(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
     Json(input): Json<RecoveryRequest>,
 ) -> ApiResult<Json<Value>> {
@@ -158,12 +151,13 @@ pub async fn set_recovery_token(
             "recovery token must contain at least 256 bits".to_owned(),
         ));
     }
+    if session.vault_id != vault_id {
+        return Err(ApiError::Forbidden);
+    }
     let result = sqlx::query(
-        "UPDATE vaults SET recovery_token_digest = $3, updated_at = now() \
-         WHERE id = $1 AND account_id = $2",
+        "UPDATE vaults SET recovery_token_digest = $2, updated_at = now() WHERE id = $1",
     )
     .bind(vault_id)
-    .bind(session.account_id)
     .bind(Sha256::digest(token).to_vec())
     .execute(&state.pool)
     .await?;

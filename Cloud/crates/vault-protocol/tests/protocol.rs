@@ -4,8 +4,10 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use uuid::Uuid;
 use vault_protocol::{
-    ObjectKindV1, VaultManifestV1, VaultMasterKey, decrypt_object, encrypt_object_with_nonce,
-    generate_hpke_keypair, hpke_open, hpke_seal, recovery_phrase, sign_manifest, verify_manifest,
+    DeviceGrantAuthorizationV1, DeviceGrantV1, ObjectKindV1, PermissionV1, VaultManifestV1,
+    VaultMasterKey, decrypt_object, encrypt_object_with_nonce, generate_hpke_keypair, hpke_open,
+    hpke_seal, recovery_phrase, sign_device_grant, sign_manifest, verify_device_grant,
+    verify_manifest,
 };
 
 #[test]
@@ -72,6 +74,65 @@ fn hpke_p256_aes256_round_trip() {
     let envelope = hpke_seal(&key_pair.public_key, b"vault key", b"device grant").expect("seal");
     let plaintext = hpke_open(&key_pair.private_key, &envelope, b"device grant").expect("open");
     assert_eq!(plaintext, b"vault key");
+}
+
+#[test]
+fn authorized_device_signs_a_second_device_grant() {
+    let authorizer = SigningKey::from_slice(&[13_u8; 32]).expect("authorizer");
+    let recipient = generate_hpke_keypair();
+    let device_signer = SigningKey::from_slice(&[17_u8; 32]).expect("device signer");
+    let master_key = VaultMasterKey::from_bytes([23_u8; 32]);
+    let grant_id = Uuid::new_v4();
+    let grant = DeviceGrantV1 {
+        protocol_version: 1,
+        grant_id,
+        device_id: Uuid::new_v4(),
+        device_hpke_public_key: recipient.public_key.clone(),
+        device_signing_public_key: device_signer
+            .verifying_key()
+            .to_encoded_point(false)
+            .as_bytes()
+            .to_vec(),
+        permission: PermissionV1::ReadWrite,
+        key_version: 1,
+        created_unix_ms: 1,
+        revoked_unix_ms: None,
+        wrapped_master_key: hpke_seal(
+            &recipient.public_key,
+            master_key.expose_for_wrapping(),
+            grant_id.as_bytes(),
+        )
+        .expect("wrap"),
+    };
+    let signed = sign_device_grant(
+        DeviceGrantAuthorizationV1 {
+            protocol_version: 1,
+            authorizer_device_id: Uuid::new_v4(),
+            grant,
+        },
+        &authorizer,
+    )
+    .expect("sign");
+    verify_device_grant(
+        &signed,
+        authorizer
+            .verifying_key()
+            .to_encoded_point(false)
+            .as_bytes(),
+    )
+    .expect("verify");
+    let mut tampered = signed;
+    tampered.authorization.grant.key_version = 2;
+    assert!(
+        verify_device_grant(
+            &tampered,
+            authorizer
+                .verifying_key()
+                .to_encoded_point(false)
+                .as_bytes(),
+        )
+        .is_err()
+    );
 }
 
 #[test]
