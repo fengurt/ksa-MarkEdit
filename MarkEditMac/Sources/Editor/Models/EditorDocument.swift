@@ -7,6 +7,7 @@
 import AppKit
 import AppKitExtensions
 import MarkEditKit
+import SharedUI
 import FileVersion
 import TextBundle
 
@@ -187,6 +188,38 @@ final class EditorDocument: NSDocument {
     }
 
     spellDocTag = NSSpellChecker.uniqueSpellDocumentTag()
+  }
+
+  func applyWorkspaceMetadata(
+    _ transform: (WorkspaceDocumentMetadata) -> WorkspaceDocumentMetadata
+  ) async throws {
+    guard let hostViewController,
+          let bridge,
+          let currentText = await hostViewController.editorText else {
+      throw CocoaError(.fileReadUnknown)
+    }
+
+    let metadata = WorkspaceDocumentMetadata.parse(currentText)
+    let updatedText = transform(metadata).applying(to: currentText)
+    guard updatedText != currentText else {
+      return
+    }
+
+    try await withCheckedThrowingContinuation { continuation in
+      bridge.core.replaceText(text: updatedText, granularity: .wholeDocument) { result in
+        continuation.resume(with: result)
+      }
+    }
+    stringValue = updatedText
+    isOutdated = true
+    updateChangeCount(.changeDone)
+  }
+
+  func currentWorkspaceMetadata() async -> WorkspaceDocumentMetadata? {
+    guard let text = await hostViewController?.editorText else {
+      return nil
+    }
+    return WorkspaceDocumentMetadata.parse(text)
   }
 }
 

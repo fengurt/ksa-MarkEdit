@@ -10,6 +10,16 @@ import {
 import * as editor from './utils/editor';
 import { sleep } from './utils/helpers';
 
+async function waitForVisualState(predicate: () => boolean, timeout = 2_000) {
+  const started = Date.now();
+  while (!predicate()) {
+    if (Date.now() - started >= timeout) {
+      throw new Error('Timed out waiting for visual Markdown decorations');
+    }
+    await sleep(10);
+  }
+}
+
 describe('visual Markdown editing', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -22,7 +32,10 @@ describe('visual Markdown editing', () => {
   test('reveals Markdown markers only in the active block without changing source', async () => {
     const source = '# Heading\n\n**bold** and *italic*';
     editor.setUp(source, visualEditingExtension);
-    await sleep(50);
+    await waitForVisualState(() => {
+      const text = document.body.textContent;
+      return text.includes('bold and italic') && !text.includes('**bold**');
+    });
 
     expect(document.body.textContent).toContain('# Heading');
     expect(document.body.textContent).toContain('bold and italic');
@@ -30,7 +43,10 @@ describe('visual Markdown editing', () => {
     expect(editor.getText()).toBe(source);
 
     editor.selectRange(source.indexOf('bold'), source.indexOf('bold'));
-    await sleep(50);
+    await waitForVisualState(() => {
+      const text = document.body.textContent;
+      return !text.includes('# Heading') && text.includes('**bold** and *italic*');
+    });
 
     expect(document.body.textContent).not.toContain('# Heading');
     expect(document.body.textContent).toContain('**bold** and *italic*');

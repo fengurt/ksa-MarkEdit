@@ -50,6 +50,13 @@ jobs:
           yarn build
           yarn test
 
+      - name: Build and test Web PWA
+        working-directory: WebApp
+        run: |
+          npm ci
+          npm test
+          npm run build
+
       - name: Import Developer ID certificate
         run: |
           keychain="$RUNNER_TEMP/release.keychain-db"

@@ -238,6 +238,9 @@ enum AppPreferences {
     @Storage(key: "window.workspace-search-width", defaultValue: 280.0)
     static var workspaceSearchWidth: Double
 
+    @Storage(key: "window.workspace-tags-width", defaultValue: 280.0)
+    static var workspaceTagsWidth: Double
+
     @Storage(key: "window.workspace-preview-width", defaultValue: 0.0)
     static var workspacePreviewWidth: Double
 

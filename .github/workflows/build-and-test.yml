@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, "codex/**"]
     types: [synchronize, opened, reopened, ready_for_review]
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 22.x
           cache: npm
-          cache-dependency-path: CoreEditor/yarn.lock
+          cache-dependency-path: WebApp/package-lock.json
 
       - name: Validate localizations
         run: node Scripts/validate-localizations.mjs
@@ -43,6 +43,13 @@ jobs:
           yarn install --immutable
           yarn build
           yarn test
+
+      - name: Build and test Web PWA
+        working-directory: WebApp
+        run: |
+          npm ci
+          npm test
+          npm run build
 
       - name: Build ksamint MarkEdit
         run: |
@@ -97,6 +104,11 @@ jobs:
           corepack enable
           yarn install --immutable
           yarn build
+      - name: Build Web PWA
+        working-directory: WebApp
+        run: |
+          npm ci
+          npm run build
       - name: Build deployment-target release
         run: |
           xcodebuild build \
@@ -127,6 +139,11 @@ jobs:
           corepack enable
           yarn install --immutable
           yarn build
+      - name: Build Web PWA
+        working-directory: WebApp
+        run: |
+          npm ci
+          npm run build
       - name: Build universal app
         run: |
           xcodebuild build \

@@ -44,7 +44,6 @@ public struct LabeledProgressView: View {
 
 // MARK: - Private
 
-@Animatable
 private struct RingProgressView: View {
   var value: Double
 

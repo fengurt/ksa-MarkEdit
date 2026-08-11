@@ -6,6 +6,8 @@
 //
 
 import AppKit
+import SharedUI
+import WebKit
 
 extension EditorViewController {
   var workspaceContentInset: Double {
@@ -19,6 +21,8 @@ extension EditorViewController {
         return workspaceSidebarWidth
       case .search:
         return workspaceSearchWidth
+      case .tags:
+        return workspaceTagsWidth
       case .preview:
         return workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
       }
@@ -140,6 +144,9 @@ extension EditorViewController {
     sidebar.onMove = { [weak self] sourceURL, destinationDirectory in
       self?.moveWorkspaceItem(sourceURL, to: destinationDirectory) ?? false
     }
+    sidebar.onTaxonomyAction = { [weak self] action, item in
+      self?.performTaxonomyAction(action, item: item)
+    }
     sidebar.onResize = { [weak self] delta in
       self?.resizeWorkspaceSidebar(by: delta)
     }
@@ -208,6 +215,9 @@ private extension EditorViewController {
     case .search:
       workspaceSearchWidth = min(max(workspaceSearchWidth + delta, 200), maximumWidth)
       AppPreferences.Window.workspaceSearchWidth = workspaceSearchWidth
+    case .tags:
+      workspaceTagsWidth = min(max(workspaceTagsWidth + delta, 200), maximumWidth)
+      AppPreferences.Window.workspaceTagsWidth = workspaceTagsWidth
     case .preview:
       let currentWidth = workspacePreviewWidth > 0 ? workspacePreviewWidth : view.bounds.width * 0.4
       workspacePreviewWidth = min(max(currentWidth + delta, 200), maximumWidth)
@@ -272,6 +282,46 @@ extension EditorViewController {
       workspacePreviewView?.reset(text: text, revision: editorTextRevision)
     }
   }
+
+  func showWorkspaceHub() {
+    if let window = workspaceHubWindowController?.window {
+      window.makeKeyAndOrderFront(nil)
+      return
+    }
+
+    Task { @MainActor [weak self] in
+      guard let self else {
+        return
+      }
+      guard let session = self.workspaceSession else {
+        self.toggleWorkspaceSidebar(.files)
+        return
+      }
+
+      let snapshot = await session.hubSnapshot()
+      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] path in
+        guard let self, let session = self.workspaceSession else {
+          return
+        }
+        let url = session.rootURL.appending(path: path).standardizedFileURL
+        guard session.contains(url) else {
+          showWorkspaceError(Localized.Workspace.outsideWorkspace)
+          return
+        }
+        openWorkspaceFile(url, lineNumber: nil)
+      }
+      let window = NSWindow(contentViewController: contentViewController)
+      window.title = Localized.Workspace.hub
+      window.setContentSize(NSSize(width: 1_040, height: 720))
+      window.minSize = NSSize(width: 760, height: 520)
+      window.styleMask.insert([.resizable, .miniaturizable, .closable, .titled])
+      window.center()
+
+      let controller = NSWindowController(window: window)
+      workspaceHubWindowController = controller
+      controller.showWindow(nil)
+    }
+  }
 }
 
 private extension EditorViewController {
@@ -298,6 +348,87 @@ private extension EditorViewController {
     } else {
       NSSound.beep()
     }
+  }
+}
+
+@MainActor
+private final class WorkspaceHubViewController: NSViewController {
+  private let webView: WKWebView
+  private let messageHandler: WorkspaceHubMessageHandler
+
+  init(snapshot: WorkspaceHubSnapshot, onOpen: @escaping (String) -> Void) {
+    let contentController = WKUserContentController()
+    self.messageHandler = WorkspaceHubMessageHandler(onOpen: onOpen)
+    contentController.add(messageHandler, name: "ksamintHub")
+
+    if let data = try? JSONEncoder().encode(snapshot) {
+      let base64 = data.base64EncodedString()
+      let source = """
+      (() => {
+        const bytes = Uint8Array.from(atob('\(base64)'), value => value.charCodeAt(0));
+        window.__KSAMINT_MAC_HUB__ = JSON.parse(new TextDecoder().decode(bytes));
+      })();
+      """
+      contentController.addUserScript(
+        WKUserScript(
+          source: source,
+          injectionTime: .atDocumentStart,
+          forMainFrameOnly: true
+        )
+      )
+    }
+
+    let configuration = WKWebViewConfiguration()
+    configuration.userContentController = contentController
+    configuration.websiteDataStore = .nonPersistent()
+    self.webView = WKWebView(frame: .zero, configuration: configuration)
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func loadView() {
+    view = webView
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    guard let indexURL = Bundle.main.url(
+      forResource: "index",
+      withExtension: "html",
+      subdirectory: "KnowledgeHub"
+    ) else {
+      return
+    }
+    webView.loadFileURL(
+      indexURL,
+      allowingReadAccessTo: indexURL.deletingLastPathComponent()
+    )
+  }
+}
+
+@MainActor
+private final class WorkspaceHubMessageHandler: NSObject, WKScriptMessageHandler {
+  private let onOpen: (String) -> Void
+
+  init(onOpen: @escaping (String) -> Void) {
+    self.onOpen = onOpen
+  }
+
+  func userContentController(
+    _ userContentController: WKUserContentController,
+    didReceive message: WKScriptMessage
+  ) {
+    guard message.name == "ksamintHub",
+          let payload = message.body as? [String: Any],
+          payload["action"] as? String == "open",
+          let path = payload["path"] as? String else {
+      return
+    }
+    onOpen(path)
   }
 }
 
@@ -527,5 +658,198 @@ private extension EditorViewController {
         buttons: [Localized.General.done]
       )
     }
+  }
+}
+
+// MARK: - Tags and Categories
+
+private extension EditorViewController {
+  func performTaxonomyAction(
+    _ action: WorkspaceTaxonomyAction,
+    item: WorkspaceTaxonomyItem
+  ) {
+    workspaceMetadataTask?.cancel()
+    workspaceMetadataTask = Task { @MainActor [weak self] in
+      guard let self, let session = self.workspaceSession else {
+        return
+      }
+
+      let urls = await session.files(for: item)
+      guard !urls.isEmpty, !Task.isCancelled else {
+        NSSound.beep()
+        return
+      }
+
+      let destination: String?
+      switch action {
+      case .rename:
+        destination = await showTextBox(
+          title: Localized.Workspace.renameMetadata,
+          placeholder: Localized.Workspace.metadataName,
+          defaultValue: item.displayName
+        )
+      case .merge:
+        destination = await showTextBox(
+          title: Localized.Workspace.mergeTag,
+          placeholder: Localized.Workspace.targetTag,
+          defaultValue: nil
+        )
+      case .delete:
+        destination = nil
+      }
+
+      if action != .delete {
+        guard let destination = destination?.trimmingCharacters(
+          in: .whitespacesAndNewlines
+        ), !destination.isEmpty, destination != item.displayName else {
+          return
+        }
+      }
+
+      let actionTitle: String = {
+        switch action {
+        case .rename:
+          return Localized.Workspace.renameMetadata
+        case .merge:
+          return Localized.Workspace.mergeTag
+        case .delete:
+          return Localized.Workspace.deleteMetadata
+        }
+      }()
+      let response = await showAlert(
+        title: actionTitle,
+        message: String(
+          format: Localized.Workspace.metadataImpactFormat,
+          item.displayName,
+          urls.count
+        ),
+        buttons: [actionTitle, Localized.General.cancel]
+      )
+      guard response == .alertFirstButtonReturn, !Task.isCancelled else {
+        return
+      }
+
+      do {
+        var snapshots = [URL: WorkspaceDocumentMetadata]()
+        for url in urls {
+          guard !Task.isCancelled else {
+            throw CancellationError()
+          }
+
+          let original = try await currentMetadata(at: url)
+          snapshots[url] = original
+          let updated = transformedMetadata(
+            original,
+            item: item,
+            action: action,
+            destination: destination
+          )
+          try await applyMetadata(updated, at: url)
+        }
+
+        registerMetadataUndo(snapshots)
+        session.rebuildIndex()
+        workspaceSidebarView?.reloadTaxonomy()
+      } catch is CancellationError {
+        return
+      } catch {
+        showWorkspaceError(error.localizedDescription)
+      }
+    }
+  }
+
+  func transformedMetadata(
+    _ metadata: WorkspaceDocumentMetadata,
+    item: WorkspaceTaxonomyItem,
+    action: WorkspaceTaxonomyAction,
+    destination: String?
+  ) -> WorkspaceDocumentMetadata {
+    var metadata = metadata
+
+    switch item {
+    case let .tag(tag):
+      let sourceIdentity = tag.identity
+      var tags = metadata.tags.filter {
+        WorkspaceDocumentMetadata.canonicalTagIdentity($0) != sourceIdentity
+      }
+      if action != .delete, let destination {
+        tags.append(destination)
+      }
+      metadata.tags = WorkspaceDocumentMetadata(tags: tags).tags
+
+    case let .category(category):
+      guard let currentCategory = metadata.category else {
+        return metadata
+      }
+      let source = category.path
+      guard currentCategory == source || currentCategory.hasPrefix("\(source)/") else {
+        return metadata
+      }
+
+      if action == .delete {
+        metadata.category = nil
+      } else if let destination {
+        metadata.category = destination + String(currentCategory.dropFirst(source.count))
+      }
+    }
+    return metadata
+  }
+
+  func currentMetadata(at url: URL) async throws -> WorkspaceDocumentMetadata {
+    if let document = NSDocumentController.shared.document(for: url) as? EditorDocument,
+       let metadata = await document.currentWorkspaceMetadata() {
+      return metadata
+    }
+    return try WorkspaceMetadataFile.read(at: url)
+  }
+
+  func applyMetadata(_ metadata: WorkspaceDocumentMetadata, at url: URL) async throws {
+    if let document = NSDocumentController.shared.document(for: url) as? EditorDocument {
+      try await document.applyWorkspaceMetadata { _ in metadata }
+      return
+    }
+
+    var coordinationError: NSError?
+    var operationError: Error?
+    let coordinator = NSFileCoordinator()
+    coordinator.coordinate(
+      writingItemAt: url,
+      options: .forMerging,
+      error: &coordinationError
+    ) { coordinatedURL in
+      do {
+        try WorkspaceMetadataFile.update(at: coordinatedURL) { _ in metadata }
+      } catch {
+        operationError = error
+      }
+    }
+
+    if let coordinationError {
+      throw coordinationError
+    }
+    if let operationError {
+      throw operationError
+    }
+  }
+
+  func registerMetadataUndo(_ snapshots: [URL: WorkspaceDocumentMetadata]) {
+    undoManager?.registerUndo(withTarget: self) { target in
+      target.workspaceMetadataTask?.cancel()
+      target.workspaceMetadataTask = Task { @MainActor [weak target] in
+        guard let target else {
+          return
+        }
+        do {
+          for (url, metadata) in snapshots {
+            try await target.applyMetadata(metadata, at: url)
+          }
+          target.workspaceSession?.rebuildIndex()
+          target.workspaceSidebarView?.reloadTaxonomy()
+        } catch {
+          target.showWorkspaceError(error.localizedDescription)
+        }
+      }
+    }
+    undoManager?.setActionName(Localized.Workspace.editMetadata)
   }
 }

@@ -144,4 +144,94 @@ final class WorkspaceIndexTests: XCTestCase {
     let results = await task.value
     XCTAssertTrue(results.isEmpty)
   }
+
+  func testMetadataFiltersBooleanQueriesAndRegularExpressions() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let database = root.appending(path: "index.sqlite")
+
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer {
+      try? FileManager.default.removeItem(at: root)
+    }
+
+    try """
+    ---
+    category: Projects/AI
+    tags: [Research, "Café"]
+    ---
+    Swift semantic retrieval
+    """.write(
+      to: root.appending(path: "model.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+    try """
+    ---
+    category: Journal
+    tags: [personal]
+    ---
+    garden notes
+    """.write(
+      to: root.appending(path: "journal.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+
+    let index = WorkspaceIndex(rootURL: root, databaseURL: database)
+    _ = try await index.rebuild()
+
+    let tagged = await index.search("tag:research category:Projects")
+    let excluded = await index.search("notes -garden")
+    let disjunction = await index.search("\"semantic retrieval\" OR tag:personal")
+    let regex = await index.search("regex:/SWIFT/i")
+    let tags = await index.tags()
+    let categories = await index.categories()
+
+    XCTAssertEqual(tagged.map(\.relativePath), ["model.md"])
+    XCTAssertTrue(excluded.isEmpty)
+    XCTAssertEqual(Set(disjunction.map(\.relativePath)), ["model.md", "journal.md"])
+    XCTAssertEqual(regex.first?.relativePath, "model.md")
+    XCTAssertEqual(tags.first { $0.identity == "research" }?.fileCount, 1)
+    XCTAssertEqual(categories.map(\.path), ["Journal", "Projects/AI"])
+  }
+
+  func testWikiLinksMarkdownLinksBacklinksAndGraph() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let database = root.appending(path: "index.sqlite")
+    let folder = root.appending(path: "Folder", directoryHint: .isDirectory)
+
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    defer {
+      try? FileManager.default.removeItem(at: root)
+    }
+
+    try "# Target".write(
+      to: folder.appending(path: "Target.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+    try "See [[Folder/Target|目标]]".write(
+      to: root.appending(path: "Wiki.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+    try "See [target](Folder/Target.md)".write(
+      to: root.appending(path: "Markdown.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+
+    let index = WorkspaceIndex(rootURL: root, databaseURL: database)
+    _ = try await index.rebuild()
+    let target = folder.appending(path: "Target.md")
+    let backlinks = await index.backlinks(to: target)
+    let graph = await index.graph()
+
+    XCTAssertEqual(Set(backlinks.map(\.relativePath)), ["Wiki.md", "Markdown.md"])
+    XCTAssertEqual(graph.nodes.count, 3)
+    XCTAssertEqual(graph.edges.count, 2)
+    XCTAssertTrue(graph.edges.allSatisfy { $0.targetPath == "Folder/Target.md" })
+  }
 }
