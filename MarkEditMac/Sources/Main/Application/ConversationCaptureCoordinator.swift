@@ -3,10 +3,10 @@ import CryptoKit
 import Security
 import ServiceManagement
 
-@MainActor
 // The capture concerns are extracted into document and queue modules in the
 // immediately following system-integration change.
 // swiftlint:disable:next type_body_length
+@MainActor
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
   static let agentArgument = "--conversation-capture-agent"
