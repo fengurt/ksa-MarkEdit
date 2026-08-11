@@ -128,7 +128,10 @@ private extension FinderTools {
       let directory = container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
       try JSONEncoder().encode(request).write(to: directory.appending(path: "\(request.id).json"), options: .atomic)
-      NSWorkspace.shared.open(URL(string: "ksamint-markedit://quick-action?id=\(request.id)")!)
+      guard let callbackURL = URL(
+        string: "ksamint-markedit://quick-action?id=\(request.id)"
+      ) else { throw CocoaError(.fileWriteInvalidFileName) }
+      NSWorkspace.shared.open(callbackURL)
     } catch {
       logger.log(level: .error, "Quick Action failed: \(error.localizedDescription)")
     }

@@ -151,7 +151,8 @@ private final class ClipboardCaptureService: NSObject {
       .precomposedStringWithCompatibilityMapping
       .trimmingCharacters(in: .whitespacesAndNewlines)
     let digest = SHA256.hash(data: Data(normalized.utf8)).map { String(format: "%02x", $0) }.joined()
-    let parts = Calendar(identifier: .gregorian).dateComponents(in: TimeZone(secondsFromGMT: 0)!, from: Date())
+    let timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+    let parts = Calendar(identifier: .gregorian).dateComponents(in: timeZone, from: Date())
     let directory = root.appending(path: "Conversations/\(String(format: "%04d", parts.year ?? 0))/\(String(format: "%02d", parts.month ?? 0))", directoryHint: .isDirectory)
     let url = directory.appending(path: "Captured--\(digest.prefix(12)).md")
     if FileManager.default.fileExists(atPath: url.path) { return true }
@@ -185,7 +186,10 @@ private final class ClipboardCaptureService: NSObject {
 
   private func savePending(_ capture: CaptureEnvelopeV1) {
     do {
-      try FileManager.default.createDirectory(at: SharedCaptureSettings.pendingDirectory, withIntermediateDirectories: true)
+      guard let pendingDirectory = SharedCaptureSettings.pendingDirectory else {
+        throw CocoaError(.fileWriteNoPermission)
+      }
+      try FileManager.default.createDirectory(at: pendingDirectory, withIntermediateDirectories: true)
       // JSON keeps the core PendingCapture fields forward-compatible with the
       // main app while preserving richer envelope fields for future imports.
       let plaintext = try JSONEncoder().encode(capture)
@@ -194,7 +198,7 @@ private final class ClipboardCaptureService: NSObject {
         for: Data(capture.content.precomposedStringWithCompatibilityMapping.utf8),
         using: key
       ).map { String(format: "%02x", $0) }.joined()
-      let destination = SharedCaptureSettings.pendingDirectory.appending(path: "\(identifier).ksc")
+      let destination = pendingDirectory.appending(path: "\(identifier).ksc")
       if FileManager.default.fileExists(atPath: destination.path) { return }
       let sealed = try AES.GCM.seal(plaintext, using: key)
       guard let combined = sealed.combined else { return }
@@ -235,8 +239,12 @@ private final class ClipboardCaptureService: NSObject {
   }
 
   private func purgeExpired() {
+    guard let pendingDirectory = SharedCaptureSettings.pendingDirectory else { return }
     let cutoff = Date().addingTimeInterval(-Self.retention)
-    let urls = (try? FileManager.default.contentsOfDirectory(at: SharedCaptureSettings.pendingDirectory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+    let urls = (try? FileManager.default.contentsOfDirectory(
+      at: pendingDirectory,
+      includingPropertiesForKeys: [.contentModificationDateKey]
+    )) ?? []
     for url in urls where (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate).map({ $0 < cutoff }) == true {
       try? FileManager.default.removeItem(at: url)
     }
@@ -270,8 +278,18 @@ private final class ClipboardCaptureService: NSObject {
 
   @objc private func togglePause() { paused.toggle(); rebuildMenu() }
   @objc private func captureNextCopy() { captureNext = true; rebuildMenu() }
-  @objc private func openInbox() { NSWorkspace.shared.open(URL(string: "ksamint-markedit://conversation-inbox")!) }
-  @objc private func openSettings() { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!) }
+  @objc private func openInbox() {
+    if let url = URL(string: "ksamint-markedit://conversation-inbox") {
+      NSWorkspace.shared.open(url)
+    }
+  }
+  @objc private func openSettings() {
+    if let url = URL(
+      string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
+    ) {
+      NSWorkspace.shared.open(url)
+    }
+  }
   @objc private func undoLast() {
     guard let lastSavedURL else { return }
     _ = try? FileManager.default.trashItem(at: lastSavedURL, resultingItemURL: nil)
@@ -304,7 +322,7 @@ private final class ClipboardCaptureService: NSObject {
 }
 
 private enum SharedCaptureSettings {
-  private static let defaults = UserDefaults(suiteName: appGroup)!
+  private static let defaults = UserDefaults(suiteName: appGroup) ?? .standard
   static var enabled: Bool {
     get { defaults.bool(forKey: "conversationCaptureEnabled") }
     set { defaults.set(newValue, forKey: "conversationCaptureEnabled") }
@@ -316,8 +334,8 @@ private enum SharedCaptureSettings {
           url.startAccessingSecurityScopedResource() else { return nil }
     return url.standardizedFileURL
   }
-  static var pendingDirectory: URL {
-    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)!
+  static var pendingDirectory: URL? {
+    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)?
       .appending(path: "ConversationInbox/Pending", directoryHint: .isDirectory)
   }
 }

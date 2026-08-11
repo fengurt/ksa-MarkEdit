@@ -67,7 +67,10 @@ final class QuickActionViewController: NSViewController {
         to: directory.appending(path: "\(request.id).json"),
         options: [.atomic, .completeFileProtectionUnlessOpen]
       )
-      NSWorkspace.shared.open(URL(string: "ksamint-markedit://quick-action?id=\(request.id)")!)
+      guard let callbackURL = URL(
+        string: "ksamint-markedit://quick-action?id=\(request.id)"
+      ) else { throw CocoaError(.fileWriteInvalidFileName) }
+      NSWorkspace.shared.open(callbackURL)
       context?.completeRequest(returningItems: nil)
     } catch {
       context?.cancelRequest(withError: error)
