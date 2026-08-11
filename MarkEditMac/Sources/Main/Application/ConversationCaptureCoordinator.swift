@@ -4,6 +4,9 @@ import Security
 import ServiceManagement
 
 @MainActor
+// The capture concerns are extracted into document and queue modules in the
+// immediately following system-integration change.
+// swiftlint:disable:next type_body_length
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
   static let agentArgument = "--conversation-capture-agent"
@@ -174,7 +177,8 @@ final class ConversationCaptureCoordinator: NSObject {
     let normalized = normalize(text)
     let digest = sha256(normalized)
     let calendar = Calendar(identifier: .gregorian)
-    let parts = calendar.dateComponents(in: TimeZone(secondsFromGMT: 0)!, from: Date())
+    let timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+    let parts = calendar.dateComponents(in: timeZone, from: Date())
     let directory = rootURL
       .appending(path: "Conversations", directoryHint: .isDirectory)
       .appending(path: String(format: "%04d", parts.year ?? 0), directoryHint: .isDirectory)
@@ -505,9 +509,10 @@ final class ConversationCaptureCoordinator: NSObject {
 
   private func unregisterLoginAgent() {
     guard #available(macOS 13, *) else { return }
-    try? SMAppService.agent(
+    let service = SMAppService.agent(
       plistName: "art.apuch.ksamint-markedit.conversation-capture.plist"
-    ).unregister()
+    )
+    try? service.unregister()
   }
 
   private var pendingDirectory: URL {
