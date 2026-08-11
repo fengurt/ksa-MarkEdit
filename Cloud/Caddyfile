@@ -1,0 +1,27 @@
+{
+    email {$ACME_EMAIL}
+}
+api.notes.apuch.art {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        -Server
+    }
+    reverse_proxy api:8080
+}
+
+notes.apuch.art {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.notes.apuch.art; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        -Server
+    }
+    root * /srv/web
+    try_files {path} /index.html
+    file_server
+}

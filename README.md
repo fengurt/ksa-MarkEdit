@@ -24,6 +24,9 @@ API stay compatible with upstream MarkEdit.
 - Optional on-device Deep Search with a separately downloaded multilingual model
 - Offline Web PWA workspace using OPFS with an IndexedDB fallback
 - Opt-in local MCP tools constrained to one authorized workspace
+- Optional Passkey account and zero-knowledge encrypted backup protocol
+- Tencent COS disaster recovery and private GitHub encrypted history
+- Independent universal `ksamint-vault` recovery CLI
 - Finder and Quick Look extensions
 - Shortcuts, AppleScript, and JavaScript extension support
 - Universal Intel and Apple silicon build
@@ -64,6 +67,18 @@ with `--mcp-stdio`, and writes require the separate `--allow-write` opt-in.
 `set_tags`, `set_category`, and `move_to_trash` additionally require
 `confirmed: true` on each call. Paths and symlinks cannot escape the selected
 workspace, and writes append to `.ksamint/audit.log`.
+
+## Private cloud and recovery
+
+Cloud features are optional and default to off. The Mac app remains fully
+functional without an account. When enabled, Markdown, paths, attachments,
+vector shards, and manifests are encrypted on the device before upload; the
+service receives only ciphertext and synchronization metadata.
+
+The versioned Rust protocol, Passkey/Axum API, Tencent STS integration,
+GitHub App token broker, deployment files, and independent recovery CLI live in
+[`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
+in the app or Web PWA.
 
 ## Language review
 

@@ -34,6 +34,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22.x
+      - uses: dtolnay/rust-toolchain@1.97
+        with:
+          components: clippy, rustfmt
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Verify tag and version
         run: |
@@ -54,8 +58,17 @@ jobs:
         working-directory: WebApp
         run: |
           npm ci
+          npm audit --audit-level=high
+          npm run lint
           npm test
           npm run build
+
+      - name: Validate private cloud and recovery
+        working-directory: Cloud
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
 
       - name: Import Developer ID certificate
         run: |
@@ -68,6 +81,22 @@ jobs:
           security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
           security list-keychains -d user -s "$keychain"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+
+      - name: Build and sign universal recovery CLI
+        working-directory: Cloud
+        run: |
+          cargo build --locked --release -p ksamint-vault --target aarch64-apple-darwin
+          cargo build --locked --release -p ksamint-vault --target x86_64-apple-darwin
+          lipo -create \
+            target/aarch64-apple-darwin/release/ksamint-vault \
+            target/x86_64-apple-darwin/release/ksamint-vault \
+            -output "$RUNNER_TEMP/ksamint-vault"
+          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
+          codesign --force --options runtime --timestamp --sign "$identity" "$RUNNER_TEMP/ksamint-vault"
+          "$RUNNER_TEMP/ksamint-vault" --version
+          lipo -archs "$RUNNER_TEMP/ksamint-vault" | grep -q arm64
+          lipo -archs "$RUNNER_TEMP/ksamint-vault" | grep -q x86_64
+          ditto -c -k "$RUNNER_TEMP/ksamint-vault" "$RUNNER_TEMP/ksamint-vault-macos-universal.zip"
 
       - name: Archive and export universal app
         run: |
@@ -110,6 +139,11 @@ jobs:
             --key-id "$APPLE_NOTARY_KEY_ID" \
             --issuer "$APPLE_NOTARY_ISSUER_ID" \
             --wait
+          xcrun notarytool submit "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            --key "$notary_key" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --wait
           xcrun stapler staple "$dmg"
           xcrun stapler validate "$dmg"
           codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/export/ksamint MarkEdit.app"
@@ -118,7 +152,10 @@ jobs:
           dmg_size="$(stat -f '%z' "$dmg")"
           test "$dmg_size" -le 6291456
           printf '{"minOSVer":"15.0"}\n' > "$RUNNER_TEMP/ReleaseInfo.json"
-          shasum -a 256 "$dmg" > "$RUNNER_TEMP/SHA256SUMS"
+          shasum -a 256 \
+            "$dmg" \
+            "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            > "$RUNNER_TEMP/SHA256SUMS"
 
       - name: Publish GitHub release
         env:
@@ -127,6 +164,7 @@ jobs:
           version="${RELEASE_TAG#v}"
           gh release create "$RELEASE_TAG" \
             "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
+            "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
             "$RUNNER_TEMP/ReleaseInfo.json" \
             "$RUNNER_TEMP/SHA256SUMS" \
             --repo "$GITHUB_REPOSITORY" \

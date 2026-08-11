@@ -171,7 +171,7 @@ function decodeScalar(rawValue: string): string | undefined {
 }
 
 function encodeScalar(value: string): string {
-  const needsQuotes = !value || /[\s:#\[\]{},&*!|>'"%@`]/.test(value);
+  const needsQuotes = !value || /[\s:#[\]{},&*!|>'"%@`]/.test(value);
   return needsQuotes ? `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"` : value;
 }
 
