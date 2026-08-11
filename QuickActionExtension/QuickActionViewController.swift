@@ -1,8 +1,7 @@
 import AppKit
 import UniformTypeIdentifiers
 
-@objc(QuickActionViewController)
-final class QuickActionViewController: NSViewController {
+@objc(QuickActionViewController) final class QuickActionViewController: NSViewController {
   private var inputURLs: [URL] = []
   private var context: NSExtensionContext?
 

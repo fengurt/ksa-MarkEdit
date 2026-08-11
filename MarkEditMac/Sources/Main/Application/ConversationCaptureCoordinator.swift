@@ -424,7 +424,6 @@ private extension ConversationCaptureCoordinator {
       NSWorkspace.shared.open(settings)
     }
   }
-
 }
 
 private extension Notification.Name {

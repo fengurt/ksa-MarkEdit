@@ -159,6 +159,7 @@ private extension FinderTools {
 
 private enum WorkspaceQuickAction: String, Codable, CaseIterable {
   case preview, openEditor, conversationInbox, saveReference, addWorkspace, analyzeAgent, convertMarkdown
+
   var title: String {
     switch self {
     case .preview: String(localized: "Quick Preview")

@@ -117,8 +117,15 @@ private final class ClipboardCaptureService: NSObject {
       return try? url.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
     } ?? []
     return CaptureEnvelopeV1(
-      version: 1, id: UUID(), capturedAt: Date(), sourceName: nil, sourceBundleID: nil,
-      content: text, html: html, rtf: rtf, fileBookmarks: bookmarks
+      version: 1,
+      id: UUID(),
+      capturedAt: Date(),
+      sourceName: nil,
+      sourceBundleID: nil,
+      content: text,
+      html: html,
+      rtf: rtf,
+      fileBookmarks: bookmarks
     )
   }
 
@@ -197,7 +204,9 @@ private final class ClipboardCaptureService: NSObject {
       let identifier = HMAC<SHA256>.authenticationCode(
         for: Data(capture.content.precomposedStringWithCompatibilityMapping.utf8),
         using: key
-      ).map { String(format: "%02x", $0) }.joined()
+      )
+        .map { String(format: "%02x", $0) }
+        .joined()
       let destination = pendingDirectory.appending(path: "\(identifier).ksc")
       if FileManager.default.fileExists(atPath: destination.path) { return }
       let sealed = try AES.GCM.seal(plaintext, using: key)
@@ -249,7 +258,9 @@ private final class ClipboardCaptureService: NSObject {
       try? FileManager.default.removeItem(at: url)
     }
   }
+}
 
+private extension ClipboardCaptureService {
   private func installStatusItem() {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     item.button?.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: String(localized: "Conversation Inbox"))

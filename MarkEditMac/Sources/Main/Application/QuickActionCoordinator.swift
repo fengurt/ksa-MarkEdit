@@ -265,6 +265,7 @@ actor FormatConversionService: ConversionProvider {
 private enum QuickActionError: LocalizedError {
   case invalidRequest, emptySelection, noWorkspace, noEditorForAgent, unsupported, batchLimit, fileLimit, remoteProviderNotConfigured
   case archiveListing(String)
+
   var errorDescription: String? {
     switch self {
     case .invalidRequest: "The Quick Action request is invalid or expired."
