@@ -38,6 +38,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.97
         with:
           components: clippy,rustfmt
+      - name: Build CoreEditor
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
+          yarn test
       - name: Validate Web and cloud
         run: |
           cd WebApp
@@ -52,13 +59,6 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
-      - name: Build CoreEditor
-        working-directory: CoreEditor
-        run: |
-          corepack enable
-          yarn install --immutable
-          yarn build
-          yarn test
       - name: Import Developer ID certificate
         run: |
           keychain="$RUNNER_TEMP/local-install.keychain-db"
