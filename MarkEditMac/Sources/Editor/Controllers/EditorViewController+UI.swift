@@ -44,6 +44,7 @@ extension EditorViewController {
     layoutWebView()
     layoutStatusView()
     layoutWorkspaceSidebar()
+    layoutAgentPanel()
 
     if AppDesign.modernTitleBar {
       modernBackgroundView.translatesAutoresizingMaskIntoConstraints = false
@@ -222,7 +223,7 @@ extension EditorViewController {
     webView.update(animated).frame = CGRect(
       x: workspaceContentInset,
       y: offset + findPanelHeight,
-      width: view.bounds.width - workspaceContentInset,
+      width: view.bounds.width - workspaceContentInset - agentPanelInset,
       height: height - findPanelHeight
     )
   }
@@ -238,7 +239,7 @@ extension EditorViewController {
     }()
 
     statusView.frame = CGRect(
-      x: view.bounds.width - statusView.frame.width - margin,
+      x: view.bounds.width - agentPanelInset - statusView.frame.width - margin,
       y: bottomPanelHeight + margin + 2, // Vertical margins are intentionally larger to visually look the same
       width: statusView.frame.width,
       height: statusView.frame.height

@@ -50,6 +50,17 @@ final class EditorViewController: NSViewController {
   var workspaceMetadataTask: Task<Void, Never>?
   var workspaceHubWindowController: NSWindowController?
   var editorTextRevision: UInt64 = 0
+  var agentPanelView: AgentPanelView?
+  var agentPanelVisible = false
+  var agentPanelWidth = AppPreferences.Window.agentPanelWidth
+  var agentProvider = LocalAgentProviderID(
+    rawValue: AppPreferences.Window.agentProvider
+  ) ?? .codex
+  var agentProviderStatuses = [LocalAgentProviderStatus]()
+  var agentBridge: LocalAgentBridge?
+  var agentMCPServer: LocalMCPUnixServer?
+  var agentEventTask: Task<Void, Never>?
+  var agentStartupTask: Task<Void, Never>?
 
   weak var presentedMenu: NSMenu?
   weak var presentedPopover: NSPopover?
@@ -257,6 +268,14 @@ final class EditorViewController: NSViewController {
 
   deinit {
     workspaceMetadataTask?.cancel()
+    agentEventTask?.cancel()
+    agentStartupTask?.cancel()
+    agentMCPServer?.stop()
+    if let agentBridge {
+      Task {
+        await agentBridge.stop()
+      }
+    }
 
     if let monitor = localEventMonitor {
       NSEvent.removeMonitor(monitor)
@@ -303,6 +322,7 @@ final class EditorViewController: NSViewController {
     }
 
     layoutWorkspaceSidebar()
+    layoutAgentPanel()
     layoutPanels()
     layoutWebView()
     layoutStatusView()

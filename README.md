@@ -24,6 +24,8 @@ API stay compatible with upstream MarkEdit.
 - Optional on-device Deep Search with a separately downloaded multilingual model
 - Offline Web PWA workspace using OPFS with an IndexedDB fallback
 - Opt-in local MCP tools constrained to one authorized workspace
+- Lazy local Codex and Claude Code Agent panel with read-only defaults and diff-gated writes
+- Signed, on-demand Folder, safe HTML, OKF, MinerU, ZIP, TAR, and TGZ resource previews
 - Optional Passkey account and zero-knowledge encrypted backup protocol
 - Tencent COS disaster recovery and private GitHub encrypted history
 - Independent universal `ksamint-vault` recovery CLI
@@ -68,6 +70,30 @@ with `--mcp-stdio`, and writes require the separate `--allow-write` opt-in.
 `set_tags`, `set_category`, and `move_to_trash` additionally require
 `confirmed: true` on each call. Paths and symlinks cannot escape the selected
 workspace, and writes append to `.ksamint/audit.log`.
+
+## Local CLI Agent Bridge
+
+Open the optional right Agent panel with `Command-Option-A`. The app detects an
+existing `codex` or `claude` executable only after the panel is opened and reuses
+that CLI's own login, MCP, plugin, and connector configuration. It never stores
+or forwards API keys.
+
+Codex is started through `codex app-server`; Claude Code uses its streaming JSON
+input and output mode. Both run with read-only or planning defaults. Network and
+external tool requests remain subject to the CLI approval protocol, while file
+insertion, creation, patching, tags, and categories always require a visible
+diff and an additional confirmation in MarkEdit.
+
+While the panel is open, the app exposes its 14 workspace tools plus five
+read-only resource tools through a permission-`0600` Unix socket protected by a
+random 256-bit capability. It does not listen on TCP. Resource reads are limited
+to 10 MiB per call and their contents are marked as untrusted data. Cancel first
+sends the provider's protocol interruption and then terminates the process group
+if the CLI does not stop within the grace period.
+
+Agent output remains temporary until you explicitly insert it, save it as
+Markdown, or save an OKF-compatible `Reference` snapshot. Confirmed actions are
+recorded in `.ksamint/agent-drafts.jsonl`.
 
 ## Private cloud and recovery
 

@@ -94,6 +94,11 @@ extension EditorViewController {
           self.toggleVisualEditing()
           return nil
         }
+
+        if event.keyCode == .kVK_ANSI_A, event.userModifierFlags == [.option, .command] {
+          self.toggleAgentPanel()
+          return nil
+        }
       }
 
       // Press F to potentially change the find mode or switch focus between two fields

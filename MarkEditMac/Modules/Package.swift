@@ -74,7 +74,7 @@ let package = Package(
   targets: [
     .target(
       name: "SharedUI",
-      dependencies: ["AppKitExtensions"],
+      dependencies: ["AppKitExtensions", "ResourceUI"],
       path: "Sources/SharedUI",
       swiftSettings: [
         .enableExperimentalFeature("StrictConcurrency")

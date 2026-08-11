@@ -63,8 +63,12 @@ public final class ResourceModuleHost {
       openInEditor: openInEditor,
       openExternally: openExternally
     )
+    await LiveResourceRegistry.shared.register(session)
     controller.onClose = { [weak self] identifier in
       self?.windows[identifier] = nil
+      Task {
+        await LiveResourceRegistry.shared.unregister(session.id)
+      }
     }
     windows[controller.identifier] = controller
     controller.showWindow(nil)

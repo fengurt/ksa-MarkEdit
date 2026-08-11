@@ -44,6 +44,33 @@ jobs:
           npm test
           npm run build
 
+  local-agent-cli-contracts:
+    name: Local Agent CLI contracts
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+      - name: Install supported CLI protocol fixtures
+        run: >-
+          npm install --prefix "$RUNNER_TEMP/agent-clis" --no-package-lock --no-save
+          @openai/codex@0.142.5 @anthropic-ai/claude-code@2.1.173
+      - name: Validate Codex app-server contract
+        run: |
+          codex="$RUNNER_TEMP/agent-clis/node_modules/.bin/codex"
+          "$codex" --version | grep -F '0.142.5'
+          "$codex" app-server --help | grep -F -- '--config'
+          "$codex" app-server --help | grep -F -- '--stdio'
+      - name: Validate Claude Code stream-json contract
+        run: |
+          claude="$RUNNER_TEMP/agent-clis/node_modules/.bin/claude"
+          "$claude" --version | grep -F '2.1.173'
+          "$claude" --help | grep -F -- '--input-format'
+          "$claude" --help | grep -F -- '--output-format'
+          "$claude" --help | grep -F -- '--permission-mode'
+          "$claude" --help | grep -F -- '--mcp-config'
+
   cloud:
     name: Private cloud and recovery
     runs-on: ubuntu-24.04
@@ -181,7 +208,7 @@ jobs:
 
   development-artifact:
     name: Universal development app
-    needs: [test, compatibility, resource-modules]
+    needs: [test, compatibility, resource-modules, local-agent-cli-contracts]
     runs-on: macos-26
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer

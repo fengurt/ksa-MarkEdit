@@ -15,6 +15,28 @@ import SharedUI
 @main
 final class Application: NSApplication {
   static func main() {
+    if let socketIndex = CommandLine.arguments.firstIndex(of: "--mcp-live-socket"),
+       let capabilityIndex = CommandLine.arguments.firstIndex(of: "--mcp-capability-file"),
+       CommandLine.arguments.indices.contains(socketIndex + 1),
+       CommandLine.arguments.indices.contains(capabilityIndex + 1) {
+      let socketPath = CommandLine.arguments[socketIndex + 1]
+      let capabilityFileURL = URL(fileURLWithPath: CommandLine.arguments[capabilityIndex + 1])
+      Task.detached {
+        do {
+          try await LocalMCPUnixClient.run(
+            socketPath: socketPath,
+            capabilityFileURL: capabilityFileURL
+          )
+          Darwin.exit(EXIT_SUCCESS)
+        } catch {
+          let message = Data("ksamint MarkEdit live MCP: \(error.localizedDescription)\n".utf8)
+          try? FileHandle.standardError.write(contentsOf: message)
+          Darwin.exit(EXIT_FAILURE)
+        }
+      }
+      dispatchMain()
+    }
+
     if CommandLine.arguments.contains("--mcp-stdio") {
       Task.detached {
         do {

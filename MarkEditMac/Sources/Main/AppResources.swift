@@ -177,6 +177,31 @@ enum Localized {
     static let install = String(localized: "Install", comment: "Button title, install a resource module")
   }
 
+  enum Agent {
+    static let panel = String(localized: "Local Agent", comment: "Local CLI Agent panel title")
+    static let close = String(localized: "Close Agent Panel", comment: "Close local Agent panel accessibility label")
+    static let detecting = String(localized: "Detecting local Agent CLIs…", comment: "Local Agent CLI detection status")
+    static let notInstalled = String(localized: "Not installed", comment: "Local Agent CLI is unavailable")
+    static let noneInstalled = String(
+      localized: "No supported Agent CLI was found. Install and sign in to Codex or Claude Code, then reopen this panel.",
+      comment: "No supported local Agent CLI status"
+    )
+    static let prompt = String(localized: "Ask about this workspace or an open resource…", comment: "Local Agent prompt placeholder")
+    static let send = String(localized: "Send", comment: "Send prompt to local Agent")
+    static let allow = String(localized: "Allow", comment: "Allow local Agent approval")
+    static let deny = String(localized: "Deny", comment: "Deny local Agent approval")
+    static let insert = String(localized: "Insert with Diff…", comment: "Insert Agent draft into current document")
+    static let saveMarkdown = String(localized: "Save MD…", comment: "Save Agent draft as Markdown")
+    static let saveReference = String(localized: "Save Reference…", comment: "Save Agent draft as OKF reference")
+    static let review = String(localized: "Review Agent Draft", comment: "Agent draft diff review title")
+    static let apply = String(localized: "Apply", comment: "Apply reviewed Agent draft")
+    static let workspaceOnly = String(
+      localized: "Agent drafts can only be saved inside the authorized workspace.",
+      comment: "Agent draft path safety error"
+    )
+    static let draftDiff = String(localized: "--- Current\n+++ Agent Draft\n%@", comment: "Agent draft visual diff format")
+  }
+
   enum Document {
     static let openDocument = String(localized: "Open Document", comment: "Menu item: open an existing document")
     static let newDocument = String(localized: "New Document", comment: "Menu item: create a new document")
