@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "folder-base",
+      "displayName": "Folder and File Preview",
+      "version": "1.0.0",
+      "entrypoint": "index.js",
+      "minAppVersion": "2.1.0",
+      "probes": [
+        {
+          "fileExtensions": ["md", "markdown", "txt", "json", "yaml", "yml", "csv", "png", "jpg", "jpeg", "gif", "webp", "avif", "svg", "pdf"],
+          "directoryMarkers": [],
+          "mediaTypes": ["public.folder", "public.plain-text", "public.image", "com.adobe.pdf"],
+          "priority": 20
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "id": "html-safe",
+      "displayName": "Safe HTML Preview",
+      "version": "1.0.0",
+      "entrypoint": "index.js",
+      "minAppVersion": "2.1.0",
+      "probes": [
+        {
+          "fileExtensions": ["html", "htm"],
+          "directoryMarkers": [],
+          "mediaTypes": ["public.html"],
+          "priority": 250
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["index.html"],
+          "mediaTypes": [],
+          "priority": 250
+        }
+      ]
+    },
+    {
+      "id": "okf",
+      "displayName": "Google OKF Catalog",
+      "version": "1.0.0",
+      "entrypoint": "index.js",
+      "minAppVersion": "2.1.0",
+      "probes": [
+        {
+          "fileExtensions": ["okf"],
+          "directoryMarkers": [],
+          "mediaTypes": [],
+          "priority": 450
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["okf.yaml"],
+          "mediaTypes": [],
+          "priority": 450
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["knowledge.okf.json"],
+          "mediaTypes": [],
+          "priority": 450
+        }
+      ]
+    },
+    {
+      "id": "mineru",
+      "displayName": "MinerU OCR Result",
+      "version": "1.0.0",
+      "entrypoint": "index.js",
+      "minAppVersion": "2.1.0",
+      "probes": [
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["content_list_v2.json"],
+          "mediaTypes": [],
+          "priority": 600
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["content_list.json"],
+          "mediaTypes": [],
+          "priority": 550
+        },
+        {
+          "fileExtensions": [],
+          "directoryMarkers": ["middle.json", "model.json"],
+          "mediaTypes": [],
+          "priority": 500
+        }
+      ]
+    },
+    {
+      "id": "archive-base",
+      "displayName": "ZIP, TAR, and TGZ Preview",
+      "version": "1.0.0",
+      "entrypoint": "index.js",
+      "minAppVersion": "2.1.0",
+      "probes": [
+        {
+          "fileExtensions": ["zip", "tar", "tgz", "gz"],
+          "directoryMarkers": [],
+          "mediaTypes": ["public.zip-archive", "org.gnu.gnu-zip-archive"],
+          "priority": 500
+        }
+      ]
+    }
+  ]
+}

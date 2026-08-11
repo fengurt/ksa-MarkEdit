@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "mineru",
+  "version": "1.0.0",
+  "displayName": "MinerU OCR Result",
+  "entrypoint": "index.js",
+  "files": [
+    {
+      "path": "base.css",
+      "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
+      "size": 2664,
+      "mediaType": "text/css"
+    },
+    {
+      "path": "index.js",
+      "sha256": "9af04dc14e4578bdbbc56f093916312df1f0b2c68091aacc60719445c0810da3",
+      "size": 6290,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "runtime.js",
+      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
+      "size": 5186,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "c47d1725af524e3e22d7c62e1b27f6609adcac348037d9b710ad529e1b96e149",
+      "size": 1015,
+      "mediaType": "text/css"
+    }
+  ],
+  "probes": [
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "content_list_v2.json"
+      ],
+      "mediaTypes": [],
+      "priority": 600
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "content_list.json"
+      ],
+      "mediaTypes": [],
+      "priority": 550
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "middle.json",
+        "model.json"
+      ],
+      "mediaTypes": [],
+      "priority": 500
+    }
+  ],
+  "signingKeyID": "official-v1",
+  "signature": "MEUCICw524x7iDUocx78rvU1B4jwPAa/CxFxjYqs7HotfWnjAiEAqw2MXlL80rRAOsp+ymFzp7RSnrZ+JQuvZpts9oi+RcA="
+}

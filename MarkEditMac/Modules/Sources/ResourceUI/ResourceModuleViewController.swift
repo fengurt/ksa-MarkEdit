@@ -14,6 +14,8 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   private let moduleURL: URL?
   private let manifest: ResourceModuleManifestV1?
   private let messages: ResourceUIMessages
+  private let openInEditor: @MainActor (URL) -> Void
+  private let openExternally: @MainActor (URL) -> Void
   private var webView: WKWebView?
   private var messageHandler: ResourceModuleMessageHandler?
   private var schemeHandler: ResourceURLSchemeHandler?
@@ -23,12 +25,16 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
     session: ResourceSession,
     moduleURL: URL?,
     manifest: ResourceModuleManifestV1?,
-    messages: ResourceUIMessages
+    messages: ResourceUIMessages,
+    openInEditor: @escaping @MainActor (URL) -> Void,
+    openExternally: @escaping @MainActor (URL) -> Void
   ) {
     self.session = session
     self.moduleURL = moduleURL
     self.manifest = manifest
     self.messages = messages
+    self.openInEditor = openInEditor
+    self.openExternally = openExternally
     super.init(nibName: nil, bundle: nil)
   }
 
@@ -92,7 +98,11 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
 private extension ResourceModuleViewController {
   func load(moduleURL: URL, manifest: ResourceModuleManifestV1) {
     let contentController = WKUserContentController()
-    let messageHandler = ResourceModuleMessageHandler(session: session)
+    let messageHandler = ResourceModuleMessageHandler(
+      session: session,
+      openInEditor: openInEditor,
+      openExternally: openExternally
+    )
     contentController.addScriptMessageHandler(messageHandler, contentWorld: .page, name: "ksamintResource")
     contentController.addUserScript(WKUserScript(
       source: Self.bridgeScript,
@@ -171,7 +181,7 @@ private extension ResourceModuleViewController {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: ksamint-resource:; media-src 'self' ksamint-resource:; connect-src ksamint-resource:; font-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-\(nonce)'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ksamint-resource:; media-src 'self' blob: ksamint-resource:; frame-src ksamint-resource:; connect-src ksamint-resource:; font-src 'self'; worker-src 'self' blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
         <style>html,body,#resource-root{height:100%;margin:0}body{font:13px system-ui;color:CanvasText;background:Canvas}</style>
       </head>
       <body>

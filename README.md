@@ -119,6 +119,8 @@ The project contains:
 - `MarkEditMac`: the native macOS app and feature modules
 - `MarkEditMac/Modules/ResourceCore` and `ResourceUI`: signed, isolated,
   read-only resource module protocol, filesystem broker, and lazy WKWebView host
+- `ResourceModules`: separately signed Folder, safe HTML, Google OKF, MinerU,
+  and ZIP/TAR/TGZ preview modules (kept outside the main DMG)
 - `WebApp`: the shared React/Vite offline knowledge workspace
 - `VaultProtocolTS`: shared TypeScript deterministic-CBOR and vault crypto
 - `AgentSDK`: remote read-only, client-side-decrypting Agent SDK
@@ -142,6 +144,23 @@ npm run validate:mac-bundle
 cd ..
 xcodebuild build -project MarkEdit.xcodeproj -scheme MarkEditMac -destination 'platform=macOS'
 ```
+
+Verify the separately distributed resource modules and their archive security
+tests with:
+
+```sh
+cd ResourceModules
+npm run verify
+```
+
+The app downloads a module only after the user opens a matching resource and
+approves its displayed name, version, and size. Every manifest has a P-256
+signature and every static asset has a SHA-256 hash. Modules run in a
+non-persistent, network-disabled WebKit process and receive only paginated
+directory metadata or bounded byte ranges from the selected resource.
+Resource containers can be opened from File > Open Resource, the Recent
+Resources submenu, or by dropping a folder, archive, HTML, or OKF resource onto
+an editor window. Ordinary image and PDF drops retain their Markdown behavior.
 
 ## Branding and license
 

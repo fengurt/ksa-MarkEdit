@@ -11,10 +11,18 @@ import WebKit
 @MainActor
 final class ResourceModuleMessageHandler: NSObject, WKScriptMessageHandlerWithReply {
   private let session: ResourceSession
+  private let openInEditor: @MainActor (URL) -> Void
+  private let openExternally: @MainActor (URL) -> Void
   private var operations = [String: Task<String, Error>]()
 
-  init(session: ResourceSession) {
+  init(
+    session: ResourceSession,
+    openInEditor: @escaping @MainActor (URL) -> Void,
+    openExternally: @escaping @MainActor (URL) -> Void
+  ) {
     self.session = session
+    self.openInEditor = openInEditor
+    self.openExternally = openExternally
   }
 
   func userContentController(
@@ -106,6 +114,23 @@ private extension ResourceModuleMessageHandler {
         ]
       )
       return try Self.jsonObject(render)
+    case .openInEditor:
+      guard let entryID = request.entryID,
+            ["md", "markdown", "mdown", "mkd", "txt"].contains(
+              URL(fileURLWithPath: entryID).pathExtension.lowercased()
+            ) else {
+        throw ResourceModuleError.unsupportedFileType(request.entryID ?? "")
+      }
+      let url = try await session.broker.authorizedFileURL(entryID: entryID)
+      openInEditor(url)
+      return ["opened": true]
+    case .openExternally:
+      guard let entryID = request.entryID else {
+        throw ResourceModuleError.invalidManifest
+      }
+      let url = try await session.broker.authorizedFileURL(entryID: entryID)
+      openExternally(url)
+      return ["opened": true]
     case .cancel:
       return ["cancelled": true]
     }

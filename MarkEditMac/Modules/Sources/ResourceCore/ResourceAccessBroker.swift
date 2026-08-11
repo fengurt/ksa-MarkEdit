@@ -133,6 +133,10 @@ public actor ResourceAccessBroker {
     return try handle.read(upToCount: Int(available)) ?? Data()
   }
 
+  public func authorizedFileURL(entryID: String) throws -> URL {
+    try resolve(relativePath: entryID, expectsDirectory: false)
+  }
+
   public func searchFileNames(query: String, limit: Int = 500) throws -> [ResourceEntryV1] {
     let foldedQuery = Self.fold(query)
     guard !foldedQuery.isEmpty else {

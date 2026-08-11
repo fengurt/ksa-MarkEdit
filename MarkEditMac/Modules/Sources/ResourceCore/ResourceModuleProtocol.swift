@@ -162,8 +162,76 @@ public struct ResourceModuleTrustStore: Sendable {
     self.keys = decoded
   }
 
+  public init(pemKeys: [String: String]) throws {
+    var decoded = [String: P256.Signing.PublicKey]()
+    for (identifier, pem) in pemKeys {
+      decoded[identifier] = try P256.Signing.PublicKey(pemRepresentation: pem)
+    }
+    self.keys = decoded
+  }
+
   public func publicKey(for identifier: String) -> P256.Signing.PublicKey? {
     keys[identifier]
+  }
+}
+
+public struct ResourceModuleCatalogV1: Codable, Equatable, Sendable {
+  public static let supportedSchemaVersion = 1
+
+  public let schemaVersion: Int
+  public let modules: [ResourceModuleCatalogEntryV1]
+
+  public init(schemaVersion: Int = Self.supportedSchemaVersion, modules: [ResourceModuleCatalogEntryV1]) {
+    self.schemaVersion = schemaVersion
+    self.modules = modules
+  }
+
+  public var isSupported: Bool {
+    schemaVersion == Self.supportedSchemaVersion
+  }
+}
+
+public struct ResourceModuleCatalogEntryV1: Codable, Equatable, Sendable {
+  public let id: String
+  public let displayName: String
+  public let version: String
+  public let manifestURL: String
+  public let manifestSHA256: String
+  public let downloadBytes: UInt64
+  public let minAppVersion: String?
+  public let probes: [ResourceProbeRuleV1]
+
+  public init(
+    id: String,
+    displayName: String,
+    version: String,
+    manifestURL: String,
+    manifestSHA256: String,
+    downloadBytes: UInt64,
+    minAppVersion: String?,
+    probes: [ResourceProbeRuleV1]
+  ) {
+    self.id = id
+    self.displayName = displayName
+    self.version = version
+    self.manifestURL = manifestURL
+    self.manifestSHA256 = manifestSHA256
+    self.downloadBytes = downloadBytes
+    self.minAppVersion = minAppVersion
+    self.probes = probes
+  }
+
+  public func validate() throws {
+    guard !id.isEmpty,
+          !displayName.isEmpty,
+          !version.isEmpty,
+          let url = URL(string: manifestURL),
+          url.scheme?.lowercased() == "https",
+          manifestSHA256.count == 64,
+          manifestSHA256.allSatisfy(\.isHexDigit),
+          downloadBytes <= ResourceModuleLimits.maximumInstalledBytes else {
+      throw ResourceModuleError.invalidManifest
+    }
   }
 }
 
@@ -287,6 +355,8 @@ public struct ResourceModuleRequestV1: Codable, Equatable, Sendable {
     case readRange
     case search
     case render
+    case openInEditor
+    case openExternally
     case cancel
   }
 

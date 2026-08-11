@@ -59,17 +59,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private var appearanceObservation: NSKeyValueObservation?
   private var settingsWindowController: NSWindowController?
+  var recentResourcesMenu: NSMenu?
+  var activeResourceSecurityScopes = [URL]()
   lazy var resourceModuleHost = ResourceModuleHost(
     installationRoot: URL.applicationSupportDirectory
       .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
       .appending(path: "ResourceModules", directoryHint: .isDirectory),
-    trustStore: ResourceModuleTrustStore(),
+    trustStore: Self.resourceModuleTrustStore,
     messages: ResourceUIMessages(
       noCompatibleModule: Localized.Resource.noCompatibleModule,
       moduleStopped: Localized.Resource.moduleStopped,
       moduleFailedPrefix: Localized.Resource.moduleFailed
-    )
+    ),
+    catalogURL: URL(
+      string: "https://raw.githubusercontent.com/fengurt/ksa-MarkEdit/main/ResourceModules/dist/registry.json"
+    ),
+    appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0",
+    confirmInstallation: { [weak self] entry in
+      await self?.confirmResourceModuleInstallation(entry) ?? false
+    },
+    openInEditor: { url in
+      NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
+    },
+    openExternally: { url in
+      NSWorkspace.shared.open(url)
+    }
   )
+
+  private static let resourceModuleTrustStore = (try? ResourceModuleTrustStore(pemKeys: [
+    "official-v1": """
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1WR0WFJ6w6oA1fJN8eqtnr5dCE7Q
+    Xl2F0//Lk05kVcToOvvQQjWQdlwTEzFWgadgDZapMbLA/LnzBnHJ5nsAAA==
+    -----END PUBLIC KEY-----
+    """,
+  ])) ?? ResourceModuleTrustStore()
 
   func applicationWillFinishLaunching(_ notification: Notification) {
     NSApp.appearance = AppPreferences.General.appearance.resolved()
@@ -172,6 +196,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationWillTerminate(_ notification: Notification) {
     EditorSelectionHistory.purgeStaleEntries()
+    for url in activeResourceSecurityScopes {
+      url.stopAccessingSecurityScopedResource()
+    }
+    activeResourceSecurityScopes.removeAll()
   }
 
   func shouldOpenOrCreateDocument() -> Bool {

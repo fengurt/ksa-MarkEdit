@@ -151,6 +151,9 @@ enum Localized {
 
   enum Resource {
     static let openResource = String(localized: "Open Resource…", comment: "Menu item to open a read-only resource")
+    static let recentResources = String(localized: "Recent Resources", comment: "File menu recent read-only resources submenu")
+    static let noRecentResources = String(localized: "No Recent Resources", comment: "Empty recent resource menu item")
+    static let clearRecentResources = String(localized: "Clear Recent Resources", comment: "Clear recent resource menu item")
     static let open = String(localized: "Open Resource", comment: "Resource open panel button")
     static let openDescription = String(
       localized: "Choose a folder, archive, HTML file, OKF catalog, or MinerU result.",
@@ -166,6 +169,12 @@ enum Localized {
       comment: "Resource module crash message"
     )
     static let moduleFailed = String(localized: "Preview module failed", comment: "Resource module failure prefix")
+    static let installModule = String(localized: "Install Preview Module?", comment: "Resource module install prompt title")
+    static let installModuleDescription = String(
+      localized: "“%@” (%@) is required to preview this resource. Download and install it now? Download size: %@.",
+      comment: "Resource module install prompt details: name, version, size"
+    )
+    static let install = String(localized: "Install", comment: "Button title, install a resource module")
   }
 
   enum Document {

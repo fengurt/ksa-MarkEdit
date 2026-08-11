@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "okf",
+  "version": "1.0.0",
+  "displayName": "Google OKF Catalog",
+  "entrypoint": "index.js",
+  "files": [
+    {
+      "path": "base.css",
+      "sha256": "2ae3c1b7855217f085bbb0547eab30c2ef1ddd09ecc577ee12a99704c13bcdcf",
+      "size": 2664,
+      "mediaType": "text/css"
+    },
+    {
+      "path": "index.js",
+      "sha256": "bcca943b044e8bc1e37b39df3bd01e20ac266ca73685b8b31b32b9631be2fbbb",
+      "size": 8023,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "runtime.js",
+      "sha256": "7a26957d6198bc61792e461b1ec29606572be5216e2124165b8e4305beeb2074",
+      "size": 5186,
+      "mediaType": "text/javascript"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "c477598acfd0bb42b52f5195afab8daeccb80a477d0b0b2d61e83b9086bfddc9",
+      "size": 952,
+      "mediaType": "text/css"
+    }
+  ],
+  "probes": [
+    {
+      "fileExtensions": [
+        "okf"
+      ],
+      "directoryMarkers": [],
+      "mediaTypes": [],
+      "priority": 450
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "okf.yaml"
+      ],
+      "mediaTypes": [],
+      "priority": 450
+    },
+    {
+      "fileExtensions": [],
+      "directoryMarkers": [
+        "knowledge.okf.json"
+      ],
+      "mediaTypes": [],
+      "priority": 450
+    }
+  ],
+  "signingKeyID": "official-v1",
+  "signature": "MEYCIQDGHGRAmJIOwaUXRmvKPe0ndDlDlFKHUFfBl7LYYn+DvgIhAPC+DWNnFlJXq/Uyz2LeD9iAsNhmwsEhTwZeWEm/n49Z"
+}
