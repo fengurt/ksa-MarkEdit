@@ -358,9 +358,7 @@ extension ConversationCaptureCoordinator {
   @discardableResult
   private func registerLoginAgent() -> Bool {
     guard #available(macOS 13, *) else { return false }
-    let service = SMAppService.loginItem(
-      identifier: "art.apuch.ksamint.markedit.conversation-capture-helper"
-    )
+    let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     do {
       if service.status == .notRegistered { try service.register() }
       switch service.status {
@@ -379,10 +377,15 @@ extension ConversationCaptureCoordinator {
 
   private func unregisterLoginAgent() {
     guard #available(macOS 13, *) else { return }
-    let service = SMAppService.loginItem(
-      identifier: "art.apuch.ksamint.markedit.conversation-capture-helper"
-    )
+    let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     try? service.unregister()
+  }
+
+  /// Mirrors the containing app's identifier so both Debug (`.dev`) and
+  /// Release builds address the login item actually embedded in that app.
+  private var captureHelperIdentifier: String {
+    let appIdentifier = Bundle.main.bundleIdentifier ?? "art.apuch.ksamint.markedit"
+    return "\(appIdentifier).conversation-capture-helper"
   }
 
   func synchronizeHelperConfiguration() {

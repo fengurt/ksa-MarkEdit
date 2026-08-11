@@ -23,7 +23,17 @@ end
 def configure(target, bundle_id, plist, entitlements, product_name)
   target.build_configurations.each do |configuration|
     settings = configuration.build_settings
-    settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id
+    # Xcode requires every embedded executable's identifier to be prefixed by
+    # its containing app. The main target adds `.dev` in Debug builds, so its
+    # embedded login item and Quick Action must mirror that configuration.
+    settings['PRODUCT_BUNDLE_IDENTIFIER'] = if configuration.name == 'Debug'
+                                              bundle_id.sub(
+                                                'art.apuch.ksamint.markedit.',
+                                                'art.apuch.ksamint.markedit.dev.'
+                                              )
+                                            else
+                                              bundle_id
+                                            end
     settings['PRODUCT_NAME'] = product_name
     settings['INFOPLIST_FILE'] = plist
     settings['CODE_SIGN_ENTITLEMENTS'] = entitlements
