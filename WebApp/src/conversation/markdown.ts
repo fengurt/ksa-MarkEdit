@@ -30,10 +30,8 @@ export function renderConversationMarkdown(
     `# ${title}`,
     '',
   ];
-  const sourceAttachments = conversation.attachments.length
-    ? `## Source files\n\n${conversation.attachments.map(attachment => (
-      `- [${attachment.name}](../../Assets/${attachment.digest}.${safeExtension(attachment.name)})`
-    )).join('\n')}\n\n`
+  const sourceAttachments = conversation.sourcePackage
+    ? `## Original export package\n\n- [${conversation.sourcePackage.name}](../../Assets/${conversation.sourcePackage.digest}.${safeExtension(conversation.sourcePackage.name)})\n\n`
     : '';
   const branches = renderAlternateBranches(conversation);
   return `${frontMatter.join('\n')}${conversation.messages.map(renderMessage).join('')}${branches}${sourceAttachments}\n`;

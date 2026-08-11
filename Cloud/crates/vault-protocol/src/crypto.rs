@@ -1,6 +1,7 @@
 use crate::{
-    CipherSuiteV1, EncryptedPathV1, HpkeEnvelopeV1, ObjectKindV1, ProtocolError, Result,
-    SignedManifestV1, VaultManifestV1, VaultObjectV1, canonical_cbor,
+    CipherSuiteV1, DeviceGrantAuthorizationV1, EncryptedPathV1, HpkeEnvelopeV1, ObjectKindV1,
+    ProtocolError, Result, SignedDeviceGrantV1, SignedManifestV1, VaultManifestV1, VaultObjectV1,
+    canonical_cbor,
 };
 use aes_gcm::{
     Aes256Gcm, KeyInit, Nonce,
@@ -313,6 +314,33 @@ pub fn verify_manifest(value: &SignedManifestV1) -> Result<()> {
     let signature =
         Signature::from_slice(&value.signature).map_err(|_| ProtocolError::InvalidSignature)?;
     key.verify(&canonical_cbor(&value.manifest)?, &signature)
+        .map_err(|_| ProtocolError::InvalidSignature)
+}
+
+pub fn sign_device_grant(
+    authorization: DeviceGrantAuthorizationV1,
+    signing_key: &SigningKey,
+) -> Result<SignedDeviceGrantV1> {
+    let signature: Signature = signing_key.sign(&canonical_cbor(&authorization)?);
+    Ok(SignedDeviceGrantV1 {
+        authorization,
+        signature: signature.to_bytes().to_vec(),
+    })
+}
+
+pub fn verify_device_grant(
+    value: &SignedDeviceGrantV1,
+    authorizer_public_key: &[u8],
+) -> Result<()> {
+    if value.authorization.protocol_version != 1 || value.authorization.grant.protocol_version != 1
+    {
+        return Err(ProtocolError::UnsupportedVersion);
+    }
+    let key = VerifyingKey::from_sec1_bytes(authorizer_public_key)
+        .map_err(|_| ProtocolError::InvalidPublicKey)?;
+    let signature =
+        Signature::from_slice(&value.signature).map_err(|_| ProtocolError::InvalidSignature)?;
+    key.verify(&canonical_cbor(&value.authorization)?, &signature)
         .map_err(|_| ProtocolError::InvalidSignature)
 }
 

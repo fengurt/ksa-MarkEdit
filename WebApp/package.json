@@ -1,7 +1,7 @@
 {
   "name": "ksamint-notes-web",
   "private": true,
-  "version": "2.3.0",
+  "version": "2.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,20 +12,23 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@ksamint/vault-protocol": "file:../VaultProtocolTS",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/language": "^6.11.3",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.1",
+    "@huggingface/tokenizers": "^0.1.3",
+    "@ksamint/vault-protocol": "file:../VaultProtocolTS",
+    "@scure/bip39": "^1.6.0",
+    "onnxruntime-web": "^1.27.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^24.2.1",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "@types/node": "^24.2.1",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",

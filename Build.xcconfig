@@ -15,10 +15,10 @@ DEVELOPMENT_TEAM =
 PRODUCT_BUNDLE_IDENTIFIER = art.apuch.ksamint.markedit$(BUNDLE_ID_SUFFIX)
 BUNDLE_ID_SUFFIX = .dev
 BUNDLE_ID_SUFFIX[config=Release] =
-REGISTER_APP_GROUPS = NO
+REGISTER_APP_GROUPS = YES
 
-MARKETING_VERSION = 2.3.0
-CURRENT_PROJECT_VERSION = 10
+MARKETING_VERSION = 2.4.0
+CURRENT_PROJECT_VERSION = 12
 
 // Keep the universal release below the 6 MiB distribution budget without
 // affecting Debug diagnostics or removing either CPU architecture.

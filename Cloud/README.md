@@ -80,14 +80,17 @@ After the first Passkey is registered, turn it off and restart the API.
 
 ## Recovery
 
-Create the recovery package at vault initialization and keep the resulting file
-offline. It contains the Vault Master Key as a 24-word phrase and is never
-uploaded:
+For an existing Web or Mac Vault, export the recovery package from that Vault's
+device/recovery UI. This is the only safe way to guarantee that the 24 words
+refer to the Vault Master Key that encrypted the existing data.
+
+The CLI can initialize a brand-new empty Vault and package. Its deliberately
+separate command must never be used to manufacture a package for an existing
+Vault:
 
 ```sh
-cargo run -p ksamint-vault -- generate-kit \
+cargo run -p ksamint-vault -- init-new-vault \
   --vault-id 00000000-0000-0000-0000-000000000000 \
-  --github-repository fengurt/ksamint-notes-backup \
   --output /secure/offline/location/ksamint-recovery.json
 ```
 

@@ -25,6 +25,12 @@ fi
 test -f "$web_dir/dist/index.html"
 test -f "$web_dir/dist/sw.js"
 
+# Deep Search is not part of the PWA shell or Git history. Stage the
+# checksum-pinned first-party model only on the Tencent host immediately before
+# the atomic container restart.
+"$repo_root/Scripts/fetch-semantic-model.sh" \
+    "$web_dir/dist/models/multilingual-e5-small"
+
 docker compose \
     --env-file "$env_file" \
     -f "$cloud_dir/docker-compose.tencent.yml" \

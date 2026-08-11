@@ -15,6 +15,8 @@ export type VaultDeviceIdentity = {
 
 export type VaultSyncState = {
   vaultId?: string;
+  enrollmentRequestId?: string;
+  recoveryConfigured?: boolean;
   sequence: number;
   previousDigest?: string;
   files: Record<string, {
@@ -35,11 +37,48 @@ type StoredIdentity = {
   wrappingKey: CryptoKey;
   masterKeyNonce: Uint8Array;
   wrappedMasterKey: ArrayBuffer;
+  recoveryTokenNonce?: Uint8Array;
+  wrappedRecoveryToken?: ArrayBuffer;
   signingPrivateKey: CryptoKey;
   signingPublicKey: CryptoKey;
   agreementPrivateKey: CryptoKey;
   agreementPublicKey: CryptoKey;
 };
+
+export async function getOrCreateRecoveryToken(workspaceId: string): Promise<Uint8Array> {
+  const identity = await readIdentity(workspaceId);
+  if (!identity) throw new Error('Create the local Vault identity before recovery setup');
+  if (identity.recoveryTokenNonce && identity.wrappedRecoveryToken) {
+    return new Uint8Array(await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: copyBuffer(identity.recoveryTokenNonce),
+        additionalData: copyBuffer(recoveryTokenAAD(workspaceId)),
+        tagLength: 128,
+      },
+      identity.wrappingKey,
+      identity.wrappedRecoveryToken,
+    ));
+  }
+  const token = crypto.getRandomValues(new Uint8Array(32));
+  const recoveryTokenNonce = crypto.getRandomValues(new Uint8Array(12));
+  const wrappedRecoveryToken = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: copyBuffer(recoveryTokenNonce),
+      additionalData: copyBuffer(recoveryTokenAAD(workspaceId)),
+      tagLength: 128,
+    },
+    identity.wrappingKey,
+    copyBuffer(token),
+  );
+  await writeIdentity(workspaceId, {
+    ...identity,
+    recoveryTokenNonce,
+    wrappedRecoveryToken,
+  });
+  return token;
+}
 
 export async function loadOrCreateVaultIdentity(
   workspaceId: string,
@@ -121,6 +160,39 @@ export async function markVaultIdentityAuthorized(workspaceId: string): Promise<
   await writeIdentity(workspaceId, { ...identity, syncAuthorized: true });
 }
 
+export async function replaceVaultMasterKey(
+  workspaceId: string,
+  masterKey: Uint8Array,
+  syncAuthorized = true,
+): Promise<void> {
+  if (masterKey.length !== 32) {
+    throw new Error('The imported Vault Master Key must contain 256 bits');
+  }
+  const identity = await readIdentity(workspaceId);
+  if (!identity) {
+    await loadOrCreateVaultIdentity(workspaceId, masterKey);
+    if (syncAuthorized) await markVaultIdentityAuthorized(workspaceId);
+    return;
+  }
+  const masterKeyNonce = crypto.getRandomValues(new Uint8Array(12));
+  const wrappedMasterKey = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: copyBuffer(masterKeyNonce),
+      additionalData: copyBuffer(identityAAD(workspaceId)),
+      tagLength: 128,
+    },
+    identity.wrappingKey,
+    copyBuffer(masterKey),
+  );
+  await writeIdentity(workspaceId, {
+    ...identity,
+    syncAuthorized,
+    masterKeyNonce,
+    wrappedMasterKey,
+  });
+}
+
 async function openIdentity(
   identity: StoredIdentity,
   workspaceId: string,
@@ -171,6 +243,10 @@ async function persistentKeyPair(
 
 function identityAAD(workspaceId: string): Uint8Array {
   return concatenate(MASTER_KEY_AAD, new TextEncoder().encode(workspaceId));
+}
+
+function recoveryTokenAAD(workspaceId: string): Uint8Array {
+  return concatenate(MASTER_KEY_AAD, new TextEncoder().encode(`/recovery-token/${workspaceId}`));
 }
 
 async function readIdentity(workspaceId: string): Promise<StoredIdentity | undefined> {

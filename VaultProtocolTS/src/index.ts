@@ -2,6 +2,7 @@
 const OBJECT_DOMAIN = new TextEncoder().encode('ksamint/vault-object/v1');
 const PATH_DOMAIN = new TextEncoder().encode('ksamint/vault-path/v1');
 const KEY_SALT = new TextEncoder().encode('ksamint/vault/v1');
+const HPKE_INFO = new TextEncoder().encode('ksamint/device-grant/v1');
 const PADDING_BLOCK = 4_096;
 
 export type VaultObjectCiphertext = {
@@ -61,6 +62,24 @@ export type HpkeEnvelopeRecord = {
   ciphertext: Uint8Array;
 };
 
+export type DeviceGrantRecord = {
+  grantId: string;
+  deviceId: string;
+  deviceHpkePublicKey: Uint8Array;
+  deviceSigningPublicKey: Uint8Array;
+  permission: 'read_only' | 'read_write';
+  keyVersion: number;
+  createdUnixMs: number;
+  revokedUnixMs?: number;
+  wrappedMasterKey: HpkeEnvelopeRecord;
+};
+
+export type SignedDeviceGrantRecord = {
+  authorizerDeviceId: string;
+  grant: DeviceGrantRecord;
+  signature: Uint8Array;
+};
+
 export type CapabilityGrantRecord = {
   grantId: string;
   agentHpkePublicKey: Uint8Array;
@@ -71,6 +90,168 @@ export type CapabilityGrantRecord = {
   revocationId: string;
   wrappedCapabilityKey: HpkeEnvelopeRecord;
 };
+
+export async function hpkeSealP256({
+  recipientPublicKey,
+  plaintext,
+  aad,
+}: {
+  recipientPublicKey: Uint8Array;
+  plaintext: Uint8Array;
+  aad: Uint8Array;
+}): Promise<HpkeEnvelopeRecord> {
+  const recipient = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(recipientPublicKey),
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    [],
+  );
+  const ephemeral = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    ['deriveBits'],
+  );
+  const encapsulatedKey = new Uint8Array(await crypto.subtle.exportKey('raw', ephemeral.publicKey));
+  const dh = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: recipient },
+    ephemeral.privateKey,
+    256,
+  ));
+  const sharedSecret = await hpkeSharedSecret(
+    dh,
+    concatenate(encapsulatedKey, recipientPublicKey),
+  );
+  const { key, nonce } = await hpkeKeySchedule(sharedSecret);
+  const sealed = new Uint8Array(await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: copyBuffer(nonce),
+      additionalData: copyBuffer(aad),
+      tagLength: 128,
+    },
+    key,
+    copyBuffer(plaintext),
+  ));
+  return { encapsulatedKey, ciphertext: sealed };
+}
+
+export async function hpkeOpenP256({
+  recipientPrivateKey,
+  recipientPublicKey,
+  envelope,
+  aad,
+}: {
+  recipientPrivateKey: CryptoKey;
+  recipientPublicKey: Uint8Array;
+  envelope: HpkeEnvelopeRecord;
+  aad: Uint8Array;
+}): Promise<Uint8Array> {
+  const ephemeral = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(envelope.encapsulatedKey),
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    [],
+  );
+  const dh = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: ephemeral },
+    recipientPrivateKey,
+    256,
+  ));
+  const sharedSecret = await hpkeSharedSecret(
+    dh,
+    concatenate(envelope.encapsulatedKey, recipientPublicKey),
+  );
+  const { key, nonce } = await hpkeKeySchedule(sharedSecret);
+  return new Uint8Array(await crypto.subtle.decrypt(
+    {
+      name: 'AES-GCM',
+      iv: copyBuffer(nonce),
+      additionalData: copyBuffer(aad),
+      tagLength: 128,
+    },
+    key,
+    copyBuffer(envelope.ciphertext),
+  ));
+}
+
+export function encodeDeviceGrant(grant: DeviceGrantRecord): Uint8Array {
+  const encoder = new CborEncoder();
+  encodeDeviceGrantInto(encoder, grant);
+  return encoder.output();
+}
+
+export async function signDeviceGrant({
+  authorizerDeviceId,
+  grant,
+  signingKey,
+}: {
+  authorizerDeviceId: string;
+  grant: DeviceGrantRecord;
+  signingKey: CryptoKey;
+}): Promise<Uint8Array> {
+  const authorization = encodeDeviceGrantAuthorization(authorizerDeviceId, grant);
+  const signature = new Uint8Array(await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    signingKey,
+    copyBuffer(authorization),
+  ));
+  if (signature.length !== 64) {
+    throw new Error('The device grant signature is not raw P-256');
+  }
+  const encoder = new CborEncoder();
+  encoder.map(2);
+  encoder.text('authorization');
+  encoder.raw(authorization);
+  encoder.text('signature');
+  encoder.bytes(signature);
+  return encoder.output();
+}
+
+export function decodeSignedDeviceGrant(value: Uint8Array): SignedDeviceGrantRecord {
+  const signed = record(new CborDecoder(value).decodeComplete());
+  const authorization = record(signed.authorization);
+  if (number(authorization.protocol_version) !== 1) {
+    throw new Error('Unsupported device grant authorization');
+  }
+  return {
+    authorizerDeviceId: bytesUUID(authorization.authorizer_device_id),
+    grant: decodeDeviceGrantRecord(record(authorization.grant)),
+    signature: bytes(signed.signature),
+  };
+}
+
+export async function verifySignedDeviceGrant({
+  value,
+  authorizerSigningPublicKey,
+}: {
+  value: Uint8Array;
+  authorizerSigningPublicKey: Uint8Array;
+}): Promise<SignedDeviceGrantRecord> {
+  const signed = decodeSignedDeviceGrant(value);
+  const authorization = encodeDeviceGrantAuthorization(
+    signed.authorizerDeviceId,
+    signed.grant,
+  );
+  const publicKey = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(authorizerSigningPublicKey),
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['verify'],
+  );
+  const valid = await crypto.subtle.verify(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    publicKey,
+    copyBuffer(signed.signature),
+    copyBuffer(authorization),
+  );
+  if (!valid) {
+    throw new Error('Invalid device grant signature');
+  }
+  return signed;
+}
 
 export async function sealVaultObject({
   plaintext,
@@ -572,6 +753,194 @@ function encodeManifestEntry(encoder: CborEncoder, entry: VaultManifestEntry) {
   encoder.unsigned(entry.byteSize);
   encoder.text('modified_unix_ms');
   encoder.unsigned(entry.modifiedUnixMs);
+}
+
+function encodeDeviceGrantAuthorization(
+  authorizerDeviceId: string,
+  grant: DeviceGrantRecord,
+): Uint8Array {
+  const encoder = new CborEncoder();
+  encoder.map(3);
+  encoder.text('protocol_version');
+  encoder.unsigned(1);
+  encoder.text('authorizer_device_id');
+  encoder.bytes(uuidBytes(authorizerDeviceId));
+  encoder.text('grant');
+  encodeDeviceGrantInto(encoder, grant);
+  return encoder.output();
+}
+
+function encodeDeviceGrantInto(encoder: CborEncoder, grant: DeviceGrantRecord) {
+  encoder.map(10);
+  encoder.text('protocol_version');
+  encoder.unsigned(1);
+  encoder.text('grant_id');
+  encoder.bytes(uuidBytes(grant.grantId));
+  encoder.text('device_id');
+  encoder.bytes(uuidBytes(grant.deviceId));
+  encoder.text('device_hpke_public_key');
+  encoder.bytes(grant.deviceHpkePublicKey);
+  encoder.text('device_signing_public_key');
+  encoder.bytes(grant.deviceSigningPublicKey);
+  encoder.text('permission');
+  encoder.text(grant.permission);
+  encoder.text('key_version');
+  encoder.unsigned(grant.keyVersion);
+  encoder.text('created_unix_ms');
+  encoder.unsigned(grant.createdUnixMs);
+  encoder.text('revoked_unix_ms');
+  if (grant.revokedUnixMs === undefined) encoder.null();
+  else encoder.unsigned(grant.revokedUnixMs);
+  encoder.text('wrapped_master_key');
+  encodeHpkeEnvelopeInto(encoder, grant.wrappedMasterKey);
+}
+
+function encodeHpkeEnvelopeInto(encoder: CborEncoder, envelope: HpkeEnvelopeRecord) {
+  encoder.map(4);
+  encoder.text('protocol_version');
+  encoder.unsigned(1);
+  encoder.text('cipher_suite');
+  encoder.text('hpke_p256_sha256_aes256_gcm');
+  encoder.text('encapsulated_key');
+  encoder.bytes(envelope.encapsulatedKey);
+  encoder.text('ciphertext');
+  encoder.bytes(envelope.ciphertext);
+}
+
+function decodeDeviceGrantRecord(map: Record<string, unknown>): DeviceGrantRecord {
+  if (number(map.protocol_version) !== 1) {
+    throw new Error('Unsupported device grant protocol');
+  }
+  const permission = string(map.permission);
+  if (permission !== 'read_only' && permission !== 'read_write') {
+    throw new Error('Unsupported device grant permission');
+  }
+  return {
+    grantId: bytesUUID(map.grant_id),
+    deviceId: bytesUUID(map.device_id),
+    deviceHpkePublicKey: bytes(map.device_hpke_public_key),
+    deviceSigningPublicKey: bytes(map.device_signing_public_key),
+    permission,
+    keyVersion: number(map.key_version),
+    createdUnixMs: number(map.created_unix_ms),
+    revokedUnixMs: map.revoked_unix_ms === null ? undefined : number(map.revoked_unix_ms),
+    wrappedMasterKey: decodeHpkeEnvelope(map.wrapped_master_key),
+  };
+}
+
+async function hpkeSharedSecret(dh: Uint8Array, kemContext: Uint8Array): Promise<Uint8Array> {
+  const kemSuite = concatenate(new TextEncoder().encode('KEM'), i2osp(0x0010, 2));
+  const eaePrk = await labeledExtract(new Uint8Array(), kemSuite, 'eae_prk', dh);
+  return labeledExpand(eaePrk, kemSuite, 'shared_secret', kemContext, 32);
+}
+
+async function hpkeKeySchedule(sharedSecret: Uint8Array): Promise<{
+  key: CryptoKey;
+  nonce: Uint8Array;
+}> {
+  const suite = concatenate(
+    new TextEncoder().encode('HPKE'),
+    i2osp(0x0010, 2),
+    i2osp(0x0001, 2),
+    i2osp(0x0002, 2),
+  );
+  const empty = new Uint8Array();
+  const pskIdHash = await labeledExtract(empty, suite, 'psk_id_hash', empty);
+  const infoHash = await labeledExtract(empty, suite, 'info_hash', HPKE_INFO);
+  const context = concatenate(Uint8Array.of(0), pskIdHash, infoHash);
+  const secret = await labeledExtract(sharedSecret, suite, 'secret', empty);
+  const keyBytes = await labeledExpand(secret, suite, 'key', context, 32);
+  const nonce = await labeledExpand(secret, suite, 'base_nonce', context, 12);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(keyBytes),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt', 'decrypt'],
+  );
+  return { key, nonce };
+}
+
+async function labeledExtract(
+  salt: Uint8Array,
+  suite: Uint8Array,
+  label: string,
+  input: Uint8Array,
+): Promise<Uint8Array> {
+  return hkdfExtract(
+    salt,
+    concatenate(
+      new TextEncoder().encode('HPKE-v1'),
+      suite,
+      new TextEncoder().encode(label),
+      input,
+    ),
+  );
+}
+
+async function labeledExpand(
+  prk: Uint8Array,
+  suite: Uint8Array,
+  label: string,
+  info: Uint8Array,
+  length: number,
+): Promise<Uint8Array> {
+  return hkdfExpand(
+    prk,
+    concatenate(
+      i2osp(length, 2),
+      new TextEncoder().encode('HPKE-v1'),
+      suite,
+      new TextEncoder().encode(label),
+      info,
+    ),
+    length,
+  );
+}
+
+async function hkdfExtract(salt: Uint8Array, input: Uint8Array): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(salt.length ? salt : new Uint8Array(32)),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, copyBuffer(input)));
+}
+
+async function hkdfExpand(
+  prk: Uint8Array,
+  info: Uint8Array,
+  length: number,
+): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    copyBuffer(prk),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const blocks: Uint8Array[] = [];
+  let previous = new Uint8Array();
+  for (let counter = 1; blocks.reduce((total, block) => total + block.length, 0) < length; counter += 1) {
+    previous = new Uint8Array(await crypto.subtle.sign(
+      'HMAC',
+      key,
+      copyBuffer(concatenate(previous, info, Uint8Array.of(counter))),
+    ));
+    blocks.push(previous);
+  }
+  return concatenate(...blocks).slice(0, length);
+}
+
+function i2osp(value: number, length: number): Uint8Array {
+  const output = new Uint8Array(length);
+  for (let index = length - 1; index >= 0; index -= 1) {
+    output[index] = value & 0xff;
+    value >>>= 8;
+  }
+  return output;
 }
 
 async function objectKey(

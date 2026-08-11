@@ -270,6 +270,8 @@ jobs:
           strip "$app/Contents/MacOS/ksamint MarkEdit"
           strip "$app/Contents/PlugIns/FinderExtension.appex/Contents/MacOS/FinderExtension"
           strip "$app/Contents/PlugIns/PreviewExtension.appex/Contents/MacOS/PreviewExtension"
+          strip "$app/Contents/PlugIns/QuickActionExtension.appex/Contents/MacOS/QuickActionExtension"
+          strip "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app/Contents/MacOS/ConversationCaptureHelper"
           codesign --force --deep --sign - "$app"
           hdiutil create \
             -volname "ksamint MarkEdit" \

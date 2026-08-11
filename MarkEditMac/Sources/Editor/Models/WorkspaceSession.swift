@@ -205,6 +205,7 @@ final class WorkspaceSession {
 
   func persist(for fileURLs: [URL] = []) {
     AppPreferences.General.workspaceFolderBookmark = bookmark
+    ConversationCaptureCoordinator.shared.synchronizeHelperConfiguration()
 
     guard !fileURLs.isEmpty else {
       return
@@ -215,6 +216,7 @@ final class WorkspaceSession {
       bookmarks[fileURL.standardizedFileURL.path] = bookmark
     }
     AppPreferences.General.workspaceFolderBookmarks = bookmarks
+    ConversationCaptureCoordinator.shared.synchronizeHelperConfiguration()
   }
 
   func contains(_ url: URL) -> Bool {

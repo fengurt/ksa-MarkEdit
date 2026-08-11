@@ -4,6 +4,14 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.art.apuch.ksamint-markedit</string>
+	</array>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)group.art.apuch.ksamint-markedit</string>
+	</array>
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<key>com.apple.security.print</key>
@@ -12,9 +20,5 @@
 	<true/>
 	<key>com.apple.security.files.user-selected.executable</key>
 	<true/>
-	<key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
-	<array>
-		<string>/</string>
-	</array>
 </dict>
 </plist>

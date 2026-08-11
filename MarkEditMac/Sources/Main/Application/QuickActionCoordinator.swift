@@ -1,0 +1,285 @@
+import AppKit
+import UniformTypeIdentifiers
+
+enum QuickActionKind: String, Codable {
+  case preview
+  case openEditor
+  case conversationInbox
+  case saveReference
+  case addWorkspace
+  case analyzeAgent
+  case convertMarkdown
+}
+
+struct QuickActionRequestV1: Codable {
+  let version: Int
+  let id: UUID
+  let createdAt: Date
+  let action: QuickActionKind
+  let resourceBookmarks: [Data]
+}
+
+@MainActor
+final class QuickActionCoordinator {
+  static let shared = QuickActionCoordinator()
+  private let conversion = FormatConversionService()
+
+  func handle(id: UUID, appDelegate: AppDelegate) async {
+    do {
+      let requestURL = try pendingDirectory().appending(path: "\(id).json")
+      let request = try JSONDecoder().decode(QuickActionRequestV1.self, from: Data(contentsOf: requestURL))
+      guard request.version == 1, request.id == id,
+            Date().timeIntervalSince(request.createdAt) < 10 * 60 else {
+        throw QuickActionError.invalidRequest
+      }
+      let urls = try request.resourceBookmarks.map(resolve)
+      defer {
+        urls.forEach { $0.stopAccessingSecurityScopedResource() }
+        try? FileManager.default.removeItem(at: requestURL)
+      }
+      try await execute(request.action, urls: urls, appDelegate: appDelegate)
+    } catch {
+      let alert = NSAlert(error: error)
+      alert.messageText = String(localized: "Quick Action Failed")
+      alert.runModal()
+    }
+  }
+
+  private func execute(_ action: QuickActionKind, urls: [URL], appDelegate: AppDelegate) async throws {
+    switch action {
+    case .preview:
+      guard let first = urls.first else { throw QuickActionError.emptySelection }
+      await appDelegate.openResourceURL(first, tabbingWindow: NSApp.keyWindow)
+    case .openEditor:
+      for url in urls where !url.hasDirectoryPath {
+        _ = try await NSDocumentController.shared.openDocument(withContentsOf: url, display: true)
+      }
+    case .conversationInbox:
+      try ConversationCaptureCoordinator.shared.importConversationResources(urls)
+    case .saveReference:
+      try writeReference(for: urls)
+    case .addWorkspace:
+      try copyIntoWorkspace(urls)
+    case .analyzeAgent:
+      guard let first = urls.first else { throw QuickActionError.emptySelection }
+      await appDelegate.openResourceURL(first, tabbingWindow: NSApp.keyWindow)
+      if let editor = appDelegate.currentEditor {
+        if !editor.agentPanelVisible { editor.toggleAgentPanel() }
+      } else {
+        throw QuickActionError.noEditorForAgent
+      }
+    case .convertMarkdown:
+      let plan = try await conversion.plan(ConversionRequestV1(resources: urls))
+      guard confirm(plan) else { return }
+      _ = try await conversion.execute(plan) { progress in
+        NotificationCenter.default.post(name: .conversionProgress, object: progress)
+      }
+    }
+  }
+
+  private func writeReference(for urls: [URL]) throws {
+    let root = try workspaceRoot()
+    defer { root.stopAccessingSecurityScopedResource() }
+    let directory = root.appending(path: "References", directoryHint: .isDirectory)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let title = urls.count == 1 ? urls[0].lastPathComponent : "Imported resources"
+    let links = urls.map { "- [\($0.lastPathComponent)](\($0.path(percentEncoded: false)))" }.joined(separator: "\n")
+    let content = """
+    ---
+    type: Reference
+    generated: \(ISO8601DateFormatter().string(from: Date()))
+    sources: \(urls.count)
+    tags: [reference]
+    ---
+
+    # \(title)
+
+    \(links)
+    """
+    try Data(content.utf8).write(to: uniqueURL(in: directory, name: "\(title).md"), options: .atomic)
+  }
+
+  private func copyIntoWorkspace(_ urls: [URL]) throws {
+    let root = try workspaceRoot()
+    defer { root.stopAccessingSecurityScopedResource() }
+    for url in urls {
+      let destination = uniqueURL(in: root, name: url.lastPathComponent)
+      try FileManager.default.copyItem(at: url, to: destination)
+    }
+  }
+
+  private func confirm(_ plan: ConversionPlanV1) -> Bool {
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Convert to Markdown")
+    alert.informativeText = plan.usesRemoteService
+      ? String(localized: "The selected PDF or document image will be uploaded over TLS to the configured Tencent MinerU Precision VLM service. The source is deleted after submission and results expire after one hour.")
+      : String(localized: "A new Markdown result will be created. Source files are not modified.")
+    alert.addButton(withTitle: String(localized: "Convert"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    return alert.runModal() == .alertFirstButtonReturn
+  }
+
+  private func resolve(_ bookmark: Data) throws -> URL {
+    var stale = false
+    let url = try URL(resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &stale)
+    guard !stale, url.startAccessingSecurityScopedResource() else { throw CocoaError(.fileReadNoPermission) }
+    return url.standardizedFileURL
+  }
+
+  private func workspaceRoot() throws -> URL {
+    guard let bookmark = AppPreferences.General.workspaceFolderBookmark else { throw QuickActionError.noWorkspace }
+    return try resolve(bookmark)
+  }
+
+  private func pendingDirectory() throws -> URL {
+    guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit") else {
+      throw CocoaError(.fileReadNoPermission)
+    }
+    return container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
+  }
+
+  private func uniqueURL(in directory: URL, name: String) -> URL {
+    let base = (name as NSString).deletingPathExtension
+    let ext = (name as NSString).pathExtension
+    var index = 1
+    var candidate = directory.appending(path: name)
+    while FileManager.default.fileExists(atPath: candidate.path) {
+      index += 1
+      candidate = directory.appending(path: ext.isEmpty ? "\(base) \(index)" : "\(base) \(index).\(ext)")
+    }
+    return candidate
+  }
+}
+
+struct ConversionRequestV1 {
+  let id = UUID()
+  let resources: [URL]
+}
+
+struct ConversionPlanV1 {
+  let request: ConversionRequestV1
+  let supported: [URL]
+  let usesRemoteService: Bool
+  let outputDirectory: URL
+}
+
+struct ConversionResultV1 {
+  let jobID: UUID
+  let outputs: [URL]
+}
+
+protocol ConversionProvider {
+  func probe(_ resources: [URL]) async -> [URL]
+  func plan(_ request: ConversionRequestV1) async throws -> ConversionPlanV1
+  func execute(
+    _ plan: ConversionPlanV1,
+    progress: @escaping @Sendable (Double) -> Void
+  ) async throws -> ConversionResultV1
+  func cancel(jobID: UUID) async
+}
+
+actor FormatConversionService: ConversionProvider {
+  private var cancelled = Set<UUID>()
+
+  func probe(_ resources: [URL]) async -> [URL] {
+    resources.filter { url in
+      if url.hasDirectoryPath { return true }
+      let ext = url.pathExtension.lowercased()
+      return ["txt", "md", "markdown", "html", "htm", "json", "yaml", "yml", "csv", "zip", "tar", "tgz", "pdf", "png", "jpg", "jpeg", "tiff", "heic"].contains(ext)
+    }
+  }
+
+  func plan(_ request: ConversionRequestV1) async throws -> ConversionPlanV1 {
+    guard request.resources.count <= 50 else { throw QuickActionError.batchLimit }
+    let supported = await probe(request.resources)
+    guard !supported.isEmpty else { throw QuickActionError.unsupported }
+    for url in supported {
+      let values = try url.resourceValues(forKeys: [.fileSizeKey])
+      if (values.fileSize ?? 0) > 200 * 1024 * 1024 { throw QuickActionError.fileLimit }
+    }
+    let remote = supported.contains { ["pdf", "png", "jpg", "jpeg", "tiff", "heic"].contains($0.pathExtension.lowercased()) }
+    let root = supported[0].deletingLastPathComponent()
+    return ConversionPlanV1(request: request, supported: supported, usesRemoteService: remote, outputDirectory: root.appending(path: "ksamint-converted-\(request.id.uuidString.prefix(8))", directoryHint: .isDirectory))
+  }
+
+  func execute(_ plan: ConversionPlanV1, progress: @escaping @Sendable (Double) -> Void) async throws -> ConversionResultV1 {
+    if plan.usesRemoteService {
+      throw QuickActionError.remoteProviderNotConfigured
+    }
+    try FileManager.default.createDirectory(at: plan.outputDirectory, withIntermediateDirectories: true)
+    var outputs: [URL] = []
+    for (index, url) in plan.supported.enumerated() {
+      if cancelled.contains(plan.request.id) { throw CancellationError() }
+      let output = plan.outputDirectory.appending(path: "\((url.lastPathComponent as NSString).deletingPathExtension).md")
+      let content = try localMarkdown(url)
+      try Data(content.utf8).write(to: output, options: .atomic)
+      outputs.append(output)
+      progress(Double(index + 1) / Double(plan.supported.count))
+    }
+    return ConversionResultV1(jobID: plan.request.id, outputs: outputs)
+  }
+
+  func cancel(jobID: UUID) async { cancelled.insert(jobID) }
+
+  private func localMarkdown(_ url: URL) throws -> String {
+    if url.hasDirectoryPath {
+      let children = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+      return "# \(url.lastPathComponent)\n\n" + children.sorted { $0.lastPathComponent < $1.lastPathComponent }.map { "- \($0.lastPathComponent)" }.joined(separator: "\n")
+    }
+    let ext = url.pathExtension.lowercased()
+    if ext == "zip" {
+      return try archiveManifest(url, executable: "/usr/bin/zipinfo", arguments: ["-1"])
+    }
+    if ["tar", "tgz"].contains(ext) {
+      return try archiveManifest(url, executable: "/usr/bin/tar", arguments: ["-tf"])
+    }
+    let text = try String(contentsOf: url, encoding: .utf8)
+    if ["md", "markdown", "txt"].contains(ext) { return text }
+    if ["html", "htm"].contains(ext) {
+      guard let attributed = try? NSAttributedString(data: Data(text.utf8), options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil) else { return text }
+      return attributed.string
+    }
+    return "# \(url.lastPathComponent)\n\n```\(ext)\n\(text)\n```\n"
+  }
+
+  private func archiveManifest(_ url: URL, executable: String, arguments: [String]) throws -> String {
+    let process = Process()
+    let output = Pipe()
+    let errors = Pipe()
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.arguments = arguments + [url.path]
+    process.standardOutput = output
+    process.standardError = errors
+    try process.run()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+      let detail = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+      throw QuickActionError.archiveListing(detail ?? "Archive listing failed")
+    }
+    let listing = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    let entries = listing.split(whereSeparator: \.isNewline).prefix(200_000)
+    return "# \(url.lastPathComponent)\n\n" + entries.map { "- `\($0)`" }.joined(separator: "\n") + "\n"
+  }
+}
+
+private enum QuickActionError: LocalizedError {
+  case invalidRequest, emptySelection, noWorkspace, noEditorForAgent, unsupported, batchLimit, fileLimit, remoteProviderNotConfigured
+  case archiveListing(String)
+  var errorDescription: String? {
+    switch self {
+    case .invalidRequest: "The Quick Action request is invalid or expired."
+    case .emptySelection: "No resources were selected."
+    case .noWorkspace: "Authorize a workspace in ksamint MarkEdit first."
+    case .noEditorForAgent: "Open a Markdown document before starting the local Agent panel."
+    case .unsupported: "None of the selected resources has a configured conversion provider."
+    case .batchLimit: "A conversion batch can contain at most 50 files."
+    case .fileLimit: "Each conversion source must be 200 MB or smaller."
+    case .remoteProviderNotConfigured: "The Tencent MinerU Precision VLM provider is not configured on this server yet."
+    case .archiveListing(let detail): detail
+    }
+  }
+}
+
+extension Notification.Name {
+  static let conversionProgress = Notification.Name("art.apuch.ksamint.conversion-progress")
+}

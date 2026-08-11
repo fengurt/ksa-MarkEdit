@@ -248,6 +248,12 @@ extension AppDelegate {
       case "install-extension":
         // ksamint-markedit://install-extension?id=markedit-preview or ?url=https://...
         ExtensionInstaller.install(queryDict: components?.queryDict)
+      case "quick-action":
+        if let value = components?.queryDict?["id"], let id = UUID(uuidString: value) {
+          Task { await QuickActionCoordinator.shared.handle(id: id, appDelegate: self) }
+        }
+      case "conversation-inbox":
+        ConversationCaptureCoordinator.shared.showInbox()
       default:
         break
       }

@@ -2,7 +2,10 @@ use crate::{
     error::{ApiError, ApiResult},
     state::AppState,
 };
-use axum::{extract::FromRequestParts, http::request::Parts};
+use axum::{
+    extract::FromRequestParts,
+    http::{header::AUTHORIZATION, request::Parts},
+};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -14,6 +17,43 @@ pub const CHALLENGE_COOKIE: &str = "__Host-ksamint_challenge";
 
 pub struct AccountSession {
     pub account_id: Uuid,
+}
+
+pub struct VaultDeviceSession {
+    pub account_id: Uuid,
+    pub vault_id: Uuid,
+    pub device_id: Uuid,
+}
+
+impl FromRequestParts<AppState> for VaultDeviceSession {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let value = parts
+            .headers
+            .get(AUTHORIZATION)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.strip_prefix("Bearer "))
+            .ok_or(ApiError::Unauthorized)?;
+        let row = sqlx::query_as::<_, (Uuid, Uuid, Uuid)>(
+            "SELECT s.account_id, s.vault_id, s.device_id FROM device_sessions s \
+             JOIN devices d ON d.id = s.device_id AND d.vault_id = s.vault_id \
+             WHERE s.token_digest = $1 AND s.expires_at > now() \
+             AND s.revoked_at IS NULL AND d.revoked_at IS NULL",
+        )
+        .bind(token_digest(value))
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(ApiError::Unauthorized)?;
+        Ok(Self {
+            account_id: row.0,
+            vault_id: row.1,
+            device_id: row.2,
+        })
+    }
 }
 
 impl FromRequestParts<AppState> for AccountSession {
@@ -109,7 +149,38 @@ pub fn take_challenge_cookie(cookies: &Cookies) -> ApiResult<Uuid> {
     Ok(id)
 }
 
-fn token_digest(value: &str) -> Vec<u8> {
+pub async fn create_device_session(
+    state: &AppState,
+    account_id: Uuid,
+    vault_id: Uuid,
+    device_id: Uuid,
+) -> ApiResult<(String, chrono::DateTime<chrono::Utc>)> {
+    let mut bytes = [0_u8; 32];
+    getrandom::fill(&mut bytes)
+        .map_err(|_| ApiError::Unavailable("secure randomness unavailable".to_owned()))?;
+    let token = URL_SAFE_NO_PAD.encode(bytes);
+    let expires_at = chrono::Utc::now()
+        + chrono::Duration::from_std(state.config.session_ttl)
+            .map_err(|error| ApiError::Internal(error.into()))?;
+    sqlx::query(
+        "INSERT INTO device_sessions \
+         (token_digest, account_id, vault_id, device_id, expires_at) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(token_digest(&token))
+    .bind(account_id)
+    .bind(vault_id)
+    .bind(device_id)
+    .bind(expires_at)
+    .execute(&state.pool)
+    .await?;
+    sqlx::query("UPDATE devices SET last_used_at = now() WHERE id = $1")
+        .bind(device_id)
+        .execute(&state.pool)
+        .await?;
+    Ok((token, expires_at))
+}
+
+pub(crate) fn token_digest(value: &str) -> Vec<u8> {
     Sha256::digest(value.as_bytes()).to_vec()
 }
 

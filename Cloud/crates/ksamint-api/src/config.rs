@@ -69,8 +69,12 @@ impl Config {
             _ => None,
         };
         let github = match (
-            env::var("GITHUB_APP_ID").ok(),
-            env::var("GITHUB_APP_PRIVATE_KEY_PEM").ok(),
+            env::var("GITHUB_APP_ID")
+                .ok()
+                .filter(|value| !value.trim().is_empty()),
+            env::var("GITHUB_APP_PRIVATE_KEY_PEM")
+                .ok()
+                .filter(|value| !value.trim().is_empty()),
         ) {
             (Some(app_id), Some(private_key_pem)) => Some(GitHubConfig {
                 app_id: app_id.parse().context("invalid GITHUB_APP_ID")?,

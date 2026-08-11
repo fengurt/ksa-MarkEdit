@@ -512,6 +512,204 @@ canvas:focus-visible {
   backdrop-filter: blur(3px);
 }
 
+.recovery-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+
+.recovery-challenge {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.recovery-challenge label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.recovery-challenge input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 9px 10px;
+}
+
+.device-dialog {
+  width: min(700px, calc(100vw - 32px));
+}
+
+.device-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+}
+
+.device-list li {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.device-list li > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.device-list span,
+.device-list small {
+  color: var(--muted);
+}
+
+.device-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.recovery-package-import {
+  align-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+}
+
+.conversation-retain-package,
+.conversation-attachments label {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.deep-search-panel form {
+  display: flex;
+  gap: 8px;
+}
+
+.deep-search-panel form input {
+  min-width: 0;
+  flex: 1;
+}
+
+.deep-search-panel ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  max-height: 280px;
+  overflow: auto;
+  padding: 0;
+}
+
+.deep-search-panel li button {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  width: 100%;
+}
+
+.deep-search-panel li span,
+.deep-search-panel li small {
+  color: var(--muted);
+}
+
+.backup-history-dialog {
+  width: min(980px, calc(100vw - 32px));
+}
+
+.backup-toolbar,
+.backup-history-layout {
+  display: flex;
+  gap: 12px;
+}
+
+.backup-toolbar {
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.github-backup-setup {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+}
+
+.github-backup-setup > p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.github-backup-fields {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 0.7fr 1fr 1.4fr auto;
+}
+
+.github-backup-fields label {
+  display: grid;
+  font-size: 0.76rem;
+  gap: 3px;
+}
+
+.backup-history-layout > ol {
+  flex: 0 0 240px;
+  list-style: none;
+  margin: 0;
+  max-height: 460px;
+  overflow: auto;
+  padding: 0;
+}
+
+.backup-history-layout > ol button,
+.backup-file-choices label {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  width: 100%;
+}
+
+.backup-history-layout > ol button.selected {
+  border-color: var(--accent);
+}
+
+.backup-file-choices {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  max-height: 460px;
+  overflow: auto;
+}
+
+.backup-file-choices label {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 7px 0;
+}
+
+.backup-file-choices label span {
+  display: grid;
+}
+
+.conversation-attachments {
+  margin: 6px 0;
+}
+
+.conversation-attachments label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 5px;
+}
+
 .taxonomy-dialog {
   display: flex;
   width: min(680px, 100%);

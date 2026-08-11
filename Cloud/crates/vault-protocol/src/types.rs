@@ -197,6 +197,20 @@ pub struct DeviceGrantV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DeviceGrantAuthorizationV1 {
+    pub protocol_version: u16,
+    pub authorizer_device_id: Uuid,
+    pub grant: DeviceGrantV1,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SignedDeviceGrantV1 {
+    pub authorization: DeviceGrantAuthorizationV1,
+    #[serde(with = "serde_bytes")]
+    pub signature: Vec<u8>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CapabilityGrantV1 {
     pub protocol_version: u16,
     pub grant_id: Uuid,

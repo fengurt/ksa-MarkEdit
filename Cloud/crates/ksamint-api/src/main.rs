@@ -1,6 +1,7 @@
 mod agent;
 mod auth;
 mod config;
+mod enrollment;
 mod error;
 mod github;
 mod session;
@@ -41,13 +42,17 @@ async fn main() -> Result<()> {
     let config = Config::from_env()?;
     let bind = config.bind;
     let state = AppState::new(config.clone()).await?;
+    tokio::spawn(github::backup_worker(state.clone()));
     // Browsers serialize an Origin without a trailing slash. `Url::as_str()`
     // adds one for a bare origin, which would make every CORS preflight fail.
     let origin = HeaderValue::from_str(&config.public_origin.origin().ascii_serialization())?;
     let cors = CorsLayer::new()
         .allow_origin(origin)
         .allow_credentials(true)
-        .allow_headers([axum::http::header::CONTENT_TYPE])
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+        ])
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE]);
     let request_id = axum::http::HeaderName::from_static("x-request-id");
 
@@ -103,7 +108,30 @@ fn api_routes() -> Router<AppState> {
         )
         .route(
             "/vaults/{vault_id}/devices/{device_id}",
-            put(sync_api::put_device).delete(sync_api::revoke_device),
+            put(sync_api::put_device)
+                .patch(enrollment::rename_device)
+                .delete(sync_api::revoke_device),
+        )
+        .route("/vaults/{vault_id}/devices", get(enrollment::list_devices))
+        .route(
+            "/vaults/{vault_id}/enrollments",
+            post(enrollment::create_enrollment),
+        )
+        .route(
+            "/vaults/{vault_id}/enrollments/{request_id}",
+            get(enrollment::enrollment_status).delete(enrollment::reject_enrollment),
+        )
+        .route(
+            "/vaults/{vault_id}/enrollments/{request_id}/approve",
+            post(enrollment::approve_enrollment),
+        )
+        .route(
+            "/vaults/{vault_id}/enrollments/{request_id}/recover",
+            post(enrollment::recover_enrollment),
+        )
+        .route(
+            "/device-sessions/exchange",
+            post(enrollment::exchange_device_session),
         )
         .route(
             "/vaults/{vault_id}/capabilities/{grant_id}",
@@ -120,8 +148,16 @@ fn api_routes() -> Router<AppState> {
             put(github::configure_repository),
         )
         .route(
-            "/vaults/{vault_id}/github/token",
-            post(github::installation_token),
+            "/vaults/{vault_id}/github/backups",
+            get(github::list_backups).post(github::trigger_backup),
+        )
+        .route(
+            "/vaults/{vault_id}/github/backups/{commit}/catalog",
+            get(github::backup_catalog),
+        )
+        .route(
+            "/vaults/{vault_id}/github/backups/{commit}/objects/{object_id}",
+            get(github::backup_object),
         )
         .route("/vaults/{vault_id}/recovery", put(sts::set_recovery_token))
         .route("/recovery/{vault_id}/catalog", post(sts::recovery_catalog))

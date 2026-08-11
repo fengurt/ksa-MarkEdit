@@ -3,6 +3,24 @@ const MAX_ENTRY_BYTES = 250 * 1024 * 1024;
 const MAX_RATIO = 1_000;
 
 export type ZipEntry = { path: string; bytes: Uint8Array };
+export type ZipArchiveReader = {
+  paths: string[];
+  textCandidatePaths: string[];
+  read(path: string): Promise<ZipEntry | undefined>;
+};
+
+export function openZipArchive(archive: Uint8Array): ZipArchiveReader {
+  const directory = zipDirectory(archive);
+  const byPath = new Map(directory.map(entry => [entry.path, entry]));
+  return {
+    paths: directory.map(entry => entry.path),
+    textCandidatePaths: preferredTextEntries(directory).map(entry => entry.path),
+    async read(path) {
+      const entry = byPath.get(path);
+      return entry ? { path, bytes: await extractEntry(archive, entry) } : undefined;
+    },
+  };
+}
 
 type DirectoryEntry = {
   path: string;
@@ -15,11 +33,11 @@ type DirectoryEntry = {
 };
 
 export async function extractZipTextEntries(archive: Uint8Array): Promise<ZipEntry[]> {
-  const directory = zipDirectory(archive);
-  const textEntries = preferredTextEntries(directory);
+  const reader = openZipArchive(archive);
   const output: ZipEntry[] = [];
-  for (const entry of textEntries) {
-    output.push({ path: entry.path, bytes: await extractEntry(archive, entry) });
+  for (const path of reader.textCandidatePaths) {
+    const entry = await reader.read(path);
+    if (entry) output.push(entry);
   }
   return output;
 }

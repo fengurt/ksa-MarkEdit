@@ -15,11 +15,19 @@ export function ConversationImportDialog({
     plan.items.filter(item => item.action === 'create' || item.action === 'update').map(item => item.id),
   ));
   const [saving, setSaving] = useState(false);
-  const [edits, setEdits] = useState<Record<string, { title: string; category: string; tags: string }>>(
+  const [edits, setEdits] = useState<Record<string, {
+    title: string;
+    category: string;
+    tags: string;
+    retainOriginalPackage: boolean;
+    selectedAttachmentIDs: string[];
+  }>>(
     () => Object.fromEntries(plan.items.map(item => [item.id, {
       title: item.conversation.title,
       category: `Conversations/${providerName(item.conversation.provider)}`,
       tags: `conversation, ${item.conversation.provider}`,
+      retainOriginalPackage: true,
+      selectedAttachmentIDs: item.conversation.attachments.map(attachment => attachment.id),
     }])),
   );
   const summary = useMemo(() => ({
@@ -54,7 +62,7 @@ export function ConversationImportDialog({
         )}
         <div className="conversation-import-list">
           {plan.items.map(item => (
-            <label key={item.id} className={`conversation-import-item action-${item.action}`}>
+            <div key={item.id} className={`conversation-import-item action-${item.action}`}>
               <input
                 type="checkbox"
                 checked={selected.has(item.id)}
@@ -76,7 +84,51 @@ export function ConversationImportDialog({
                   }))}
                 />
                 <small>{item.conversation.provider} · {item.conversation.messages.length} {t('conversationMessages')}</small>
+                <small>
+                  {item.conversation.attachments.length} attachments · {formatBytes(
+                    item.conversation.attachments.reduce((total, attachment) => total + attachment.byteSize, 0)
+                    + (item.conversation.sourcePackage?.byteSize ?? 0),
+                  )}
+                </small>
                 <small>{item.reason}</small>
+                {item.conversation.sourcePackage && (
+                  <label className="conversation-retain-package">
+                    <input
+                      type="checkbox"
+                      checked={edits[item.id]?.retainOriginalPackage ?? true}
+                      onChange={event => setEdits(current => ({
+                        ...current,
+                        [item.id]: { ...current[item.id], retainOriginalPackage: event.target.checked },
+                      }))}
+                    />
+                    Keep original export package · {formatBytes(item.conversation.sourcePackage.byteSize)}
+                  </label>
+                )}
+                {item.conversation.attachments.length > 0 && (
+                  <details className="conversation-attachments">
+                    <summary>Message attachments</summary>
+                    {item.conversation.attachments.map(attachment => (
+                      <label key={attachment.id}>
+                        <input
+                          type="checkbox"
+                          checked={edits[item.id]?.selectedAttachmentIDs.includes(attachment.id) ?? true}
+                          disabled={!attachment.bytes}
+                          onChange={event => setEdits(current => {
+                            const values = new Set(current[item.id].selectedAttachmentIDs);
+                            if (event.target.checked) values.add(attachment.id);
+                            else values.delete(attachment.id);
+                            return {
+                              ...current,
+                              [item.id]: { ...current[item.id], selectedAttachmentIDs: [...values] },
+                            };
+                          })}
+                        />
+                        {attachment.name} · {attachment.mimeType} · {formatBytes(attachment.byteSize)}
+                        {!attachment.bytes ? ' · missing' : ''}
+                      </label>
+                    ))}
+                  </details>
+                )}
                 <span className="conversation-metadata-fields">
                   <input
                     aria-label={t('category')}
@@ -98,7 +150,7 @@ export function ConversationImportDialog({
                 <code>{item.proposedPath}</code>
               </span>
               <b>{actionLabel(item.action)}</b>
-            </label>
+            </div>
           ))}
         </div>
         <footer>
@@ -119,6 +171,8 @@ export function ConversationImportDialog({
                   title: edit?.title,
                   category: edit?.category,
                   tags: edit?.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+                  retainOriginalPackage: edit?.retainOriginalPackage ?? true,
+                  selectedAttachmentIDs: edit?.selectedAttachmentIDs ?? [],
                 };
               });
               void onApply(decisions).finally(() => setSaving(false));
@@ -130,6 +184,12 @@ export function ConversationImportDialog({
       </section>
     </div>
   );
+}
+
+function formatBytes(value: number): string {
+  if (value < 1_024) return `${value} B`;
+  if (value < 1_024 * 1_024) return `${(value / 1_024).toFixed(1)} KiB`;
+  return `${(value / (1_024 * 1_024)).toFixed(1)} MiB`;
 }
 
 function providerName(provider: ConversationImportPlan['items'][number]['conversation']['provider']): string {

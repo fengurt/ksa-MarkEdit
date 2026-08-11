@@ -1,6 +1,7 @@
 use crate::{
+    enrollment::session_proof,
     error::{ApiError, ApiResult},
-    session::{AccountSession, now_ms},
+    session::{AccountSession, VaultDeviceSession, create_device_session, now_ms},
     state::AppState,
 };
 use axum::{
@@ -9,6 +10,7 @@ use axum::{
     http::StatusCode,
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
+use p256::ecdsa::{Signature, VerifyingKey, signature::Verifier};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -45,6 +47,9 @@ pub struct PutDevice {
     pub hpke_public_key: String,
     pub signing_public_key: String,
     pub wrapped_grant: String,
+    pub display_name: String,
+    pub unix_ms: i64,
+    pub proof: String,
 }
 
 #[derive(Deserialize)]
@@ -113,10 +118,10 @@ pub async fn create_vault(
 
 pub async fn latest_manifest(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
 ) -> ApiResult<Json<Value>> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     let row = sqlx::query_as::<_, (i64, Option<Vec<u8>>, Vec<u8>, Vec<u8>)>(
         "SELECT sequence, previous_digest, digest, signed_cbor FROM manifests \
          WHERE vault_id = $1 ORDER BY sequence DESC LIMIT 1",
@@ -135,11 +140,22 @@ pub async fn latest_manifest(
 
 pub async fn put_manifest(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
     Json(input): Json<PutManifest>,
 ) -> ApiResult<Json<Value>> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
+    let recovery_ready = sqlx::query_scalar::<_, bool>(
+        "SELECT recovery_token_digest IS NOT NULL FROM vaults WHERE id = $1",
+    )
+    .bind(vault_id)
+    .fetch_one(&state.pool)
+    .await?;
+    if !recovery_ready {
+        return Err(ApiError::Conflict(
+            "save and verify the recovery package before the first manifest".to_owned(),
+        ));
+    }
     let bytes = STANDARD
         .decode(input.signed_cbor)
         .map_err(|_| ApiError::Invalid("signedCbor must be base64".to_owned()))?;
@@ -153,9 +169,10 @@ pub async fn put_manifest(
     }
     let active_device = sqlx::query_scalar::<_, bool>(
         "SELECT EXISTS(SELECT 1 FROM devices \
-         WHERE vault_id = $1 AND signing_public_key = $2 AND revoked_at IS NULL)",
+         WHERE vault_id = $1 AND id = $2 AND signing_public_key = $3 AND revoked_at IS NULL)",
     )
     .bind(vault_id)
+    .bind(session.device_id)
     .bind(&signed.device_signing_public_key)
     .fetch_one(&state.pool)
     .await?;
@@ -269,16 +286,21 @@ pub async fn put_manifest(
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
+    if let Err(error) =
+        crate::github::schedule_backup(&state, vault_id, input.sequence, false).await
+    {
+        tracing::warn!(%vault_id, %error, "failed to queue GitHub backup after manifest");
+    }
     Ok(Json(json!({"sequence": input.sequence, "accepted": true})))
 }
 
 pub async fn register_object(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
     Json(input): Json<RegisterObject>,
 ) -> ApiResult<(StatusCode, Json<Value>)> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     if input.cipher_size <= 0 || input.cipher_size > 10 * 1024 * 1024 * 1024_i64 {
         return Err(ApiError::Invalid("invalid cipher size".to_owned()));
     }
@@ -317,11 +339,11 @@ pub async fn register_object(
 
 pub async fn list_objects(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
     Query(cursor): Query<Cursor>,
 ) -> ApiResult<Json<Value>> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     let rows = sqlx::query_as::<_, (Uuid, String, i64, Vec<u8>, i64)>(
         "SELECT id, kind, cipher_size, digest, event_sequence FROM objects \
          WHERE vault_id = $1 AND event_sequence > $2 ORDER BY event_sequence LIMIT $3",
@@ -360,6 +382,22 @@ pub async fn put_device(
             "device keys must be uncompressed P-256 public points".to_owned(),
         ));
     }
+    if (now_ms() - input.unix_ms).abs() > 2 * 60 * 1_000 {
+        return Err(ApiError::Unauthorized);
+    }
+    let proof = decode_limited(&input.proof, 256)?;
+    let verifying_key =
+        VerifyingKey::from_sec1_bytes(&signing).map_err(|_| ApiError::Unauthorized)?;
+    let proof = Signature::from_slice(&proof).map_err(|_| ApiError::Unauthorized)?;
+    verifying_key
+        .verify(&session_proof(vault_id, device_id, input.unix_ms), &proof)
+        .map_err(|_| ApiError::Unauthorized)?;
+    let display_name = input.display_name.trim();
+    if display_name.is_empty() || display_name.chars().count() > 80 {
+        return Err(ApiError::Invalid(
+            "device name must contain 1-80 characters".to_owned(),
+        ));
+    }
     let mut transaction = state.pool.begin().await?;
     sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
         .bind(vault_id.to_string())
@@ -389,7 +427,11 @@ pub async fn put_device(
             .execute(&mut *transaction)
             .await?;
         transaction.commit().await?;
-        return Ok(Json(json!({"id": device_id})));
+        let (token, expires_at) =
+            create_device_session(&state, session.account_id, vault_id, device_id).await?;
+        return Ok(Json(
+            json!({"id": device_id, "token": token, "expiresAt": expires_at}),
+        ));
     }
     let vault_has_device =
         sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM devices WHERE vault_id = $1)")
@@ -403,18 +445,23 @@ pub async fn put_device(
     }
     sqlx::query(
         "INSERT INTO devices \
-         (id, vault_id, hpke_public_key, signing_public_key, wrapped_grant) \
-         VALUES ($1, $2, $3, $4, $5)",
+         (id, vault_id, hpke_public_key, signing_public_key, wrapped_grant, display_name) \
+         VALUES ($1, $2, $3, $4, $5, $6)",
     )
     .bind(device_id)
     .bind(vault_id)
     .bind(hpke)
     .bind(signing)
     .bind(wrapped)
+    .bind(display_name)
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    Ok(Json(json!({"id": device_id})))
+    let (token, expires_at) =
+        create_device_session(&state, session.account_id, vault_id, device_id).await?;
+    Ok(Json(
+        json!({"id": device_id, "token": token, "expiresAt": expires_at}),
+    ))
 }
 
 pub async fn revoke_device(
@@ -434,16 +481,24 @@ pub async fn revoke_device(
     if result.rows_affected() == 0 {
         return Err(ApiError::NotFound);
     }
+    sqlx::query(
+        "UPDATE device_sessions SET revoked_at = now() \
+         WHERE vault_id = $1 AND device_id = $2 AND revoked_at IS NULL",
+    )
+    .bind(vault_id)
+    .bind(device_id)
+    .execute(&state.pool)
+    .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn put_capability(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path((vault_id, grant_id)): Path<(Uuid, Uuid)>,
     Json(input): Json<PutCapability>,
 ) -> ApiResult<Json<Value>> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     if input.expires_unix_ms <= now_ms() {
         return Err(ApiError::Invalid(
             "capability is already expired".to_owned(),
@@ -473,10 +528,10 @@ pub async fn put_capability(
 
 pub async fn revoke_capability(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path((vault_id, revocation_id)): Path<(Uuid, Uuid)>,
 ) -> ApiResult<StatusCode> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     let result = sqlx::query(
         "UPDATE capability_grants SET revoked_at = now() \
          WHERE vault_id = $1 AND revocation_id = $2 AND revoked_at IS NULL",
@@ -493,11 +548,11 @@ pub async fn revoke_capability(
 
 pub async fn append_audit(
     State(state): State<AppState>,
-    session: AccountSession,
+    session: VaultDeviceSession,
     Path(vault_id): Path<Uuid>,
     Json(input): Json<AuditInput>,
 ) -> ApiResult<Json<Value>> {
-    require_vault(&state, session.account_id, vault_id).await?;
+    require_device_vault(&session, vault_id)?;
     let previous = decode_digest(&input.previous_hash)?;
     let hash = decode_digest(&input.entry_hash)?;
     let encrypted = decode_limited(&input.encrypted_entry, 64 * 1024)?;
@@ -553,6 +608,14 @@ async fn require_vault(state: &AppState, account_id: Uuid, vault_id: Uuid) -> Ap
         Ok(())
     } else {
         Err(ApiError::NotFound)
+    }
+}
+
+fn require_device_vault(session: &VaultDeviceSession, vault_id: Uuid) -> ApiResult<()> {
+    if session.vault_id == vault_id {
+        Ok(())
+    } else {
+        Err(ApiError::Forbidden)
     }
 }
 
