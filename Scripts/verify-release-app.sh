@@ -14,6 +14,17 @@ test "$actual_commit" = "$expected_commit" || {
   exit 1
 }
 
+source_icon="$(git rev-parse --show-toplevel)/Icon.png"
+built_icon="$app/Contents/Resources/Icon.png"
+test -f "$source_icon"
+test -f "$built_icon"
+expected_icon_hash=$(shasum -a 256 "$source_icon" | awk '{print $1}')
+actual_icon_hash=$(shasum -a 256 "$built_icon" | awk '{print $1}')
+test "$actual_icon_hash" = "$expected_icon_hash" || {
+  echo "App icon mismatch: expected $expected_icon_hash, found $actual_icon_hash" >&2
+  exit 1
+}
+
 for bundle in \
   "$app" \
   "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app" \
