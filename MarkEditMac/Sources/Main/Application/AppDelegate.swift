@@ -254,6 +254,10 @@ extension AppDelegate {
         }
       case "conversation-inbox":
         ConversationCaptureCoordinator.shared.showInbox()
+      case "capture-history":
+        ConversationCaptureCoordinator.shared.openCaptureHistory()
+      case "capture-search":
+        ConversationCaptureCoordinator.shared.searchCaptureHistory()
       default:
         break
       }

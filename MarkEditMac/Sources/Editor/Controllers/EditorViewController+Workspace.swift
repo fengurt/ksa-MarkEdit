@@ -112,6 +112,16 @@ extension EditorViewController {
     }
   }
 
+  func showCaptureHistorySearch() {
+    workspaceSidebarMode = .search
+    workspaceSidebarVisible = true
+    ensureWorkspaceSidebar()
+    workspaceSidebarView?.showSearch(query: #"path:"Conversations/""#)
+    AppPreferences.Window.workspaceSidebarVisible = true
+    AppPreferences.Window.workspaceSidebarMode = WorkspaceSidebarMode.search.rawValue
+    view.needsLayout = true
+  }
+
   func layoutWorkspaceSidebar() {
     guard let workspaceSidebarView else {
       return

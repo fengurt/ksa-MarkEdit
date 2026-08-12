@@ -40,10 +40,10 @@ def configure(target, bundle_id, plist, entitlements, product_name)
     settings['GENERATE_INFOPLIST_FILE'] = 'NO'
     settings['MACOSX_DEPLOYMENT_TARGET'] = '15.0'
     settings['SDKROOT'] = 'macosx'
-    settings['SWIFT_VERSION'] = '5.0'
+    settings['SWIFT_VERSION'] = '6.0'
     settings['SKIP_INSTALL'] = 'YES'
-    settings['MARKETING_VERSION'] = '2.5.0'
-    settings['CURRENT_PROJECT_VERSION'] = '12'
+    settings['MARKETING_VERSION'] = '2.5.1'
+    settings['CURRENT_PROJECT_VERSION'] = '14'
     settings['CODE_SIGN_STYLE'] = 'Automatic'
   end
 end

@@ -31,6 +31,12 @@
       "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开对话收件箱" } },
       "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟對話收件匣" } }
     } },
+    "Open Capture History" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir l’historique des captures" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込み履歴を開く" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开捕捉历史" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟擷取記錄" } }
+    } },
     "Pause Capture" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre la capture en pause" } },
       "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込みを一時停止" } },
@@ -48,6 +54,12 @@
       "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込みを再開" } },
       "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续收集" } },
       "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "繼續收集" } }
+    } },
+    "Search Captures" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher dans les captures" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込みを検索" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索捕捉内容" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋擷取內容" } }
     } },
     "Turn Off Conversation Capture" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désactiver la capture des conversations" } },

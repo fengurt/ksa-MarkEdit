@@ -64,6 +64,9 @@ enum AppPreferences {
     @Storage(key: "general.conversation-capture-enabled", defaultValue: false)
     static var conversationCaptureEnabled: Bool
 
+    @Storage(key: "general.conversation-capture-sync-interval", defaultValue: .fiveMinutes)
+    static var conversationCaptureSyncInterval: ConversationCaptureSyncInterval
+
     static var quitAlwaysKeepsWindows: Bool {
       get {
         UserDefaults.standard.bool(forKey: NSQuitAlwaysKeepsWindows)
@@ -490,6 +493,31 @@ enum NewFilenameExtension: String, Codable, CaseIterable {
       return matched
     }
     return MainActor.assumeIsolated { AppPreferences.General.newFilenameExtension }
+  }
+}
+
+enum ConversationCaptureSyncInterval: Int, Codable, CaseIterable, Identifiable {
+  case manual = 0
+  case fiveMinutes = 300
+  case fifteenMinutes = 900
+  case thirtyMinutes = 1_800
+  case hourly = 3_600
+
+  var id: Int { rawValue }
+
+  var localizedTitle: String {
+    switch self {
+    case .manual:
+      String(localized: "Manually")
+    case .fiveMinutes:
+      String(localized: "Every 5 minutes")
+    case .fifteenMinutes:
+      String(localized: "Every 15 minutes")
+    case .thirtyMinutes:
+      String(localized: "Every 30 minutes")
+    case .hourly:
+      String(localized: "Every hour")
+    }
   }
 }
 
