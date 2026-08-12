@@ -2,7 +2,7 @@
 //
 //  WorkspaceDeepSearch.swift
 //
-//  Private, on-device semantic search for ksamint MarkEdit.
+//  Private, on-device semantic search for kmd.
 //
 
 import Accelerate

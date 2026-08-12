@@ -63,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   var activeResourceSecurityScopes = [URL]()
   lazy var resourceModuleHost = ResourceModuleHost(
     installationRoot: URL.applicationSupportDirectory
+      // Keep already-installed resource modules available across the rename.
       .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
       .appending(path: "ResourceModules", directoryHint: .isDirectory),
     trustStore: Self.resourceModuleTrustStore,

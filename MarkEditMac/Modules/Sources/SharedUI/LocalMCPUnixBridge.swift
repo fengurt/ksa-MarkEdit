@@ -56,6 +56,8 @@ public final class LocalMCPUnixServer: @unchecked Sendable {
   public static func start(
     workspaceURL: URL,
     runtimeRoot: URL = URL.applicationSupportDirectory
+      // Preserve the legacy storage path so the rename does not orphan MCP
+      // sockets, capabilities, or audit history.
       .appending(path: "ksamint MarkEdit", directoryHint: .isDirectory)
       .appending(path: "AgentBridge", directoryHint: .isDirectory)
   ) async throws -> LocalMCPUnixServer {

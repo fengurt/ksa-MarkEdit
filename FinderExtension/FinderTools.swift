@@ -60,14 +60,14 @@ final class FinderTools: FIFinderSync {
   override func menu(for menuKind: FIMenuKind) -> NSMenu {
     let menu = NSMenu()
     if menuKind == .contextualMenuForItems || menuKind == .contextualMenuForContainer {
-      let quickActions = NSMenu(title: String(localized: "ksamint Quick Actions"))
+      let quickActions = NSMenu(title: String(localized: "kmd Quick Actions"))
       for (index, action) in WorkspaceQuickAction.allCases.enumerated() {
         let item = NSMenuItem(title: action.title, action: #selector(runQuickAction(_:)), keyEquivalent: "")
         item.tag = index
         item.target = self
         quickActions.addItem(item)
       }
-      let wrapper = NSMenuItem(title: String(localized: "ksamint Quick Actions"), action: nil, keyEquivalent: "")
+      let wrapper = NSMenuItem(title: String(localized: "kmd Quick Actions"), action: nil, keyEquivalent: "")
       wrapper.submenu = quickActions
       menu.addItem(wrapper)
       menu.addItem(.separator())

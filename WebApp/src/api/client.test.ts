@@ -10,11 +10,11 @@ describe('WebAuthn option decoding', () => {
     const decoded = decodeCreationOptions({
       publicKey: {
         challenge: 'AQID',
-        rp: { name: 'ksamint MarkEdit' },
+        rp: { name: 'kmd' },
         user: {
           id: 'BAUG',
           name: 'user-example',
-          displayName: 'ksamint MarkEdit',
+          displayName: 'kmd',
         },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
       },

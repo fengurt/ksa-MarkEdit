@@ -22,7 +22,7 @@ use vault_protocol::{
 
 #[derive(Parser)]
 #[command(
-    about = "Independent backup and disaster-recovery utility for ksamint MarkEdit",
+    about = "Independent backup and disaster-recovery utility for kmd",
     version
 )]
 struct Args {

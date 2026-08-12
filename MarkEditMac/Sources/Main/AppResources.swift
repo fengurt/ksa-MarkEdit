@@ -346,8 +346,8 @@ enum Localized {
 
   enum Updater {
     static let upToDateTitle = String(localized: "You’re up-to-date!", comment: "Title for the up-to-date info")
-    static let upToDateMessage = String(localized: "ksamint MarkEdit %@ is currently the latest version.", comment: "Message for the up-to-date info")
-    static let newVersionAvailable = String(localized: "ksamint MarkEdit %@ is available!", comment: "Title for new version available")
+    static let upToDateMessage = String(localized: "kmd %@ is currently the latest version.", comment: "Message for the up-to-date info")
+    static let newVersionAvailable = String(localized: "kmd %@ is available!", comment: "Title for new version available")
     static let updateFailedTitle = String(localized: "Failed to get the update.", comment: "Title for failed to get the update")
     static let updateFailedMessage = String(localized: "Please check your network connection or get the latest release from the version history.", comment: "Message for failed to get the update")
     static let needsOSUpdateMessage = String(localized: "This release requires macOS %@ or later and cannot be installed without upgrading your operating system.", comment: "Message for minimum required OS version")

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "870A51A1294700DE0095C7EB"
-               BuildableName = "ksamint MarkEdit.app"
+               BuildableName = "kmd.app"
                BlueprintName = "MarkEditMac"
                ReferencedContainer = "container:MarkEdit.xcodeproj">
             </BuildableReference>
@@ -44,7 +44,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Kill Debug Process"
-               scriptText = "id=$(pgrep -x &quot;ksamint MarkEdit&quot; || true)&#10;path=$(which `ps -o comm= -p $id`)&#10;&#10;if [[ $path == *&quot;/Build/Products/Debug/&quot;* ]]; then&#10;  kill $id&#10;fi&#10;">
+               scriptText = "id=$(pgrep -x &quot;kmd&quot; || true)&#10;path=$(which `ps -o comm= -p $id`)&#10;&#10;if [[ $path == *&quot;/Build/Products/Debug/&quot;* ]]; then&#10;  kill $id&#10;fi&#10;">
             </ActionContent>
          </ExecutionAction>
       </PreActions>
@@ -53,7 +53,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "870A51A1294700DE0095C7EB"
-            BuildableName = "ksamint MarkEdit.app"
+            BuildableName = "kmd.app"
             BlueprintName = "MarkEditMac"
             ReferencedContainer = "container:MarkEdit.xcodeproj">
          </BuildableReference>
@@ -77,7 +77,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "870A51A1294700DE0095C7EB"
-            BuildableName = "ksamint MarkEdit.app"
+            BuildableName = "kmd.app"
             BlueprintName = "MarkEditMac"
             ReferencedContainer = "container:MarkEdit.xcodeproj">
          </BuildableReference>

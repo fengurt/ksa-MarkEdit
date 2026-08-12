@@ -221,7 +221,7 @@
 		87067E2629755D5C0052E795 /* EditorStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStatusView.swift; sourceTree = "<group>"; };
 		87091B992A963C6B00F5EF0D /* EditorTextInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTextInput.swift; sourceTree = "<group>"; };
 		8709C69D29B4412F009EABB5 /* AssistantSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantSettingsView.swift; sourceTree = "<group>"; };
-		870A51A2294700DE0095C7EB /* ksamint MarkEdit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ksamint MarkEdit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		870A51A2294700DE0095C7EB /* kmd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "kmd.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		870A51A9294700E00095C7EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		870A51AC294700E00095C7EB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		870A51AE294700E00095C7EB /* Info.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
@@ -459,7 +459,7 @@
 		870A51A3294700DE0095C7EB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				870A51A2294700DE0095C7EB /* ksamint MarkEdit.app */,
+				870A51A2294700DE0095C7EB /* kmd.app */,
 				872924002951525C007156B1 /* PreviewExtension.appex */,
 				87152B9A2EC599CA00B39F06 /* FinderExtension.appex */,
 				961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */,
@@ -904,8 +904,8 @@
 				AB2100023000000000000001 /* ResourceCore */,
 				AB2100043000000000000001 /* ResourceUI */,
 			);
-			productName = "ksamint MarkEdit";
-			productReference = 870A51A2294700DE0095C7EB /* ksamint MarkEdit.app */;
+			productName = "kmd";
+			productReference = 870A51A2294700DE0095C7EB /* kmd.app */;
 			productType = "com.apple.product-type.application";
 		};
 		87152B992EC599CA00B39F06 /* FinderExtension */ = {
@@ -1308,7 +1308,7 @@
 				CODE_SIGN_ENTITLEMENTS = ConversationCaptureHelper/Info.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ConversationCaptureHelper/Info.plist;
@@ -1317,7 +1317,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.conversation-capture-helper";
 				PRODUCT_NAME = ConversationCaptureHelper;
 				SDKROOT = macosx;
@@ -1332,7 +1332,7 @@
 				CODE_SIGN_ENTITLEMENTS = ConversationCaptureHelper/Info.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ConversationCaptureHelper/Info.plist;
@@ -1341,7 +1341,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.dev.conversation-capture-helper";
 				PRODUCT_NAME = ConversationCaptureHelper;
 				SDKROOT = macosx;
@@ -1503,7 +1503,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MarkEditMac/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -1516,7 +1516,7 @@
 				MARKETING_VERSION = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited)";
 				PRODUCT_MODULE_NAME = MarkEdit;
-				PRODUCT_NAME = "ksamint MarkEdit";
+				PRODUCT_NAME = "kmd";
 				REGISTER_APP_GROUPS = "$(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1540,7 +1540,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MarkEditMac/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -1553,7 +1553,7 @@
 				MARKETING_VERSION = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited)";
 				PRODUCT_MODULE_NAME = MarkEdit;
-				PRODUCT_NAME = "ksamint MarkEdit";
+				PRODUCT_NAME = "kmd";
 				REGISTER_APP_GROUPS = "$(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
@@ -1585,7 +1585,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit Finder";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd Finder";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1631,7 +1631,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit Finder";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd Finder";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1664,7 +1664,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PreviewExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit Preview";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd Preview";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1695,7 +1695,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PreviewExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ksamint MarkEdit Preview";
+				INFOPLIST_KEY_CFBundleDisplayName = "kmd Preview";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1719,12 +1719,12 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = QuickActionExtension/Info.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QuickActionExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.quick-actions";
 				PRODUCT_NAME = QuickActionExtension;
 				SDKROOT = macosx;
@@ -1739,12 +1739,12 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = QuickActionExtension/Info.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QuickActionExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "art.apuch.ksamint.markedit.dev.quick-actions";
 				PRODUCT_NAME = QuickActionExtension;
 				SDKROOT = macosx;

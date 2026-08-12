@@ -67,7 +67,7 @@ export class VaultStorage {
     if (manifest.files.length === 0) {
       await storage.createFile(
         'Welcome.md',
-        '# Welcome to ksamint Notes\n\nYour Markdown stays local until you enable encrypted sync.\n',
+        '# Welcome to kmd\n\nYour Markdown stays local until you enable encrypted sync.\n',
       );
     }
     return storage;

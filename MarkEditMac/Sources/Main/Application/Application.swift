@@ -29,7 +29,7 @@ final class Application: NSApplication {
           )
           Darwin.exit(EXIT_SUCCESS)
         } catch {
-          let message = Data("ksamint MarkEdit live MCP: \(error.localizedDescription)\n".utf8)
+          let message = Data("kmd live MCP: \(error.localizedDescription)\n".utf8)
           try? FileHandle.standardError.write(contentsOf: message)
           Darwin.exit(EXIT_FAILURE)
         }
@@ -43,7 +43,7 @@ final class Application: NSApplication {
           try await LocalMCPServer.run()
           Darwin.exit(EXIT_SUCCESS)
         } catch {
-          let message = Data("ksamint MarkEdit MCP: \(error.localizedDescription)\n".utf8)
+          let message = Data("kmd MCP: \(error.localizedDescription)\n".utf8)
           try? FileHandle.standardError.write(contentsOf: message)
           Darwin.exit(EXIT_FAILURE)
         }

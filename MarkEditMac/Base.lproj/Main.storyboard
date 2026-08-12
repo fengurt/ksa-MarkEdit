@@ -11,11 +11,11 @@
                 <application id="hnw-xV-0zn" sceneMemberID="viewController">
                     <menu key="mainMenu" title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
                         <items>
-                            <menuItem title="ksamint MarkEdit" id="1Xt-HY-uBw" userLabel="ksamint MarkEdit">
+                            <menuItem title="kmd" id="1Xt-HY-uBw" userLabel="kmd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="ksamint MarkEdit" systemMenu="apple" id="uQy-DD-JDr">
+                                <menu key="submenu" title="kmd" systemMenu="apple" id="uQy-DD-JDr">
                                     <items>
-                                        <menuItem title="About ksamint MarkEdit" id="5kV-Vb-QxS">
+                                        <menuItem title="About kmd" id="5kV-Vb-QxS">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="orderFrontStandardAboutPanel:" target="Ady-hI-5gd" id="Exp-CZ-Vem"/>
@@ -78,7 +78,7 @@
                                             </menu>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="4je-JR-u6R"/>
-                                        <menuItem title="Hide ksamint MarkEdit" keyEquivalent="h" id="Olw-nP-bQN">
+                                        <menuItem title="Hide kmd" keyEquivalent="h" id="Olw-nP-bQN">
                                             <connections>
                                                 <action selector="hide:" target="Ady-hI-5gd" id="PnN-Uc-m68"/>
                                             </connections>
@@ -96,7 +96,7 @@
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
-                                        <menuItem title="Quit ksamint MarkEdit" keyEquivalent="q" id="4sb-4s-VLi">
+                                        <menuItem title="Quit kmd" keyEquivalent="q" id="4sb-4s-VLi">
                                             <connections>
                                                 <action selector="terminate:" target="Ady-hI-5gd" id="Te7-pn-YzF"/>
                                             </connections>
@@ -1007,7 +1007,7 @@ Gw
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                                     <items>
-                                        <menuItem title="ksamint MarkEdit Help" keyEquivalent="?" id="FKE-Sm-Kum">
+                                        <menuItem title="kmd Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                             <connections>
                                                 <action selector="showHelp:" target="Voe-Tx-rLC" id="ba9-aC-ghc"/>
                                             </connections>

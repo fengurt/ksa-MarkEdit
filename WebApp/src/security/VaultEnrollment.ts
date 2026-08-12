@@ -283,7 +283,7 @@ async function rawPublicKey(key: CryptoKey): Promise<Uint8Array> {
 
 function deviceDisplayName(): string {
   const platform = navigator.platform || 'Web';
-  return `ksamint Web · ${platform}`.slice(0, 80);
+  return `kmd Web · ${platform}`.slice(0, 80);
 }
 
 function base64(value: Uint8Array): string {

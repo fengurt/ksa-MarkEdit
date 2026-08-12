@@ -4,12 +4,12 @@ version, sha256 = ARGV
 abort "usage: render-cask.rb VERSION SHA256" unless version && sha256
 
 puts <<~RUBY
-  cask "ksamint-markedit" do
+  cask "kmd" do
     version "#{version}"
     sha256 "#{sha256}"
 
     url "https://github.com/fengurt/ksa-MarkEdit/releases/download/v\#{version}/ksamint-MarkEdit-\#{version}.dmg"
-    name "ksamint MarkEdit"
+    name "kmd"
     desc "Fast, native Markdown editor with Chinese, Japanese, and French support"
     homepage "https://github.com/fengurt/ksa-MarkEdit"
 
@@ -21,7 +21,7 @@ puts <<~RUBY
     depends_on macos: :sequoia
     depends_on arch: :arm64
 
-    app "ksamint MarkEdit.app"
+    app "kmd.app"
 
     zap trash: [
       "~/Library/Application Scripts/art.apuch.ksamint.markedit.finder-extension",

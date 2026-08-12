@@ -27,7 +27,7 @@ case "$requested_arch" in
   *) echo "--arch must resolve to arm64 for v2.5" >&2; exit 2 ;;
 esac
 test "$requested_arch" = arm64 || {
-  echo "ksamint MarkEdit v2.5 supports Apple Silicon Macs only." >&2
+  echo "kmd v2.5 supports Apple Silicon Macs only." >&2
   exit 2
 }
 
@@ -73,7 +73,7 @@ if [ "$source_mode" = release ]; then
   xcrun stapler validate "$dmg"
   mkdir -p "$temporary/mount" "$temporary/unpacked"
   hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$temporary/mount" >/dev/null
-  ditto "$temporary/mount/ksamint MarkEdit.app" "$temporary/unpacked/ksamint MarkEdit.app"
+  ditto "$temporary/mount/kmd.app" "$temporary/unpacked/kmd.app"
   hdiutil detach "$temporary/mount" >/dev/null
 else
   gh workflow run signed-local-install.yml --repo "$repository" --ref main \
@@ -98,12 +98,12 @@ else
   test -f "$archive" || { echo "Signed app artifact is missing." >&2; exit 1; }
   ditto -x -k "$archive" "$temporary/unpacked"
 fi
-candidate="$temporary/unpacked/ksamint MarkEdit.app"
+candidate="$temporary/unpacked/kmd.app"
 test -d "$candidate" || { echo "Signed app bundle is missing." >&2; exit 1; }
 
 actual_commit=$(/usr/libexec/PlistBuddy -c 'Print :KSAMINTBuildCommit' "$candidate/Contents/Info.plist")
 test "$actual_commit" = "$expected_commit" || { echo "Artifact commit mismatch: $actual_commit" >&2; exit 1; }
-archs=$(lipo -archs "$candidate/Contents/MacOS/ksamint MarkEdit")
+archs=$(lipo -archs "$candidate/Contents/MacOS/kmd")
 echo "$archs" | grep -qw arm64
 if echo "$archs" | grep -qw x86_64; then exit 1; fi
 codesign --verify --deep --strict --verbose=2 "$candidate"
@@ -119,28 +119,40 @@ actual_team=$(codesign -dvv "$candidate" 2>&1 | sed -n 's/^TeamIdentifier=//p')
 if [ -z "$team_id" ]; then team_id=$actual_team; fi
 test -n "$team_id" && test "$actual_team" = "$team_id" || { echo "Unexpected signing Team ID: $actual_team" >&2; exit 1; }
 
-target="/Applications/ksamint MarkEdit.app"
-if pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
-  osascript -e 'tell application "ksamint MarkEdit" to quit' >/dev/null 2>&1 || true
+target="/Applications/kmd.app"
+legacy_target="/Applications/ksamint MarkEdit.app"
+if [ -d "$target" ] && [ -d "$legacy_target" ]; then
+  echo "Installation deferred: both the old and renamed app are installed; remove one after checking for unsaved documents." >&2
+  exit 3
+fi
+if pgrep -x 'kmd' >/dev/null 2>&1 || pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
+  osascript -e 'tell application id "art.apuch.ksamint.markedit" to quit' >/dev/null 2>&1 || true
   wait_count=0
-  while pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1 && [ "$wait_count" -lt 20 ]; do
+  while { pgrep -x 'kmd' >/dev/null 2>&1 || pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; } && [ "$wait_count" -lt 20 ]; do
     sleep 1
     wait_count=$((wait_count + 1))
   done
-  if pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
+  if pgrep -x 'kmd' >/dev/null 2>&1 || pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
     echo "Installation deferred: the app still has a window or unsaved document open." >&2
     exit 3
   fi
 fi
 
 backup=
+backup_source=
 if [ -d "$target" ]; then
+  backup_source="$target"
+  backup="/Applications/kmd.backup-$(date +%Y%m%d-%H%M%S).app"
+elif [ -d "$legacy_target" ]; then
+  backup_source="$legacy_target"
   backup="/Applications/ksamint MarkEdit.backup-$(date +%Y%m%d-%H%M%S).app"
-  mv "$target" "$backup"
+fi
+if [ -n "$backup_source" ]; then
+  mv "$backup_source" "$backup"
 fi
 rollback() {
   rm -rf "$target"
-  if [ -n "$backup" ] && [ -d "$backup" ]; then mv "$backup" "$target"; fi
+  if [ -n "$backup" ] && [ -d "$backup" ]; then mv "$backup" "$backup_source"; fi
 }
 trap 'rollback; cleanup' HUP INT TERM
 
@@ -153,10 +165,10 @@ fi
 
 open -a "$target"
 sleep 3
-if ! pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
+if ! pgrep -x 'kmd' >/dev/null 2>&1; then
   echo "Installed app failed its launch smoke test; rolling back." >&2
   rollback
-  if [ -d "$target" ]; then open -a "$target"; fi
+  if [ -n "$backup_source" ] && [ -d "$backup_source" ]; then open -a "$backup_source"; fi
   exit 1
 fi
 
@@ -165,5 +177,5 @@ build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$target/Contents/In
 test -d "$target/Contents/Library/LoginItems/ConversationCaptureHelper.app"
 test -d "$target/Contents/PlugIns/FinderExtension.appex"
 test -d "$target/Contents/PlugIns/QuickActionExtension.appex"
-echo "Installed ksamint MarkEdit $version ($build), commit $actual_commit."
+echo "Installed kmd $version ($build), commit $actual_commit."
 if [ -n "$backup" ]; then echo "Previous app retained at $backup"; fi

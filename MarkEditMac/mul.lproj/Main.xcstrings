@@ -188,31 +188,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit"
+            "value" : "kmd"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit"
+            "value" : "kmd"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         }
       }
@@ -440,31 +440,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Quit ksamint MarkEdit"
+            "value" : "Quit kmd"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "退出 查明 MarkEdit"
+            "value" : "退出 kmd"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "結束 查明 MarkEdit"
+            "value" : "結束 kmd"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEditを終了する"
+            "value" : "kmdを終了する"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quitter ksamint MarkEdit"
+            "value" : "Quitter kmd"
           }
         }
       }
@@ -512,31 +512,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "About ksamint MarkEdit"
+            "value" : "About kmd"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关于 查明 MarkEdit"
+            "value" : "关于 kmd"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關於 查明 MarkEdit"
+            "value" : "關於 kmd"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit について"
+            "value" : "kmd について"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "À propos de ksamint MarkEdit"
+            "value" : "À propos de kmd"
           }
         }
       }
@@ -2338,31 +2338,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "ksamint MarkEdit Help"
+            "value" : "kmd Help"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit 帮助"
+            "value" : "kmd 帮助"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit 輔助說明"
+            "value" : "kmd 輔助說明"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit ヘルプ"
+            "value" : "kmd ヘルプ"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aide de ksamint MarkEdit"
+            "value" : "Aide de kmd"
           }
         }
       }
@@ -4020,31 +4020,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Hide ksamint MarkEdit"
+            "value" : "Hide kmd"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "隐藏 查明 MarkEdit"
+            "value" : "隐藏 kmd"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "隱藏 查明 MarkEdit"
+            "value" : "隱藏 kmd"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEditを隠す"
+            "value" : "kmdを隠す"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Masquer ksamint MarkEdit"
+            "value" : "Masquer kmd"
           }
         }
       }
@@ -5640,31 +5640,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit"
+            "value" : "kmd"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit"
+            "value" : "kmd"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit"
+            "value" : "kmd"
           }
         }
       }

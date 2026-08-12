@@ -64,7 +64,7 @@ pub async fn register_options(
         .start_passkey_registration(
             account_id,
             &format!("user-{}", &account_id.to_string()[..8]),
-            "ksamint MarkEdit",
+            "kmd",
             excluded,
         )
         .map_err(|error| ApiError::Invalid(error.to_string()))?;
