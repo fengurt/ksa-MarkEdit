@@ -280,6 +280,8 @@ private extension ClipboardCaptureService {
     menu.addItem(withTitle: paused ? String(localized: "Resume Capture") : String(localized: "Pause Capture"), action: #selector(togglePause), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Capture Next Copy"), action: #selector(captureNextCopy), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Open Conversation Inbox"), action: #selector(openInbox), keyEquivalent: "").target = self
+    menu.addItem(withTitle: String(localized: "Open Capture History"), action: #selector(openHistory), keyEquivalent: "").target = self
+    menu.addItem(withTitle: String(localized: "Search Captures"), action: #selector(searchHistory), keyEquivalent: "").target = self
     if lastSavedURL != nil { menu.addItem(withTitle: String(localized: "Undo Last Capture"), action: #selector(undoLast), keyEquivalent: "").target = self }
     menu.addItem(.separator())
     menu.addItem(withTitle: String(localized: "Permission Settings…"), action: #selector(openSettings), keyEquivalent: "").target = self
@@ -290,10 +292,10 @@ private extension ClipboardCaptureService {
   @objc private func togglePause() { paused.toggle(); rebuildMenu() }
   @objc private func captureNextCopy() { captureNext = true; rebuildMenu() }
   @objc private func openInbox() {
-    if let url = URL(string: "ksamint-markedit://conversation-inbox") {
-      NSWorkspace.shared.open(url)
-    }
+    openMainApp(route: "conversation-inbox")
   }
+  @objc private func openHistory() { openMainApp(route: "capture-history") }
+  @objc private func searchHistory() { openMainApp(route: "capture-search") }
   @objc private func openSettings() {
     if let url = URL(
       string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
@@ -313,6 +315,11 @@ private extension ClipboardCaptureService {
     NSApp.terminate(nil)
   }
   @objc private func settingsChanged() { if !SharedCaptureSettings.enabled { NSApp.terminate(nil) } }
+
+  private func openMainApp(route: String) {
+    guard let url = URL(string: "ksamint-markedit://\(route)") else { return }
+    NSWorkspace.shared.open(url)
+  }
 
   private func jsonString(_ value: String) -> String {
     guard let data = try? JSONSerialization.data(withJSONObject: [value]), let text = String(data: data, encoding: .utf8) else { return "\"\"" }

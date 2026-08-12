@@ -196,6 +196,33 @@ final class WorkspaceIndexTests: XCTestCase {
     XCTAssertEqual(categories.map(\.path), ["Journal", "Projects/AI"])
   }
 
+  func testCaptureHistoryPathFilterOnlyReturnsConversationFiles() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let database = root.appending(path: "index.sqlite")
+    let conversations = root.appending(path: "Conversations", directoryHint: .isDirectory)
+
+    try FileManager.default.createDirectory(at: conversations, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    try "captured transcript".write(
+      to: conversations.appending(path: "Captured.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+    try "ordinary note".write(
+      to: root.appending(path: "Note.md"),
+      atomically: true,
+      encoding: .utf8
+    )
+
+    let index = WorkspaceIndex(rootURL: root, databaseURL: database)
+    _ = try await index.rebuild()
+    let results = await index.search(#"path:"Conversations/""#)
+
+    XCTAssertEqual(results.map(\.relativePath), ["Conversations/Captured.md"])
+  }
+
   func testWikiLinksMarkdownLinksBacklinksAndGraph() async throws {
     let root = FileManager.default.temporaryDirectory
       .appending(path: UUID().uuidString, directoryHint: .isDirectory)

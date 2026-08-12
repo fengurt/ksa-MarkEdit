@@ -237,8 +237,9 @@ an editor window. Ordinary image and PDF drops retain their Markdown behavior.
 ## Branding and license
 
 The ksamint / 查明 identity and mint/deep-green theme follow the current
-[APUCH brand directory](https://apuch.art/brand?brand=ksamint). No unpublished
-logo has been invented.
+[APUCH brand directory](https://apuch.art/brand?brand=ksamint). The black-and-white
+paw holding bamboo app icon was generated for ksamint MarkEdit from that published
+brand direction and approved in the v2.5.1 product update.
 
 ksamint MarkEdit is distributed under the MIT License. The fork is based on
 MarkEdit by Ying Zhong and its contributors; upstream copyright and license

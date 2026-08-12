@@ -1,10 +1,59 @@
 import AppKit
 import ServiceManagement
 
+enum ConversationCaptureServiceState: Equatable {
+  case disabled
+  case enabled
+  case approvalRequired
+  case notRegistered
+  case unavailable
+
+  var localizedDescription: String {
+    switch self {
+    case .disabled:
+      String(localized: "Clipboard capture is off")
+    case .enabled:
+      String(localized: "Clipboard capture is running in the background")
+    case .approvalRequired:
+      String(localized: "Approval is required in System Settings › Login Items")
+    case .notRegistered:
+      String(localized: "The background helper is not registered")
+    case .unavailable:
+      String(localized: "Background capture is unavailable on this Mac")
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .enabled:
+      "checkmark.circle.fill"
+    case .approvalRequired:
+      "exclamationmark.triangle.fill"
+    case .disabled:
+      "pause.circle"
+    case .notRegistered, .unavailable:
+      "xmark.circle"
+    }
+  }
+
+  var color: NSColor {
+    switch self {
+    case .enabled:
+      .systemGreen
+    case .approvalRequired:
+      .systemOrange
+    case .disabled, .notRegistered, .unavailable:
+      .secondaryLabelColor
+    }
+  }
+}
+
 @MainActor
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
   static let agentArgument = "--conversation-capture-agent"
+  static let historyDirectoryName = "Conversations"
+  static let historySearchQuery = #"path:"Conversations/""#
 
   private static let maximumClipboardBytes = 5 * 1024 * 1024
   private static let passwordManagerBundleIDs = [
@@ -64,10 +113,6 @@ final class ConversationCaptureCoordinator: NSObject {
 
   var pendingCount: Int {
     pendingQueue.count
-  }
-
-  func showInbox() {
-    reviewNextPendingCapture()
   }
 
   func importConversationResources(_ urls: [URL]) throws {
@@ -179,7 +224,7 @@ final class ConversationCaptureCoordinator: NSObject {
     let timeZone = TimeZone(secondsFromGMT: 0) ?? .current
     let parts = calendar.dateComponents(in: timeZone, from: Date())
     let directory = rootURL
-      .appending(path: "Conversations", directoryHint: .isDirectory)
+      .appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
       .appending(path: String(format: "%04d", parts.year ?? 0), directoryHint: .isDirectory)
       .appending(path: String(format: "%02d", parts.month ?? 0), directoryHint: .isDirectory)
     let filename = "Captured--\(digest.prefix(12)).md"
@@ -233,6 +278,63 @@ final class ConversationCaptureCoordinator: NSObject {
 }
 
 extension ConversationCaptureCoordinator {
+  var serviceState: ConversationCaptureServiceState {
+    guard AppPreferences.General.conversationCaptureEnabled else { return .disabled }
+    guard #available(macOS 13, *) else { return .unavailable }
+    switch SMAppService.loginItem(identifier: captureHelperIdentifier).status {
+    case .enabled:
+      return .enabled
+    case .requiresApproval:
+      return .approvalRequired
+    case .notRegistered:
+      return .notRegistered
+    case .notFound:
+      return .unavailable
+    @unknown default:
+      return .unavailable
+    }
+  }
+
+  func showInbox() {
+    reviewNextPendingCapture()
+  }
+
+  func openCaptureHistory() {
+    guard let root = authorizedWorkspaceRoot() else {
+      showWorkspaceRequired()
+      return
+    }
+    defer { root.stopAccessingSecurityScopedResource() }
+    let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
+    do {
+      try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+      NSWorkspace.shared.open(folder)
+    } catch {
+      showCaptureError(error.localizedDescription)
+    }
+  }
+
+  func searchCaptureHistory() {
+    NSApp.activate(ignoringOtherApps: true)
+    if let editor = NSApp.currentEditor {
+      editor.showCaptureHistorySearch()
+      return
+    }
+    NSDocumentController.shared.newDocument(nil)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+      NSApp.currentEditor?.showCaptureHistorySearch()
+    }
+  }
+
+  func openPermissionSettings() {
+    guard let settings = URL(
+      string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
+    ) else { return }
+    NSWorkspace.shared.open(settings)
+  }
+}
+
+extension ConversationCaptureCoordinator {
   private func installStatusItem() {
     guard statusItem == nil else { return }
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -268,6 +370,18 @@ extension ConversationCaptureCoordinator {
       keyEquivalent: ""
     )
       .target = self
+    menu.addItem(
+      withTitle: String(localized: "Open Capture History"),
+      action: #selector(openCaptureHistoryFromMenu),
+      keyEquivalent: ""
+    )
+      .target = self
+    menu.addItem(
+      withTitle: String(localized: "Search Captures"),
+      action: #selector(searchCaptureHistoryFromMenu),
+      keyEquivalent: ""
+    )
+      .target = self
     if lastSavedURL != nil {
       menu.addItem(
         withTitle: String(localized: "Undo Last Capture"),
@@ -295,11 +409,19 @@ extension ConversationCaptureCoordinator {
     reviewNextPendingCapture()
   }
 
+  @objc private func openCaptureHistoryFromMenu() {
+    openCaptureHistory()
+  }
+
+  @objc private func searchCaptureHistoryFromMenu() {
+    searchCaptureHistory()
+  }
+
   private func reviewNextPendingCapture() {
     pendingQueue.purgeExpired()
     guard let url = pendingQueue.urls.first else {
       if let root = authorizedWorkspaceRoot() {
-        let folder = root.appending(path: "Conversations", directoryHint: .isDirectory)
+        let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
         root.stopAccessingSecurityScopedResource()
         NSWorkspace.shared.open(folder)
       }
@@ -391,6 +513,10 @@ extension ConversationCaptureCoordinator {
   func synchronizeHelperConfiguration() {
     guard let defaults = UserDefaults(suiteName: "group.art.apuch.ksamint-markedit") else { return }
     defaults.set(AppPreferences.General.conversationCaptureEnabled, forKey: "conversationCaptureEnabled")
+    defaults.set(
+      AppPreferences.General.conversationCaptureSyncInterval.rawValue,
+      forKey: "conversationCaptureSyncInterval"
+    )
     defaults.set(AppPreferences.General.workspaceFolderBookmark, forKey: "workspaceBookmark")
     var paths = Set<String>()
     if let bookmark = AppPreferences.General.workspaceFolderBookmark {
@@ -429,6 +555,26 @@ extension ConversationCaptureCoordinator {
     ) {
       NSWorkspace.shared.open(settings)
     }
+  }
+
+  private func showWorkspaceRequired() {
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Choose a workspace first")
+    alert.informativeText = String(
+      localized: "Captured conversations are saved inside the authorized workspace’s Conversations folder."
+    )
+    alert.addButton(withTitle: String(localized: "OK"))
+    alert.runModal()
+  }
+
+  private func showCaptureError(_ description: String) {
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Could not open capture history")
+    alert.informativeText = description
+    alert.addButton(withTitle: String(localized: "OK"))
+    alert.runModal()
   }
 }
 

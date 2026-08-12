@@ -124,6 +124,14 @@ final class WorkspaceSidebarView: NSView {
     window?.makeFirstResponder(searchField)
   }
 
+  func showSearch(query: String) {
+    mode = .search
+    searchModeControl.selectedSegment = 0
+    searchField.stringValue = query
+    search(searchField)
+    focusSearch()
+  }
+
   func reloadTaxonomy() {
     taxonomyTask?.cancel()
     taxonomyStatusLabel.stringValue = Localized.Workspace.loadingMetadata
