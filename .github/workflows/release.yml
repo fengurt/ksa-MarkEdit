@@ -215,8 +215,8 @@ jobs:
             SWIFT_OPTIMIZATION_LEVEL="-Osize" \
             COPY_PHASE_STRIP=YES \
             STRIP_INSTALLED_PRODUCT=YES \
-            STRIP_STYLE=all \
-            DEPLOYMENT_POSTPROCESSING=YES \
+            STRIP_STYLE=non-global \
+            DEPLOYMENT_POSTPROCESSING=NO \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
