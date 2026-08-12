@@ -16,6 +16,7 @@ import SharedUI
 /**
  UserDefaults wrapper with handy getters and setters.
  */
+@MainActor
 enum AppPreferences {
   enum General {
     @Storage(key: "general.appearance", defaultValue: .system)
@@ -317,12 +318,14 @@ enum AppPreferences {
   }
 }
 
+@MainActor
 extension FontStyle {
   var webFontFace: WebFontFace {
     WebFontFace(family: cssFontFamily, weight: cssFontWeight, style: cssFontStyle)
   }
 }
 
+@MainActor
 extension AppPreferences {
   static func editorConfig(theme: String) -> EditorConfig {
     EditorConfig(
@@ -373,6 +376,7 @@ extension AppPreferences {
   }
 }
 
+@MainActor
 extension AppPreferences.Window {
   struct CodableColor: Codable {
     let hex: UInt32
@@ -405,6 +409,7 @@ extension AppPreferences.Window {
 
 // MARK: - Types
 
+@MainActor
 enum Appearance: Codable {
   case system
   case light
@@ -495,6 +500,7 @@ extension NSWindow.TabbingMode: @retroactive Codable {}
 
 // MARK: - Private
 
+@MainActor
 private extension AppPreferences {
   static func performUpdates(action: @escaping (EditorViewController) -> Void) {
     Task { @MainActor in

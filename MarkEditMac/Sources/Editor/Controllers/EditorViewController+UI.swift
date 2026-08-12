@@ -159,7 +159,7 @@ extension EditorViewController {
 
   @available(macOS 15.1, *)
   func updateWritingTools(isActive: Bool) {
-    let performUpdate = {
+    let performUpdate: @MainActor @Sendable () -> Void = {
       // Work around undo stack and selection range issues
       self.bridge.writingTools.setActive(
         isActive: isActive,

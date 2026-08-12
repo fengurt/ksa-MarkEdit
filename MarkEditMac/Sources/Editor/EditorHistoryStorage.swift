@@ -8,6 +8,7 @@
 import Foundation
 import MarkEditCore
 
+@MainActor
 enum EditorHistory {
   struct Activity: Codable, Identifiable, Equatable {
     enum Kind: String, Codable {
