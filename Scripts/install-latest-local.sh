@@ -6,11 +6,13 @@ requested_ref=HEAD
 repository=fengurt/ksa-MarkEdit
 team_id=${KSAMINT_EXPECTED_TEAM_ID:-}
 requested_arch=auto
+requested_tag=
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --source) source_mode=$2; shift 2 ;;
     --ref) requested_ref=$2; shift 2 ;;
+    --tag) requested_tag=$2; shift 2 ;;
     --repo) repository=$2; shift 2 ;;
     --team-id) team_id=$2; shift 2 ;;
     --arch) requested_arch=$2; shift 2 ;;
@@ -18,22 +20,31 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-case "$source_mode" in auto|ci|local) ;; *) echo "--source must be auto, ci, or local" >&2; exit 2 ;; esac
+case "$source_mode" in auto|ci|local|release) ;; *) echo "--source must be auto, ci, local, or release" >&2; exit 2 ;; esac
 case "$requested_arch" in
   auto) requested_arch=$(uname -m) ;;
-  arm64|universal) ;;
-  *) echo "--arch must be auto, arm64, or universal" >&2; exit 2 ;;
+  arm64) ;;
+  *) echo "--arch must resolve to arm64 for v2.5" >&2; exit 2 ;;
 esac
-test "$requested_arch" = arm64 || test "$requested_arch" = universal || {
-  echo "This installer supports ARM Macs and universal artifacts." >&2
+test "$requested_arch" = arm64 || {
+  echo "ksamint MarkEdit v2.5 supports Apple Silicon Macs only." >&2
   exit 2
 }
 
-root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-expected_commit=$(git -C "$root" rev-parse "$requested_ref^{commit}")
+root=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/ksamint-install.XXXXXX")
 cleanup() { rm -rf "$temporary"; }
 trap cleanup EXIT INT TERM
+
+command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required to obtain the signed build." >&2; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "Sign in with gh auth login first." >&2; exit 1; }
+
+if [ "$source_mode" = release ]; then
+  test -n "$requested_tag" || { echo "--tag is required with --source release" >&2; exit 2; }
+  expected_commit=$(gh api "repos/$repository/commits/$requested_tag" --jq .sha)
+else
+  expected_commit=$(git -C "$root" rev-parse "$requested_ref^{commit}")
+fi
 
 build_locally=false
 if [ "$source_mode" = local ]; then build_locally=true; fi
@@ -45,31 +56,48 @@ if $build_locally; then
   echo "A notarized local build requires the release workflow; dispatching CI for $expected_commit."
 fi
 
-command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required to obtain the signed build." >&2; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "Sign in with gh auth login first." >&2; exit 1; }
-
-gh workflow run signed-local-install.yml --repo "$repository" --ref main \
-  -f ref="$expected_commit" -f architecture="$requested_arch"
-run_id=
-attempt=0
-while [ "$attempt" -lt 120 ]; do
-  run_id=$(gh run list --repo "$repository" --workflow signed-local-install.yml --limit 30 --json databaseId,displayTitle,status,conclusion --jq ".[] | select(.displayTitle == \"Signed local $requested_arch $expected_commit\") | .databaseId" | head -1)
-  if [ -n "$run_id" ]; then
-    state=$(gh run view "$run_id" --repo "$repository" --json status,conclusion --jq '.status + ":" + (.conclusion // "")')
-    case "$state" in
-      completed:success) break ;;
-      completed:*) echo "Signed CI build failed: $state" >&2; exit 1 ;;
-    esac
-  fi
-  attempt=$((attempt + 1))
-  sleep 15
-done
-test -n "$run_id" || { echo "Timed out waiting for the signed CI run." >&2; exit 1; }
-gh run download "$run_id" --repo "$repository" --name ksamint-MarkEdit-signed-local --dir "$temporary/artifact"
-
-archive="$temporary/artifact/ksamint-MarkEdit-signed-local.zip"
-test -f "$archive" || { echo "Signed app artifact is missing." >&2; exit 1; }
-ditto -x -k "$archive" "$temporary/unpacked"
+if [ "$source_mode" = release ]; then
+  release_state=$(gh release view "$requested_tag" --repo "$repository" \
+    --json isDraft,isPrerelease --jq '(.isDraft|tostring) + ":" + (.isPrerelease|tostring)')
+  test "$release_state" = false:false || { echo "Release is not final: $release_state" >&2; exit 1; }
+  mkdir -p "$temporary/release"
+  gh release download "$requested_tag" --repo "$repository" --dir "$temporary/release" \
+    --pattern 'ksamint-MarkEdit-*.dmg' --pattern SHA256SUMS --pattern ReleaseInfo.json
+  dmg=$(find "$temporary/release" -maxdepth 1 -name 'ksamint-MarkEdit-*.dmg' -print -quit)
+  test -f "$dmg" && test -f "$temporary/release/SHA256SUMS"
+  expected_sha=$(awk -v name="$(basename "$dmg")" '$2 == name {print $1}' "$temporary/release/SHA256SUMS")
+  actual_sha=$(shasum -a 256 "$dmg" | awk '{print $1}')
+  test -n "$expected_sha" && test "$actual_sha" = "$expected_sha" || { echo "Release checksum mismatch." >&2; exit 1; }
+  test "$(jq -r .arch "$temporary/release/ReleaseInfo.json")" = arm64
+  test "$(jq -r .commit "$temporary/release/ReleaseInfo.json")" = "$expected_commit"
+  xcrun stapler validate "$dmg"
+  mkdir -p "$temporary/mount" "$temporary/unpacked"
+  hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$temporary/mount" >/dev/null
+  ditto "$temporary/mount/ksamint MarkEdit.app" "$temporary/unpacked/ksamint MarkEdit.app"
+  hdiutil detach "$temporary/mount" >/dev/null
+else
+  gh workflow run signed-local-install.yml --repo "$repository" --ref main \
+    -f ref="$expected_commit" -f architecture="$requested_arch"
+  run_id=
+  attempt=0
+  while [ "$attempt" -lt 120 ]; do
+    run_id=$(gh run list --repo "$repository" --workflow signed-local-install.yml --limit 30 --json databaseId,displayTitle,status,conclusion --jq ".[] | select(.displayTitle == \"Signed local $requested_arch $expected_commit\") | .databaseId" | head -1)
+    if [ -n "$run_id" ]; then
+      state=$(gh run view "$run_id" --repo "$repository" --json status,conclusion --jq '.status + ":" + (.conclusion // "")')
+      case "$state" in
+        completed:success) break ;;
+        completed:*) echo "Signed CI build failed: $state" >&2; exit 1 ;;
+      esac
+    fi
+    attempt=$((attempt + 1))
+    sleep 15
+  done
+  test -n "$run_id" || { echo "Timed out waiting for the signed CI run." >&2; exit 1; }
+  gh run download "$run_id" --repo "$repository" --name ksamint-MarkEdit-signed-local --dir "$temporary/artifact"
+  archive="$temporary/artifact/ksamint-MarkEdit-signed-local.zip"
+  test -f "$archive" || { echo "Signed app artifact is missing." >&2; exit 1; }
+  ditto -x -k "$archive" "$temporary/unpacked"
+fi
 candidate="$temporary/unpacked/ksamint MarkEdit.app"
 test -d "$candidate" || { echo "Signed app bundle is missing." >&2; exit 1; }
 
@@ -77,7 +105,7 @@ actual_commit=$(/usr/libexec/PlistBuddy -c 'Print :KSAMINTBuildCommit' "$candida
 test "$actual_commit" = "$expected_commit" || { echo "Artifact commit mismatch: $actual_commit" >&2; exit 1; }
 archs=$(lipo -archs "$candidate/Contents/MacOS/ksamint MarkEdit")
 echo "$archs" | grep -qw arm64
-if [ "$requested_arch" = universal ]; then echo "$archs" | grep -qw x86_64; fi
+if echo "$archs" | grep -qw x86_64; then exit 1; fi
 codesign --verify --deep --strict --verbose=2 "$candidate"
 spctl --assess --type execute -vv "$candidate"
 xcrun stapler validate "$candidate"
@@ -87,9 +115,7 @@ if [ -z "$team_id" ]; then team_id=$actual_team; fi
 test -n "$team_id" && test "$actual_team" = "$team_id" || { echo "Unexpected signing Team ID: $actual_team" >&2; exit 1; }
 
 target="/Applications/ksamint MarkEdit.app"
-running=false
 if pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1; then
-  running=true
   osascript -e 'tell application "ksamint MarkEdit" to quit' >/dev/null 2>&1 || true
   wait_count=0
   while pgrep -x 'ksamint MarkEdit' >/dev/null 2>&1 && [ "$wait_count" -lt 20 ]; do

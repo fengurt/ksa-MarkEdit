@@ -15,17 +15,16 @@ on:
         type: choice
         options:
           - arm64
-          - universal
 
 permissions:
   contents: read
 
 jobs:
   signed-local:
-    runs-on: ${{ inputs.architecture == 'arm64' && 'macos-15' || 'macos-26' }}
+    runs-on: macos-15
     environment: release
     env:
-      DEVELOPER_DIR: ${{ inputs.architecture == 'arm64' && '/Applications/Xcode_26.3.app/Contents/Developer' || '/Applications/Xcode_26.5.app/Contents/Developer' }}
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_DEVELOPER_ID_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
       APPLE_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
@@ -35,16 +34,17 @@ jobs:
       APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
       - name: Verify exact immutable commit
         run: test "$(git rev-parse HEAD)" = "${{ inputs.ref }}"
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
-      - uses: dtolnay/rust-toolchain@1.97
+          node-version: 24.19.0
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
+          toolchain: 1.97.1
           components: clippy,rustfmt
       - name: Build CoreEditor
         working-directory: CoreEditor
@@ -67,6 +67,8 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
+          cargo install cargo-audit --locked --version 0.22.2
+          ./audit.sh
       - name: Import Developer ID certificate
         run: |
           keychain="$RUNNER_TEMP/local-install.keychain-db"
@@ -133,11 +135,7 @@ jobs:
         run: |
           key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
           printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
-          case '${{ inputs.architecture }}' in
-            arm64) archive_archs='arm64' ;;
-            universal) archive_archs='arm64 x86_64' ;;
-            *) echo 'Unsupported architecture selection' >&2; exit 2 ;;
-          esac
+          test '${{ inputs.architecture }}' = arm64
           xcodebuild archive \
             -project MarkEdit.xcodeproj \
             -scheme MarkEditMac \
@@ -148,7 +146,7 @@ jobs:
             -authenticationKeyPath "$key" \
             -authenticationKeyID "$APPLE_NOTARY_KEY_ID" \
             -authenticationKeyIssuerID "$APPLE_NOTARY_ISSUER_ID" \
-            ARCHS="$archive_archs" ONLY_ACTIVE_ARCH=NO \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
             KSAMINT_BUILD_COMMIT='${{ inputs.ref }}' \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
@@ -175,7 +173,7 @@ jobs:
             "$RUNNER_TEMP/export/ksamint MarkEdit.app" \
             "$RUNNER_TEMP/ksamint-MarkEdit-signed-unstapled.zip"
       - name: Preserve signed app before notarization
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ksamint-MarkEdit-signed-unstapled
           path: ${{ runner.temp }}/ksamint-MarkEdit-signed-unstapled.zip
@@ -196,7 +194,7 @@ jobs:
           test -n "$submission_id"
           test "$submission_id" != null
           echo "Notary submission: $submission_id"
-          deadline="$(( $(date +%s) + 21600 ))"
+          deadline="$(( $(date +%s) + 2700 ))"
           while true; do
             if status_json="$(xcrun notarytool info "$submission_id" \
               --key "$key" \
@@ -230,13 +228,11 @@ jobs:
           spctl --assess --type execute -vv "$app"
           archs="$(lipo -archs "$app/Contents/MacOS/ksamint MarkEdit")"
           echo "$archs" | grep -qw arm64
-          if [ '${{ inputs.architecture }}' = universal ]; then
-            echo "$archs" | grep -qw x86_64
-          fi
+          if echo "$archs" | grep -qw x86_64; then exit 1; fi
           test -d "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app"
           test -d "$app/Contents/PlugIns/QuickActionExtension.appex"
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-signed-local.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ksamint-MarkEdit-signed-local
           path: ${{ runner.temp }}/ksamint-MarkEdit-signed-local.zip

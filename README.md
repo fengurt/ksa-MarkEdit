@@ -28,15 +28,16 @@ API stay compatible with upstream MarkEdit.
 - Signed, on-demand Folder, safe HTML, OKF, MinerU, ZIP, TAR, and TGZ resource previews
 - Optional Passkey account and zero-knowledge encrypted backup protocol
 - Tencent COS encrypted object and manifest synchronization
-- Independent universal `ksamint-vault` recovery CLI
+- Independent ARM64 `ksamint-vault` recovery CLI
 - Shared TypeScript vault protocol and expiring read-only Agent SDK
 - Finder and Quick Look extensions
 - Shortcuts, AppleScript, and JavaScript extension support
-- Universal Intel and Apple silicon build
+- Apple Silicon ARM64 build (Intel is not included in v2.5)
 
 ## Installation
 
-The signed and notarized release supports macOS 15 or later:
+The signed and notarized ARM64 release supports Apple Silicon Macs running
+macOS 15 or later:
 
 ```sh
 brew install --cask fengurt/ksamint/ksamint-markedit
@@ -46,7 +47,7 @@ open -a "ksamint MarkEdit"
 Alternatively, download `ksamint-MarkEdit-<version>.dmg` from the
 [latest GitHub release](https://github.com/fengurt/ksa-MarkEdit/releases/latest).
 
-Pull requests also produce a universal, ad-hoc-signed development artifact.
+Pull requests also produce an ARM64, ad-hoc-signed development artifact.
 Download `ksamint-MarkEdit-development` from the successful GitHub Actions run,
 unzip it, and copy `ksamint MarkEdit.app` into `~/Applications`.
 
@@ -107,7 +108,7 @@ GitHub App token broker, deployment files, and independent recovery CLI live in
 [`Cloud`](Cloud/README.md). Permanent provider credentials are never embedded
 in the app or Web PWA.
 
-The v2.4 code line authorizes a new browser with a five-minute, signed device
+The v2.5 code line authorizes a new browser with a five-minute, signed device
 grant from an existing Vault device, or with the 24-word package generated from
 the active Vault Master Key. Both devices independently derive the displayed
 eight-digit verification code from the enrollment keys. Device sessions are
@@ -130,7 +131,7 @@ with a WASM SIMD fallback, stores Float16 shards in OPFS, reuses unchanged
 embeddings, and uses an HNSW graph for larger workspaces. The initial PWA shell
 does not contain the model or ONNX runtime worker.
 
-The Mac v2.4 targets include an independent sandboxed clipboard Login Item, a
+The Mac v2.5 targets include an independent sandboxed clipboard Login Item, a
 workspace-scoped Finder Sync menu, and a Finder Quick Action for selections
 outside the workspace. These components share only signed App Group requests;
 scanning, Agent access, conversion, and writes happen in the main app. Local

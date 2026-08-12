@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-26
     environment: release
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       RELEASE_TAG: ${{ inputs.tag }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_DEVELOPER_ID_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
@@ -28,16 +28,17 @@ jobs:
       APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
-      - uses: dtolnay/rust-toolchain@1.97
+          node-version: 24.19.0
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
+          toolchain: 1.97.1
           components: clippy, rustfmt
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: aarch64-apple-darwin
 
       - name: Verify tag and version
         run: |
@@ -74,6 +75,8 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
+          cargo install cargo-audit --locked --version 0.22.2
+          ./audit.sh
 
       - name: Build and pack read-only Agent SDK
         working-directory: AgentSDK
@@ -98,136 +101,224 @@ jobs:
         run: |
           keychain="$RUNNER_TEMP/release.keychain-db"
           certificate="$RUNNER_TEMP/developer-id.p12"
+          intermediate="$RUNNER_TEMP/DeveloperIDG2CA.cer"
           printf '%s' "$APPLE_DEVELOPER_ID_P12_BASE64" | base64 --decode > "$certificate"
+          curl --fail --silent --show-error --location \
+            https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer \
+            --output "$intermediate"
           security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
           security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
-          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security import "$certificate" -P "$APPLE_DEVELOPER_ID_P12_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security -k "$keychain"
+          security import "$intermediate" -k "$keychain"
           security list-keychains -d user -s "$keychain"
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s \
+            -k "$APPLE_KEYCHAIN_PASSWORD" "$keychain"
+          identity_line="$(security find-identity -v -p codesigning "$keychain" | \
+            grep 'Developer ID Application:' | head -1)"
+          test -n "$identity_line"
+          identity_sha1="$(printf '%s\n' "$identity_line" | awk '{print $2}')"
+          case "$identity_sha1" in
+            *[!0-9A-F]*|'') echo 'Unable to resolve Developer ID identity' >&2; exit 1 ;;
+          esac
+          printf 'APPLE_DEVELOPER_ID_SHA1=%s\n' "$identity_sha1" >> "$GITHUB_ENV"
 
-      - name: Build and sign universal recovery CLI
+      - name: Install Developer ID provisioning profiles
+        run: |
+          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
+          token="$(KEY_PATH="$key" ruby -ropenssl -rjson -rbase64 -e '
+            encode = ->(value) { Base64.urlsafe_encode64(value, padding: false) }
+            now = Time.now.to_i
+            header = encode.call({alg: "ES256", kid: ENV.fetch("APPLE_NOTARY_KEY_ID"), typ: "JWT"}.to_json)
+            payload = encode.call({iss: ENV.fetch("APPLE_NOTARY_ISSUER_ID"), iat: now, exp: now + 600, aud: "appstoreconnect-v1"}.to_json)
+            input = "#{header}.#{payload}"
+            der = OpenSSL::PKey.read(File.read(ENV.fetch("KEY_PATH"))).sign(OpenSSL::Digest::SHA256.new, input)
+            signature = OpenSSL::ASN1.decode(der).value.map { |part| part.value.to_s(2).rjust(32, "\0") }.join
+            print "#{input}.#{encode.call(signature)}"
+          ')"
+          profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$profiles"
+          while IFS='|' read -r _bundle_id profile_name; do
+            response="$(curl --fail --silent --show-error --get \
+              -H "Authorization: Bearer $token" \
+              --data-urlencode "filter[name]=$profile_name" \
+              --data-urlencode 'filter[profileType]=MAC_APP_DIRECT' \
+              https://api.appstoreconnect.apple.com/v1/profiles)"
+            test "$(printf '%s' "$response" | jq '.data | length')" -eq 1
+            test "$(printf '%s' "$response" | jq -r '.data[0].attributes.profileState')" = ACTIVE
+            uuid="$(printf '%s' "$response" | jq -r '.data[0].attributes.uuid')"
+            printf '%s' "$response" | jq -r '.data[0].attributes.profileContent' | \
+              base64 --decode > "$profiles/$uuid.provisionprofile"
+            security cms -D -i "$profiles/$uuid.provisionprofile" >/dev/null
+          done <<'PROFILES'
+          art.apuch.ksamint.markedit|ksamint MarkEdit Developer ID
+          art.apuch.ksamint.markedit.conversation-capture-helper|ksamint Capture Helper Developer ID
+          art.apuch.ksamint.markedit.finder-extension|ksamint Finder Extension Developer ID
+          art.apuch.ksamint.markedit.preview-extension|ksamint Preview Extension Developer ID
+          art.apuch.ksamint.markedit.quick-actions|ksamint Quick Actions Developer ID
+          PROFILES
+          unset token
+
+      - name: Build and sign ARM64 recovery CLI
         working-directory: Cloud
         run: |
           cargo build --locked --release -p ksamint-vault --target aarch64-apple-darwin
-          cargo build --locked --release -p ksamint-vault --target x86_64-apple-darwin
-          lipo -create \
-            target/aarch64-apple-darwin/release/ksamint-vault \
-            target/x86_64-apple-darwin/release/ksamint-vault \
-            -output "$RUNNER_TEMP/ksamint-vault"
-          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
-          codesign --force --options runtime --timestamp --sign "$identity" "$RUNNER_TEMP/ksamint-vault"
+          cp target/aarch64-apple-darwin/release/ksamint-vault "$RUNNER_TEMP/ksamint-vault"
+          codesign --force --options runtime --timestamp \
+            --sign "$APPLE_DEVELOPER_ID_SHA1" "$RUNNER_TEMP/ksamint-vault"
           "$RUNNER_TEMP/ksamint-vault" --version
           lipo -archs "$RUNNER_TEMP/ksamint-vault" | grep -q arm64
-          lipo -archs "$RUNNER_TEMP/ksamint-vault" | grep -q x86_64
-          ditto -c -k "$RUNNER_TEMP/ksamint-vault" "$RUNNER_TEMP/ksamint-vault-macos-universal.zip"
+          if lipo -archs "$RUNNER_TEMP/ksamint-vault" | grep -q x86_64; then exit 1; fi
+          ditto -c -k "$RUNNER_TEMP/ksamint-vault" "$RUNNER_TEMP/ksamint-vault-macos-arm64.zip"
 
-      - name: Archive and export universal app
+      - name: Archive and export ARM64 app
         run: |
-          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
-          test -n "$identity"
+          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$key"
+          commit="$(git rev-parse HEAD)"
           xcodebuild archive \
             -project MarkEdit.xcodeproj \
             -scheme MarkEditMac \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/ksamint-MarkEdit.xcarchive" \
             -destination 'generic/platform=macOS' \
-            ARCHS="arm64 x86_64" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$key" \
+            -authenticationKeyID "$APPLE_NOTARY_KEY_ID" \
+            -authenticationKeyIssuerID "$APPLE_NOTARY_ISSUER_ID" \
+            ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=NO \
+            KSAMINT_BUILD_COMMIT="$commit" \
             SWIFT_OPTIMIZATION_LEVEL="-Osize" \
             COPY_PHASE_STRIP=YES \
             STRIP_INSTALLED_PRODUCT=YES \
             STRIP_STYLE=all \
             DEPLOYMENT_POSTPROCESSING=YES \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_IDENTITY="$identity"
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
           plutil -create xml1 "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert method -string developer-id "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
           plutil -insert signingStyle -string manual "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -insert signingCertificate -string "$APPLE_DEVELOPER_ID_SHA1" "$RUNNER_TEMP/ExportOptions.plist"
+          /usr/libexec/PlistBuddy -c 'Add :provisioningProfiles dict' "$RUNNER_TEMP/ExportOptions.plist"
+          while IFS='|' read -r bundle_id profile_name; do
+            /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:$bundle_id string $profile_name" \
+              "$RUNNER_TEMP/ExportOptions.plist"
+          done <<'PROFILES'
+          art.apuch.ksamint.markedit|ksamint MarkEdit Developer ID
+          art.apuch.ksamint.markedit.conversation-capture-helper|ksamint Capture Helper Developer ID
+          art.apuch.ksamint.markedit.finder-extension|ksamint Finder Extension Developer ID
+          art.apuch.ksamint.markedit.preview-extension|ksamint Preview Extension Developer ID
+          art.apuch.ksamint.markedit.quick-actions|ksamint Quick Actions Developer ID
+          PROFILES
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/ksamint-MarkEdit.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+          Scripts/verify-release-app.sh \
+            "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$APPLE_TEAM_ID" "$commit"
 
-      - name: Create, sign, and notarize DMG
-        run: |
-          version="${RELEASE_TAG#v}"
-          staging="$RUNNER_TEMP/dmg"
-          dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
-          mkdir -p "$staging"
-          ditto "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$staging/ksamint MarkEdit.app"
-          ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDBZ "$dmg"
-          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\\(Developer ID Application:.*\\)"/\\1/p' | head -1)"
-          codesign --force --timestamp --sign "$identity" "$dmg"
-          notary_key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
-          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$notary_key"
-          xcrun notarytool submit "$dmg" \
-            --key "$notary_key" \
-            --key-id "$APPLE_NOTARY_KEY_ID" \
-            --issuer "$APPLE_NOTARY_ISSUER_ID" \
-            --wait
-          xcrun notarytool submit "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
-            --key "$notary_key" \
-            --key-id "$APPLE_NOTARY_KEY_ID" \
-            --issuer "$APPLE_NOTARY_ISSUER_ID" \
-            --wait
-          xcrun stapler staple "$dmg"
-          xcrun stapler validate "$dmg"
-          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/export/ksamint MarkEdit.app"
-          spctl --assess --type execute -vv "$RUNNER_TEMP/export/ksamint MarkEdit.app"
-          Scripts/verify-universal.sh "$RUNNER_TEMP/export/ksamint MarkEdit.app"
-          dmg_size="$(stat -f '%z' "$dmg")"
-          echo "Notarized UDBZ size: $dmg_size bytes (limit: 6291456)"
-          test "$dmg_size" -le 6291456
-          printf '{"minOSVer":"15.0"}\n' > "$RUNNER_TEMP/ReleaseInfo.json"
-          shasum -a 256 \
-            "$dmg" \
-            "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
-            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
-            "$RUNNER_TEMP/ksamint-resource-modules-$version.zip" \
-            > "$RUNNER_TEMP/SHA256SUMS"
-
-      - name: Publish GitHub release
+      - name: Create signed artifacts and submit each byte sequence once
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${RELEASE_TAG#v}"
+          commit="$(git rev-parse HEAD)"
+          staging="$RUNNER_TEMP/dmg"
+          dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
+          cli="$RUNNER_TEMP/ksamint-vault-macos-arm64.zip"
+          mkdir -p "$staging"
+          ditto "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$staging/ksamint MarkEdit.app"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDBZ "$dmg"
+          codesign --force --timestamp --sign "$APPLE_DEVELOPER_ID_SHA1" "$dmg"
+          dmg_size="$(stat -f '%z' "$dmg")"
+          echo "Signed UDBZ size: $dmg_size bytes (limit: 6291456)"
+          test "$dmg_size" -le 6291456
+
+          notary_key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$notary_key"
+          dmg_submission="$(xcrun notarytool submit "$dmg" \
+            --key "$notary_key" --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" --output-format json)"
+          cli_submission="$(xcrun notarytool submit "$cli" \
+            --key "$notary_key" --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" --output-format json)"
+          dmg_id="$(printf '%s' "$dmg_submission" | jq -r '.id')"
+          cli_id="$(printf '%s' "$cli_submission" | jq -r '.id')"
+          test -n "$dmg_id" && test "$dmg_id" != null
+          test -n "$cli_id" && test "$cli_id" != null
+
+          jq -n \
+            --arg tag "$RELEASE_TAG" --arg commit "$commit" --arg team "$APPLE_TEAM_ID" \
+            --arg dmgAsset "$(basename "$dmg")" --arg dmgSubmission "$dmg_id" \
+            --arg cliAsset "$(basename "$cli")" --arg cliSubmission "$cli_id" \
+            '{schema:1, tag:$tag, commit:$commit, teamID:$team,
+              dmg:{asset:$dmgAsset,submissionID:$dmgSubmission},
+              cli:{asset:$cliAsset,submissionID:$cliSubmission}}' \
+            > "$RUNNER_TEMP/NotarySubmission.json"
+          jq -n --arg commit "$commit" \
+            '{minOSVer:"15.0",arch:"arm64",commit:$commit}' \
+            > "$RUNNER_TEMP/ReleaseInfo.json"
+          shasum -a 256 \
+            "$dmg" "$cli" \
+            "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
+            "$RUNNER_TEMP/ksamint-resource-modules-$version.zip" \
+            > "$RUNNER_TEMP/SHA256SUMS.pre-notary"
+
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release already exists; refusing to replace submitted bytes." >&2
+            exit 1
+          fi
           gh release create "$RELEASE_TAG" \
-            "$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg" \
-            "$RUNNER_TEMP/ksamint-vault-macos-universal.zip" \
+            "$dmg" "$cli" \
             "$RUNNER_TEMP/ksamint-agent-sdk-$version.tgz" \
             "$RUNNER_TEMP/ksamint-resource-modules-$version.zip" \
             "$RUNNER_TEMP/ReleaseInfo.json" \
-            "$RUNNER_TEMP/SHA256SUMS" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$version" \
-            --generate-notes \
-            --verify-tag
+            "$RUNNER_TEMP/NotarySubmission.json" \
+            "$RUNNER_TEMP/SHA256SUMS.pre-notary" \
+            --repo "$GITHUB_REPOSITORY" --title "$version" \
+            --generate-notes --verify-tag --draft
 
-      - name: Update Homebrew tap
+      - name: Poll for up to 45 minutes without resubmitting
         env:
-          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          version="${RELEASE_TAG#v}"
-          dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
-          sha="$(shasum -a 256 "$dmg" | awk '{print $1}')"
-          mkdir -p ~/.ssh
-          printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" > ~/.ssh/ksamint_tap
-          chmod 600 ~/.ssh/ksamint_tap
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/ksamint_tap -o IdentitiesOnly=yes" \
-            git clone git@github.com:fengurt/homebrew-ksamint.git "$RUNNER_TEMP/tap"
-          ruby Scripts/render-cask.rb "$version" "$sha" > "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
-          brew style --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
-          brew audit --new --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
-          brew install --cask "$RUNNER_TEMP/tap/Casks/ksamint-markedit.rb"
-          test -d "/Applications/ksamint MarkEdit.app"
-          brew uninstall --cask ksamint-markedit
-          cd "$RUNNER_TEMP/tap"
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add Casks/ksamint-markedit.rb
-          git commit -m "ksamint MarkEdit $version"
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/ksamint_tap -o IdentitiesOnly=yes" git push
+          metadata="$RUNNER_TEMP/NotarySubmission.json"
+          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          deadline="$(( $(date +%s) + 2700 ))"
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            all_accepted=true
+            for id in $(jq -r '.dmg.submissionID,.cli.submissionID' "$metadata"); do
+              info="$(xcrun notarytool info "$id" --key "$key" \
+                --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" \
+                --output-format json)"
+              status="$(printf '%s' "$info" | jq -r '.status')"
+              echo "$id: $status"
+              case "$status" in
+                Accepted) ;;
+                Invalid|Rejected)
+                  xcrun notarytool log "$id" --key "$key" \
+                    --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" || true
+                  exit 1 ;;
+                *) all_accepted=false ;;
+              esac
+            done
+            if $all_accepted; then
+              gh workflow run finalize-release.yml --repo "$GITHUB_REPOSITORY" \
+                --ref main -f tag="$RELEASE_TAG" || true
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Notarization remains in progress. The draft release and submission IDs are preserved for the scheduled finalizer."
+
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/release.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/developer-id.p12" \
+            "$RUNNER_TEMP/DeveloperIDG2CA.cer" \
+            "$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
