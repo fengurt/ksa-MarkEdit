@@ -8,7 +8,7 @@ puts <<~RUBY
     version "#{version}"
     sha256 "#{sha256}"
 
-    url "https://github.com/fengurt/ksa-MarkEdit/releases/download/v#{version}/ksamint-MarkEdit-#{version}.dmg"
+    url "https://github.com/fengurt/ksa-MarkEdit/releases/download/v\#{version}/ksamint-MarkEdit-\#{version}.dmg"
     name "ksamint MarkEdit"
     desc "Fast, native Markdown editor with Chinese, Japanese, and French support"
     homepage "https://github.com/fengurt/ksa-MarkEdit"
