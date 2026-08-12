@@ -95,6 +95,10 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test protocol, API, and recovery
         run: cargo test --workspace
+      - name: Audit Rust dependencies
+        run: |
+          cargo install cargo-audit --locked --version 0.22.2
+          ./audit.sh
       - name: Validate Tencent sync environment wiring
         env:
           POSTGRES_PASSWORD: ci-postgres-password

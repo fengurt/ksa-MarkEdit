@@ -18,7 +18,11 @@ use axum::{
 use config::Config;
 use serde_json::json;
 use state::AppState;
-use std::time::Duration;
+use std::{
+    io::{Read, Write},
+    net::{SocketAddr, TcpStream},
+    time::Duration,
+};
 use tower_cookies::CookieManagerLayer;
 use tower_http::{
     catch_panic::CatchPanicLayer,
@@ -32,6 +36,9 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    if std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new("--healthcheck")) {
+        std::process::exit(if local_healthcheck() { 0 } else { 1 });
+    }
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
@@ -80,6 +87,22 @@ async fn main() -> Result<()> {
     .with_graceful_shutdown(shutdown_signal())
     .await?;
     Ok(())
+}
+
+fn local_healthcheck() -> bool {
+    let address = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let Ok(mut stream) = TcpStream::connect_timeout(&address, Duration::from_secs(2)) else {
+        return false;
+    };
+    if stream
+        .write_all(b"GET /healthz HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+        .is_err()
+    {
+        return false;
+    }
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
+    let mut response = [0_u8; 128];
+    matches!(stream.read(&mut response), Ok(read) if response[..read].starts_with(b"HTTP/1.1 200"))
 }
 
 fn api_routes() -> Router<AppState> {
