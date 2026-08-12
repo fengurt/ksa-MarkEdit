@@ -129,11 +129,12 @@ jobs:
             gh release upload "$tag" "$dmg" "$work/SHA256SUMS" \
               --repo "$GITHUB_REPOSITORY" --clobber
             # The releases/tags REST endpoint deliberately hides draft
-            # releases. Resolve the authenticated draft ID first, then address
-            # its assets directly without changing or resubmitting any bytes.
-            release_id="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 50 \
-              --json databaseId,tagName,isDraft \
-              --jq ".[] | select(.isDraft and .tagName == \"$tag\") | .databaseId")"
+            # releases, and not every supported gh build exposes databaseId
+            # from `gh release list`. Resolve the authenticated draft ID from
+            # the REST collection without changing or resubmitting any bytes.
+            release_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+              --jq ".[] | select(.draft and .tag_name == \"$tag\") | .id" \
+              | head -1)"
             test -n "$release_id"
             pre_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
               --jq '.assets[] | select(.name=="SHA256SUMS.pre-notary") | .id')"
@@ -144,21 +145,25 @@ jobs:
               --draft=false --latest --verify-tag
 
             sha="$(shasum -a 256 "$dmg" | awk '{print $1}')"
-            tap="$RUNNER_TEMP/tap-$version"
+            tap="$(brew --repository)/Library/Taps/fengurt/homebrew-ksamint"
+            cask="fengurt/ksamint/ksamint-markedit"
             mkdir -p "$HOME/.ssh"
             chmod 700 "$HOME/.ssh"
             printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" > "$HOME/.ssh/ksamint_tap"
             chmod 600 "$HOME/.ssh/ksamint_tap"
             ssh-keyscan github.com >> "$HOME/.ssh/known_hosts"
             export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/ksamint_tap -o IdentitiesOnly=yes"
+            if [ -d "$tap" ]; then
+              brew untap --force fengurt/ksamint
+            fi
             git clone git@github.com:fengurt/homebrew-ksamint.git "$tap"
             mkdir -p "$tap/Casks"
             ruby Scripts/render-cask.rb "$version" "$sha" > "$tap/Casks/ksamint-markedit.rb"
-            brew style --cask "$tap/Casks/ksamint-markedit.rb"
-            brew audit --new --strict --cask "$tap/Casks/ksamint-markedit.rb"
-            brew install --cask --appdir="$RUNNER_TEMP/cask-apps" "$tap/Casks/ksamint-markedit.rb"
+            brew style --cask "$cask"
+            brew audit --new --strict --cask "$cask"
+            brew install --cask --appdir="$RUNNER_TEMP/cask-apps" "$cask"
             test -d "$RUNNER_TEMP/cask-apps/ksamint MarkEdit.app"
-            brew uninstall --cask ksamint-markedit
+            brew uninstall --cask "$cask"
             git -C "$tap" config user.name github-actions
             git -C "$tap" config user.email github-actions@github.com
             git -C "$tap" add Casks/ksamint-markedit.rb
