@@ -1,0 +1,2 @@
+# advisory|review-by|upstream|scope-and-rationale
+RUSTSEC-2023-0071|2026-11-12|https://github.com/launchbadge/sqlx/issues/2418|Build-time-only optional sqlx-mysql dependency locked by sqlx-macros; rsa is absent from every compiled target and runtime cargo tree.
