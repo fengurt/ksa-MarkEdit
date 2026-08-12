@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cloud_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cloud_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 allowlist="$cloud_dir/rustsec-allowlist.txt"
 today=$(date -u +%F)
 ignore_args=()
