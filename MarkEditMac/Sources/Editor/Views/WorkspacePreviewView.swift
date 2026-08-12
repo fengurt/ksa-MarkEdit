@@ -167,7 +167,7 @@ extension WorkspacePreviewView: WKNavigationDelegate {
   func webView(
     _ webView: WKWebView,
     decidePolicyFor navigationAction: WKNavigationAction,
-    decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
   ) {
     let isInitialLoad = navigationAction.navigationType == .other
     decisionHandler(isInitialLoad ? .allow : .cancel)

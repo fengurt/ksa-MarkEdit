@@ -122,7 +122,7 @@ extension PreviewViewController: WKNavigationDelegate {
   func webView(
     _ webView: WKWebView,
     decidePolicyFor navigationAction: WKNavigationAction,
-    decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
   ) {
     decisionHandler(navigationAction.navigationType == .linkActivated ? .cancel : .allow)
   }

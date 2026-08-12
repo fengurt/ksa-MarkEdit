@@ -77,7 +77,7 @@ public final class ResourceModuleViewController: NSViewController, WKNavigationD
   public func webView(
     _ webView: WKWebView,
     decidePolicyFor navigationAction: WKNavigationAction,
-    decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void
+    decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
   ) {
     guard let url = navigationAction.request.url,
           let scheme = url.scheme?.lowercased() else {
