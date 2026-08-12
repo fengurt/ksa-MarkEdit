@@ -61,7 +61,7 @@ jobs:
           assert_equal AgentSDK/package.json "$version" \
             "$(node -p "require('./AgentSDK/package.json').version")"
           assert_equal Cloud/Cargo.toml "$version" \
-            "$(sed -n 's/^version = \"\\(.*\\)\"/\\1/p' Cloud/Cargo.toml | head -1)"
+            "$(awk -F '"' '/^version = "/ { print $2; exit }' Cloud/Cargo.toml)"
           # Fetch the immutable release tag into an isolated ref. This works
           # whether checkout retained a local tag ref or only a detached HEAD.
           validation_ref="refs/tags/release-validation/$RELEASE_TAG"
