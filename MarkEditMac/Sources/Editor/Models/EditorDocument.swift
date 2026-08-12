@@ -353,7 +353,8 @@ extension EditorDocument {
       .map { $0.exportedType }
 
     // Enable *.textbundle only when we have the bundle, typically for a duplicated draft
-    return textBundle == nil ? exportedTypes : ["org.textbundle.package"] + exportedTypes
+    let hasTextBundle = MainActor.assumeIsolated { textBundle != nil }
+    return hasTextBundle ? ["org.textbundle.package"] + exportedTypes : exportedTypes
   }
 
   override func fileNameExtension(forType typeName: String, saveOperation: NSDocument.SaveOperationType) -> String? {
@@ -628,10 +629,12 @@ extension EditorDocument {
       return try super.write(to: url, ofType: typeName)
     }
 
-    let fileWrapper = try MainActor.assumeIsolated {
+    let fileWrapper: FileWrapper? = try MainActor.assumeIsolated {
       try textBundle?.fileWrapper(with: data(ofType: typeName))
     }
-    try fileWrapper?.write(to: url, originalContentsURL: nil)
+    try MainActor.assumeIsolated {
+      try fileWrapper?.write(to: url, originalContentsURL: nil)
+    }
   }
 
   override func duplicate() throws -> NSDocument {
