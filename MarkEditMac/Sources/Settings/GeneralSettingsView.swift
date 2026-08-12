@@ -99,9 +99,12 @@ struct GeneralSettingsView: View {
               refreshCaptureServiceState()
             }
 
-          Label(captureServiceState.localizedDescription, systemImage: captureStatusSymbol)
+          Label(
+            captureServiceState.localizedDescription,
+            systemImage: captureServiceState.systemImage
+          )
             .font(.caption)
-            .foregroundStyle(captureStatusColor)
+            .foregroundStyle(Color(nsColor: captureServiceState.color))
 
           if captureServiceState == .approvalRequired {
             Button("Open Login Item Settings…") {
@@ -142,29 +145,8 @@ struct GeneralSettingsView: View {
       }
     }
     .onAppear(perform: refreshCaptureServiceState)
-  }
-
-  private var captureStatusSymbol: String {
-    switch captureServiceState {
-    case .enabled:
-      "checkmark.circle.fill"
-    case .approvalRequired:
-      "exclamationmark.triangle.fill"
-    case .disabled:
-      "pause.circle"
-    case .notRegistered, .unavailable:
-      "xmark.circle"
-    }
-  }
-
-  private var captureStatusColor: Color {
-    switch captureServiceState {
-    case .enabled:
-      Color(nsColor: .systemGreen)
-    case .approvalRequired:
-      Color(nsColor: .systemOrange)
-    case .disabled, .notRegistered, .unavailable:
-      .secondary
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+      refreshCaptureServiceState()
     }
   }
 

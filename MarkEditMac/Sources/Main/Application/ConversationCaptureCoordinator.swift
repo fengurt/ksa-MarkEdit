@@ -22,12 +22,38 @@ enum ConversationCaptureServiceState: Equatable {
       String(localized: "Background capture is unavailable on this Mac")
     }
   }
+
+  var systemImage: String {
+    switch self {
+    case .enabled:
+      "checkmark.circle.fill"
+    case .approvalRequired:
+      "exclamationmark.triangle.fill"
+    case .disabled:
+      "pause.circle"
+    case .notRegistered, .unavailable:
+      "xmark.circle"
+    }
+  }
+
+  var color: NSColor {
+    switch self {
+    case .enabled:
+      .systemGreen
+    case .approvalRequired:
+      .systemOrange
+    case .disabled, .notRegistered, .unavailable:
+      .secondaryLabelColor
+    }
+  }
 }
 
 @MainActor
 final class ConversationCaptureCoordinator: NSObject {
   static let shared = ConversationCaptureCoordinator()
   static let agentArgument = "--conversation-capture-agent"
+  static let historyDirectoryName = "Conversations"
+  static let historySearchQuery = #"path:"Conversations/""#
 
   private static let maximumClipboardBytes = 5 * 1024 * 1024
   private static let passwordManagerBundleIDs = [
@@ -99,6 +125,8 @@ final class ConversationCaptureCoordinator: NSObject {
       return .approvalRequired
     case .notRegistered:
       return .notRegistered
+    case .notFound:
+      return .unavailable
     @unknown default:
       return .unavailable
     }
@@ -113,10 +141,14 @@ final class ConversationCaptureCoordinator: NSObject {
       showWorkspaceRequired()
       return
     }
-    let folder = root.appending(path: "Conversations", directoryHint: .isDirectory)
-    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    root.stopAccessingSecurityScopedResource()
-    NSWorkspace.shared.open(folder)
+    defer { root.stopAccessingSecurityScopedResource() }
+    let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
+    do {
+      try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+      NSWorkspace.shared.open(folder)
+    } catch {
+      showCaptureError(error.localizedDescription)
+    }
   }
 
   func searchCaptureHistory() {
@@ -247,7 +279,7 @@ final class ConversationCaptureCoordinator: NSObject {
     let timeZone = TimeZone(secondsFromGMT: 0) ?? .current
     let parts = calendar.dateComponents(in: timeZone, from: Date())
     let directory = rootURL
-      .appending(path: "Conversations", directoryHint: .isDirectory)
+      .appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
       .appending(path: String(format: "%04d", parts.year ?? 0), directoryHint: .isDirectory)
       .appending(path: String(format: "%02d", parts.month ?? 0), directoryHint: .isDirectory)
     let filename = "Captured--\(digest.prefix(12)).md"
@@ -387,7 +419,7 @@ extension ConversationCaptureCoordinator {
     pendingQueue.purgeExpired()
     guard let url = pendingQueue.urls.first else {
       if let root = authorizedWorkspaceRoot() {
-        let folder = root.appending(path: "Conversations", directoryHint: .isDirectory)
+        let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
         root.stopAccessingSecurityScopedResource()
         NSWorkspace.shared.open(folder)
       }
@@ -530,6 +562,15 @@ extension ConversationCaptureCoordinator {
     alert.informativeText = String(
       localized: "Captured conversations are saved inside the authorized workspace’s Conversations folder."
     )
+    alert.addButton(withTitle: String(localized: "OK"))
+    alert.runModal()
+  }
+
+  private func showCaptureError(_ description: String) {
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Could not open capture history")
+    alert.informativeText = description
     alert.addButton(withTitle: String(localized: "OK"))
     alert.runModal()
   }

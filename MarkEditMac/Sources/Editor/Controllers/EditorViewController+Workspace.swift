@@ -116,7 +116,7 @@ extension EditorViewController {
     workspaceSidebarMode = .search
     workspaceSidebarVisible = true
     ensureWorkspaceSidebar()
-    workspaceSidebarView?.showSearch(query: #"path:"Conversations/""#)
+    workspaceSidebarView?.showSearch(query: ConversationCaptureCoordinator.historySearchQuery)
     AppPreferences.Window.workspaceSidebarVisible = true
     AppPreferences.Window.workspaceSidebarMode = WorkspaceSidebarMode.search.rawValue
     view.needsLayout = true

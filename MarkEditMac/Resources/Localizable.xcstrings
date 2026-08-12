@@ -41,6 +41,14 @@
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "請先選擇工作區" } }
       }
     },
+    "Could not open capture history" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible d’ouvrir l’historique des captures" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "取り込み履歴を開けませんでした" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开捕捉历史" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "無法開啟擷取記錄" } }
+      }
+    },
     "Clipboard capture is off" : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "La capture du presse-papiers est désactivée" } },
