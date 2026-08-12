@@ -115,61 +115,6 @@ final class ConversationCaptureCoordinator: NSObject {
     pendingQueue.count
   }
 
-  var serviceState: ConversationCaptureServiceState {
-    guard AppPreferences.General.conversationCaptureEnabled else { return .disabled }
-    guard #available(macOS 13, *) else { return .unavailable }
-    switch SMAppService.loginItem(identifier: captureHelperIdentifier).status {
-    case .enabled:
-      return .enabled
-    case .requiresApproval:
-      return .approvalRequired
-    case .notRegistered:
-      return .notRegistered
-    case .notFound:
-      return .unavailable
-    @unknown default:
-      return .unavailable
-    }
-  }
-
-  func showInbox() {
-    reviewNextPendingCapture()
-  }
-
-  func openCaptureHistory() {
-    guard let root = authorizedWorkspaceRoot() else {
-      showWorkspaceRequired()
-      return
-    }
-    defer { root.stopAccessingSecurityScopedResource() }
-    let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
-    do {
-      try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-      NSWorkspace.shared.open(folder)
-    } catch {
-      showCaptureError(error.localizedDescription)
-    }
-  }
-
-  func searchCaptureHistory() {
-    NSApp.activate(ignoringOtherApps: true)
-    if let editor = NSApp.currentEditor {
-      editor.showCaptureHistorySearch()
-      return
-    }
-    NSDocumentController.shared.newDocument(nil)
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-      NSApp.currentEditor?.showCaptureHistorySearch()
-    }
-  }
-
-  func openPermissionSettings() {
-    guard let settings = URL(
-      string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
-    ) else { return }
-    NSWorkspace.shared.open(settings)
-  }
-
   func importConversationResources(_ urls: [URL]) throws {
     var imported = false
     for url in urls where !url.hasDirectoryPath {
@@ -329,6 +274,63 @@ final class ConversationCaptureCoordinator: NSObject {
       bookmarkDataIsStale: &stale
     ), url.startAccessingSecurityScopedResource() else { return nil }
     return url.standardizedFileURL
+  }
+}
+
+extension ConversationCaptureCoordinator {
+  var serviceState: ConversationCaptureServiceState {
+    guard AppPreferences.General.conversationCaptureEnabled else { return .disabled }
+    guard #available(macOS 13, *) else { return .unavailable }
+    switch SMAppService.loginItem(identifier: captureHelperIdentifier).status {
+    case .enabled:
+      return .enabled
+    case .requiresApproval:
+      return .approvalRequired
+    case .notRegistered:
+      return .notRegistered
+    case .notFound:
+      return .unavailable
+    @unknown default:
+      return .unavailable
+    }
+  }
+
+  func showInbox() {
+    reviewNextPendingCapture()
+  }
+
+  func openCaptureHistory() {
+    guard let root = authorizedWorkspaceRoot() else {
+      showWorkspaceRequired()
+      return
+    }
+    defer { root.stopAccessingSecurityScopedResource() }
+    let folder = root.appending(path: Self.historyDirectoryName, directoryHint: .isDirectory)
+    do {
+      try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+      NSWorkspace.shared.open(folder)
+    } catch {
+      showCaptureError(error.localizedDescription)
+    }
+  }
+
+  func searchCaptureHistory() {
+    NSApp.activate(ignoringOtherApps: true)
+    if let editor = NSApp.currentEditor {
+      editor.showCaptureHistorySearch()
+      return
+    }
+    NSDocumentController.shared.newDocument(nil)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+      NSApp.currentEditor?.showCaptureHistorySearch()
+    }
+  }
+
+  func openPermissionSettings() {
+    guard let settings = URL(
+      string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
+    ) else { return }
+    NSWorkspace.shared.open(settings)
   }
 }
 
