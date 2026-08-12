@@ -15,10 +15,12 @@ import Foundation
   - text.markdown
 
  FileWrapper parsing is learned from: https://github.com/shinyfrog/TextBundle.
+ *
+ * The wrapper is immutable after parsing. Its retained FileWrapper instances
+ * are only read later while producing a replacement bundle, so transferring
+ * this value from NSDocument's nonisolated read callback to the main actor is
+ * safe.
  */
-// The wrapper is immutable after parsing. Its retained FileWrapper instances are
-// only read later while producing a replacement bundle, so transferring this
-// value from NSDocument's nonisolated read callback to the main actor is safe.
 public struct TextBundleWrapper: @unchecked Sendable {
   public let data: Data
   public let textFileName: String
