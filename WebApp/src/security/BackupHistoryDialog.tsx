@@ -51,7 +51,7 @@ export function BackupHistoryDialog({ workspaceId, files, onClose, onRestore }: 
       </div>
       <details className="github-backup-setup">
         <summary>Connect one private GitHub repository</summary>
-        <p>Install the ksamint GitHub App for only the private backup repository, then enter the installation shown in the callback URL.</p>
+        <p>Install the kmd GitHub App for only the private backup repository, then enter the installation shown in the callback URL.</p>
         <div className="github-backup-fields">
           <label>Installation ID<input inputMode="numeric" value={installationId} onChange={event => setInstallationId(event.target.value.replaceAll(/\D/gu, ''))} /></label>
           <label>Owner<input value={owner} onChange={event => setOwner(event.target.value)} /></label>

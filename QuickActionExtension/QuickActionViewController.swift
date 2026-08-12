@@ -95,7 +95,7 @@ private enum QuickActionKind: String, Codable, CaseIterable {
   var title: String {
     switch self {
     case .preview: String(localized: "Quick Preview")
-    case .openEditor: String(localized: "Open in ksamint MarkEdit")
+    case .openEditor: String(localized: "Open in kmd")
     case .conversationInbox: String(localized: "Import to Conversation Inbox")
     case .saveReference: String(localized: "Save as Reference")
     case .addWorkspace: String(localized: "Add to Workspace")

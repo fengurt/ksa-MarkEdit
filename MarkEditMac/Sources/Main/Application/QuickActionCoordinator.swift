@@ -270,7 +270,7 @@ private enum QuickActionError: LocalizedError {
     switch self {
     case .invalidRequest: "The Quick Action request is invalid or expired."
     case .emptySelection: "No resources were selected."
-    case .noWorkspace: "Authorize a workspace in ksamint MarkEdit first."
+    case .noWorkspace: "Authorize a workspace in kmd first."
     case .noEditorForAgent: "Open a Markdown document before starting the local Agent panel."
     case .unsupported: "None of the selected resources has a configured conversion provider."
     case .batchLimit: "A conversion batch can contain at most 50 files."

@@ -70,6 +70,7 @@ jobs:
           remote_tag_commit="$(git rev-list -n 1 "$validation_ref")"
           assert_equal release-tag "$(git rev-parse HEAD)" "$remote_tag_commit"
           node Scripts/validate-localizations.mjs
+          node Scripts/validate-product-identity.mjs
 
       - name: Build CoreEditor
         working-directory: CoreEditor
@@ -239,7 +240,7 @@ jobs:
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
           Scripts/verify-release-app.sh \
-            "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$APPLE_TEAM_ID" "$commit"
+            "$RUNNER_TEMP/export/kmd.app" "$APPLE_TEAM_ID" "$commit"
 
       - name: Create signed artifacts and submit each byte sequence once
         env:
@@ -251,9 +252,9 @@ jobs:
           dmg="$RUNNER_TEMP/ksamint-MarkEdit-$version.dmg"
           cli="$RUNNER_TEMP/ksamint-vault-macos-arm64.zip"
           mkdir -p "$staging"
-          ditto "$RUNNER_TEMP/export/ksamint MarkEdit.app" "$staging/ksamint MarkEdit.app"
+          ditto "$RUNNER_TEMP/export/kmd.app" "$staging/kmd.app"
           ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "ksamint MarkEdit" -srcfolder "$staging" -ov -format UDBZ "$dmg"
+          hdiutil create -volname "kmd" -srcfolder "$staging" -ov -format UDBZ "$dmg"
           codesign --force --timestamp --sign "$APPLE_DEVELOPER_ID_SHA1" "$dmg"
           dmg_size="$(stat -f '%z' "$dmg")"
           echo "Signed UDBZ size: $dmg_size bytes (limit: 6291456)"

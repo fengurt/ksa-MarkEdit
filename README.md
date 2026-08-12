@@ -1,9 +1,9 @@
-# ksamint MarkEdit
+# kmd
 
 [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-0F4B42)](https://github.com/fengurt/ksa-MarkEdit/releases/latest)
 [![Build and test](https://github.com/fengurt/ksa-MarkEdit/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/fengurt/ksa-MarkEdit/actions/workflows/build-and-test.yml)
 
-ksamint MarkEdit is a fast, native Markdown editor for macOS with first-class
+kmd is a fast, native Markdown editor for macOS with first-class
 Simplified Chinese, Traditional Chinese, Japanese, and French interfaces.
 It is an independent localization-focused fork of
 [MarkEdit](https://github.com/MarkEdit-app/MarkEdit).
@@ -40,8 +40,8 @@ The signed and notarized ARM64 release supports Apple Silicon Macs running
 macOS 15 or later:
 
 ```sh
-brew install --cask fengurt/ksamint/ksamint-markedit
-open -a "ksamint MarkEdit"
+brew install --cask fengurt/ksamint/kmd
+open -a "kmd"
 ```
 
 Alternatively, download `ksamint-MarkEdit-<version>.dmg` from the
@@ -49,7 +49,7 @@ Alternatively, download `ksamint-MarkEdit-<version>.dmg` from the
 
 Pull requests also produce an ARM64, ad-hoc-signed development artifact.
 Download `ksamint-MarkEdit-development` from the successful GitHub Actions run,
-unzip it, and copy `ksamint MarkEdit.app` into `~/Applications`.
+unzip it, and copy `kmd.app` into `~/Applications`.
 
 ## Local MCP
 
@@ -61,7 +61,7 @@ with `--mcp-stdio`, and writes require the separate `--allow-write` opt-in.
 {
   "mcpServers": {
     "ksamint-markedit": {
-      "command": "/Applications/ksamint MarkEdit.app/Contents/MacOS/ksamint MarkEdit",
+      "command": "/Applications/kmd.app/Contents/MacOS/kmd",
       "args": ["--mcp-stdio", "--workspace", "/absolute/path/to/notes"]
     }
   }
@@ -238,10 +238,10 @@ an editor window. Ordinary image and PDF drops retain their Markdown behavior.
 
 The ksamint / 查明 identity and mint/deep-green theme follow the current
 [APUCH brand directory](https://apuch.art/brand?brand=ksamint). The black-and-white
-paw holding bamboo app icon was generated for ksamint MarkEdit from that published
-brand direction and approved in the v2.5.1 product update.
+paw holding bamboo app icon remains the current shipping artwork while a more
+abstract `kmd` paw mark is reviewed separately.
 
-ksamint MarkEdit is distributed under the MIT License. The fork is based on
+kmd is distributed under the MIT License. The fork is based on
 MarkEdit by Ying Zhong and its contributors; upstream copyright and license
 notices are preserved. Built with
 [CodeMirror 6](https://codemirror.net/) and

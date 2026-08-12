@@ -712,7 +712,7 @@ export default function App() {
       <header className="topbar">
         <button className="brand-button" type="button" onClick={() => setRoute('hub')}>
           <span className="brand-mark" aria-hidden="true">K</span>
-          <span>ksamint Notes</span>
+          <span>kmd</span>
         </button>
         <button className="workspace-switcher" type="button" onClick={() => setRoute('hub')}>
           <span>{storage.workspace().name}</span>

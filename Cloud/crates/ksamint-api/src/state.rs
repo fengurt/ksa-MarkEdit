@@ -44,7 +44,7 @@ impl AppState {
         let rp_origin = Url::parse(config.public_origin.as_str())?;
         let webauthn = WebauthnBuilder::new(&config.rp_id, &rp_origin)
             .context("create WebAuthn configuration")?
-            .rp_name("ksamint MarkEdit")
+            .rp_name("kmd")
             .build()
             .context("build WebAuthn configuration")?;
         Ok(Self {

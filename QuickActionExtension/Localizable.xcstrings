@@ -25,11 +25,11 @@
       "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入对话收件箱" } },
       "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "匯入對話收件匣" } }
     } },
-    "Open in ksamint MarkEdit" : { "localizations" : {
-      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir dans ksamint MarkEdit" } },
-      "ja" : { "stringUnit" : { "state" : "translated", "value" : "ksamint MarkEdit で開く" } },
-      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ksamint MarkEdit 中打开" } },
-      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在 ksamint MarkEdit 中開啟" } }
+    "Open in kmd" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir dans kmd" } },
+      "ja" : { "stringUnit" : { "state" : "translated", "value" : "kmd で開く" } },
+      "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 kmd 中打开" } },
+      "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在 kmd 中開啟" } }
     } },
     "Quick Preview" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aperçu rapide" } },

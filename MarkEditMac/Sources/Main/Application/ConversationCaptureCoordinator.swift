@@ -545,7 +545,7 @@ extension ConversationCaptureCoordinator {
     let alert = NSAlert()
     alert.messageText = String(localized: "Enable Conversation Capture")
     alert.informativeText = String(
-      localized: "Allow ksamint Conversation Capture in System Settings › General › Login Items."
+      localized: "Allow kmd Conversation Capture in System Settings › General › Login Items."
     )
     alert.addButton(withTitle: String(localized: "Open System Settings"))
     alert.addButton(withTitle: String(localized: "Cancel"))

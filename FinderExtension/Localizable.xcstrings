@@ -1,6 +1,14 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "kmd Quick Actions" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actions rapides kmd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "kmdクイックアクション" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "kmd 快速操作" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "kmd 快速動作" } }
+      }
+    },
     "New “%@%@”" : {
       "localizations" : {
         "en" : {

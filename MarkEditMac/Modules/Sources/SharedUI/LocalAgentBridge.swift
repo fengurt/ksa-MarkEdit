@@ -232,7 +232,7 @@ public actor LocalAgentBridge {
         _ = try await request(method: "initialize", params: .object([
           "clientInfo": .object([
             "name": .string("ksamint_markedit"),
-            "title": .string("ksamint MarkEdit"),
+            "title": .string("kmd"),
             "version": .string(applicationVersion),
           ]),
         ]))

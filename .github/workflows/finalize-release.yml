@@ -103,7 +103,7 @@ jobs:
             mount="$work/mount"
             mkdir -p "$mount"
             hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount"
-            app="$mount/ksamint MarkEdit.app"
+            app="$mount/kmd.app"
             Scripts/verify-release-app.sh "$app" "$team" "$commit"
             spctl --assess --type execute -vv "$app"
             hdiutil detach "$mount"
@@ -146,7 +146,7 @@ jobs:
 
             sha="$(shasum -a 256 "$dmg" | awk '{print $1}')"
             tap="$(brew --repository)/Library/Taps/fengurt/homebrew-ksamint"
-            cask="fengurt/ksamint/ksamint-markedit"
+            cask="fengurt/ksamint/kmd"
             mkdir -p "$HOME/.ssh"
             chmod 700 "$HOME/.ssh"
             if [[ "$HOMEBREW_TAP_DEPLOY_KEY" == *"BEGIN OPENSSH PRIVATE KEY"* ]]; then
@@ -165,19 +165,25 @@ jobs:
             fi
             git clone git@github.com:fengurt/homebrew-ksamint.git "$tap"
             mkdir -p "$tap/Casks"
-            ruby Scripts/render-cask.rb "$version" "$sha" > "$tap/Casks/ksamint-markedit.rb"
+            ruby Scripts/render-cask.rb "$version" "$sha" > "$tap/Casks/kmd.rb"
+            rm -f "$tap/Casks/ksamint-markedit.rb"
+            printf '%s\n' \
+              '{' \
+              '  "ksamint-markedit": "kmd"' \
+              '}' > "$tap/cask_renames.json"
             brew style --cask "$cask"
             # This is an update in our existing Tap. `--new` is reserved for
             # a future submission to homebrew/cask after GitHub detaches this
             # repository from its upstream fork network.
             brew audit --strict --cask "$cask"
             brew install --cask --appdir="$RUNNER_TEMP/cask-apps" "$cask"
-            test -d "$RUNNER_TEMP/cask-apps/ksamint MarkEdit.app"
+            test -d "$RUNNER_TEMP/cask-apps/kmd.app"
             brew uninstall --cask "$cask"
             git -C "$tap" config user.name github-actions
             git -C "$tap" config user.email github-actions@github.com
-            git -C "$tap" add Casks/ksamint-markedit.rb
-            git -C "$tap" commit -m "ksamint MarkEdit $version"
+            git -C "$tap" add Casks/kmd.rb cask_renames.json
+            git -C "$tap" rm --ignore-unmatch Casks/ksamint-markedit.rb
+            git -C "$tap" commit -m "kmd: renamed from ksamint-markedit ($version)"
             git -C "$tap" push
             rm -f "$HOME/.ssh/ksamint_tap"
           done

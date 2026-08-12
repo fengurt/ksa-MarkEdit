@@ -131,7 +131,9 @@ jobs:
           cache-dependency-path: WebApp/package-lock.json
 
       - name: Validate localizations
-        run: node Scripts/validate-localizations.mjs
+        run: |
+          node Scripts/validate-localizations.mjs
+          node Scripts/validate-product-identity.mjs
 
       - name: Build and test CoreEditor
         working-directory: CoreEditor
@@ -153,7 +155,7 @@ jobs:
           npm run build:mac
           npm run validate:mac-bundle
 
-      - name: Build ksamint MarkEdit
+      - name: Build kmd
         run: |
           xcodebuild build \
             -project MarkEdit.xcodeproj \
@@ -256,17 +258,17 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
-          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/ksamint MarkEdit.app"
+          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/kmd.app"
           test "$(shasum -a 256 Icon.png | awk '{print $1}')" = \
             "$(shasum -a 256 "$app/Contents/Resources/Icon.png" | awk '{print $1}')"
-          strip "$app/Contents/MacOS/ksamint MarkEdit"
+          strip "$app/Contents/MacOS/kmd"
           strip "$app/Contents/PlugIns/FinderExtension.appex/Contents/MacOS/FinderExtension"
           strip "$app/Contents/PlugIns/PreviewExtension.appex/Contents/MacOS/PreviewExtension"
           strip "$app/Contents/PlugIns/QuickActionExtension.appex/Contents/MacOS/QuickActionExtension"
           strip "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app/Contents/MacOS/ConversationCaptureHelper"
           codesign --force --deep --sign - "$app"
           hdiutil create \
-            -volname "ksamint MarkEdit" \
+            -volname "kmd" \
             -srcfolder "$app" \
             -ov \
             -format UDBZ \

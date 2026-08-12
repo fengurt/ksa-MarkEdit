@@ -68,7 +68,7 @@ struct WorkspaceHubSnapshot: Codable {
     return Self(
       version: 2,
       hasWorkspace: false,
-      workspaceName: "ksamint MarkEdit",
+      workspaceName: "kmd",
       rootPath: Localized.Workspace.noFolder,
       recentFiles: [],
       recentDocuments: history.recentDocuments().map(WorkspaceRecentDocument.init),

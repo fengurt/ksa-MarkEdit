@@ -4101,89 +4101,89 @@
         }
       }
     },
-    "ksamint MarkEdit %@ is available!" : {
+    "kmd %@ is available!" : {
       "comment" : "Title for new version available",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit %@ 已发布！"
+            "value" : "kmd %@ 已发布！"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit %@ 已釋出！"
+            "value" : "kmd %@ 已釋出！"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit %@ が利用可能です!"
+            "value" : "kmd %@ が利用可能です!"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit %@ est disponible !"
+            "value" : "kmd %@ est disponible !"
           }
         }
       }
     },
-    "ksamint MarkEdit %@ is currently the latest version." : {
+    "kmd %@ is currently the latest version." : {
       "comment" : "Message for the up-to-date info",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit %@ 是目前的最新版本。"
+            "value" : "kmd %@ 是目前的最新版本。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit %@ 是目前的最新版本。"
+            "value" : "kmd %@ 是目前的最新版本。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit %@ が現在の最新バージョンです。"
+            "value" : "kmd %@ が現在の最新バージョンです。"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit %@ est actuellement la dernière version."
+            "value" : "kmd %@ est actuellement la dernière version."
           }
         }
       }
     },
-    "ksamint MarkEdit Extensions" : {
+    "kmd Extensions" : {
       "comment" : "Title of the extension manager window",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit 扩展功能"
+            "value" : "kmd 扩展功能"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查明 MarkEdit 擴充功能"
+            "value" : "kmd 擴充功能"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ksamint MarkEdit 拡張機能"
+            "value" : "kmd 拡張機能"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Extensions de ksamint MarkEdit"
+            "value" : "Extensions de kmd"
           }
         }
       }
@@ -5291,60 +5291,60 @@
         }
       }
     },
-    "Relaunch ksamint MarkEdit to start using “%@”." : {
+    "Relaunch kmd to start using “%@”." : {
       "comment" : "Message (format) shown after an extension is installed",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新启动 查明 MarkEdit 以开始使用“%@”。"
+            "value" : "重新启动 kmd 以开始使用“%@”。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 查明 MarkEdit 以開始使用“%@”。"
+            "value" : "重新啟動 kmd 以開始使用“%@”。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「%@」の使用を開始するには、ksamint MarkEditを再起動します。"
+            "value" : "「%@」の使用を開始するには、kmdを再起動します。"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relancez ksamint MarkEdit pour commencer à utiliser « %@ »."
+            "value" : "Relancez kmd pour commencer à utiliser « %@ »."
           }
         }
       }
     },
-    "Relaunch ksamint MarkEdit to use the updated extensions." : {
+    "Relaunch kmd to use the updated extensions." : {
       "comment" : "Message shown after extensions are updated",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新启动 查明 MarkEdit 以使用更新后的扩展功能。"
+            "value" : "重新启动 kmd 以使用更新后的扩展功能。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 查明 MarkEdit 以使用更新後的擴充功能。"
+            "value" : "重新啟動 kmd 以使用更新後的擴充功能。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更新された拡張機能を使用するには、ksamint MarkEdit を再起動します。"
+            "value" : "更新された拡張機能を使用するには、kmd を再起動します。"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relancez ksamint MarkEdit pour utiliser les extensions mises à jour."
+            "value" : "Relancez kmd pour utiliser les extensions mises à jour."
           }
         }
       }
@@ -6682,31 +6682,31 @@
         }
       }
     },
-    "This extension requires ksamint MarkEdit %@ or later." : {
+    "This extension requires kmd %@ or later." : {
       "comment" : "Error (format) when an extension needs a newer app version",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此扩展功能需要 查明 MarkEdit %@ 或更高版本。"
+            "value" : "此扩展功能需要 kmd %@ 或更高版本。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此擴充功能需要 查明 MarkEdit %@ 或更高版本。"
+            "value" : "此擴充功能需要 kmd %@ 或更高版本。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "この拡張機能には、ksamint MarkEdit %@ 以降が必要です。"
+            "value" : "この拡張機能には、kmd %@ 以降が必要です。"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette extension nécessite ksamint MarkEdit %@ ou version ultérieure."
+            "value" : "Cette extension nécessite kmd %@ ou version ultérieure."
           }
         }
       }
@@ -6798,31 +6798,31 @@
         }
       }
     },
-    "This source is not reviewed by ksamint MarkEdit. Only continue if you trust it." : {
+    "This source is not reviewed by kmd. Only continue if you trust it." : {
       "comment" : "Caution shown before installing an extension from a raw URL",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此来源未经 查明 MarkEdit 审核，请仅在信任该来源时继续。"
+            "value" : "此来源未经 kmd 审核，请仅在信任该来源时继续。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此來源未經 查明 MarkEdit 審核，請僅在信任該來源時繼續。"
+            "value" : "此來源未經 kmd 審核，請僅在信任該來源時繼續。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このソースは ksamint MarkEdit によってレビューされていません。信頼できる場合のみ続行してください。"
+            "value" : "このソースは kmd によってレビューされていません。信頼できる場合のみ続行してください。"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette source n'est pas examinée par ksamint MarkEdit. Ne continuez que si vous lui faites confiance."
+            "value" : "Cette source n'est pas examinée par kmd. Ne continuez que si vous lui faites confiance."
           }
         }
       }

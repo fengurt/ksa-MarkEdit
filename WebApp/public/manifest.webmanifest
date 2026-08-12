@@ -1,6 +1,6 @@
 {
-  "name": "ksamint Notes",
-  "short_name": "ksamint",
+  "name": "kmd",
+  "short_name": "kmd",
   "description": "Private, local-first Markdown knowledge workspace.",
   "start_url": ".",
   "display": "standalone",
