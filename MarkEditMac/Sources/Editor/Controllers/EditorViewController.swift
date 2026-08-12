@@ -518,6 +518,7 @@ extension EditorViewController {
 /**
  Continuation wrapper for managing the lifecycle of a preload operation.
  */
+@MainActor
 private final class PreloadContinuation {
   private var continuation: CheckedContinuation<Void, Never>?
 
