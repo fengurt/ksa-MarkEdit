@@ -1518,7 +1518,6 @@
 				PRODUCT_MODULE_NAME = MarkEdit;
 				PRODUCT_NAME = "ksamint MarkEdit";
 				REGISTER_APP_GROUPS = "$(inherited)";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -1556,7 +1555,6 @@
 				PRODUCT_MODULE_NAME = MarkEdit;
 				PRODUCT_NAME = "ksamint MarkEdit";
 				REGISTER_APP_GROUPS = "$(inherited)";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};
