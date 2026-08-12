@@ -26,18 +26,17 @@ import UniformTypeIdentifiers
       $0.attachments ?? []
     }
     let group = DispatchGroup()
-    let lock = NSLock()
-    var values: [URL] = []
+    let values = LockedURLs()
     for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
       group.enter()
       provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, _ in
         let url = item as? URL ?? (item as? Data).flatMap { URL(dataRepresentation: $0, relativeTo: nil) }
-        if let url { lock.withLock { values.append(url) } }
+        if let url { values.append(url) }
         group.leave()
       }
     }
     group.notify(queue: .main) { [weak self] in
-      self?.inputURLs = values
+      self?.inputURLs = values.snapshot()
     }
   }
 
@@ -74,6 +73,19 @@ import UniformTypeIdentifiers
     } catch {
       context?.cancelRequest(withError: error)
     }
+  }
+}
+
+private final class LockedURLs: @unchecked Sendable {
+  private let lock = NSLock()
+  private var values: [URL] = []
+
+  func append(_ url: URL) {
+    lock.withLock { values.append(url) }
+  }
+
+  func snapshot() -> [URL] {
+    lock.withLock { values }
   }
 }
 
