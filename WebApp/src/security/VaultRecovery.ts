@@ -29,7 +29,7 @@ export async function prepareRecoveryPackage(
 ): Promise<{ recoveryPackage: RecoveryPackageV2; challenge: RecoveryChallenge[] }> {
   const [{ entropyToMnemonic }, { wordlist }] = await Promise.all([
     import('@scure/bip39'),
-    import('@scure/bip39/wordlists/english'),
+    import('@scure/bip39/wordlists/english.js'),
   ]);
   const identity = await loadOrCreateVaultIdentity(workspaceId);
   const recoveryToken = await getOrCreateRecoveryToken(workspaceId);
@@ -104,7 +104,7 @@ export async function decodeRecoveryPackage(value: string): Promise<{
   }
   const [{ mnemonicToEntropy }, { wordlist }] = await Promise.all([
     import('@scure/bip39'),
-    import('@scure/bip39/wordlists/english'),
+    import('@scure/bip39/wordlists/english.js'),
   ]);
   const masterKey = mnemonicToEntropy(parsed.recoveryPhrase, wordlist);
   if (masterKey.length !== 32 || unbase64(parsed.recoveryToken).length < 32) {

@@ -1,6 +1,10 @@
 {
   "name": "@ksamint/agent-sdk",
-  "version": "2.4.0",
+  "version": "2.5.0",
+  "engines": {
+    "node": ">=24.19 <25"
+  },
+  "packageManager": "npm@11.7.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -14,7 +18,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/index.js",
+    "build": "tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/index.js",
     "test": "vitest run",
     "lint": "eslint ."
   },
@@ -23,11 +27,11 @@
     "@hpke/core": "^1.9.0",
     "@ksamint/vault-protocol": "file:../VaultProtocolTS",
     "@types/node": "^24.2.1",
-    "esbuild": "^0.25.0",
-    "eslint": "^10.8.0",
-    "globals": "^17.8.0",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.65.0",
-    "vitest": "^3.2.4"
+    "esbuild": "^0.28.2",
+    "eslint": "^10.8.1",
+    "globals": "^17.10.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
   }
 }

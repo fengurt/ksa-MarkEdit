@@ -1,7 +1,11 @@
 {
   "name": "@ksamint/resource-modules",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.5.0",
+  "engines": {
+    "node": ">=24.19 <25"
+  },
+  "packageManager": "npm@11.7.0",
   "type": "module",
   "scripts": {
     "generate-key": "node scripts/generate-key.mjs",
@@ -13,6 +17,6 @@
     "js-yaml": "5.2.3"
   },
   "devDependencies": {
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.2"
   }
 }

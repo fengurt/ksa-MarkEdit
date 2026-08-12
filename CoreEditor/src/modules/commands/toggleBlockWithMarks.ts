@@ -75,7 +75,6 @@ export default function toggleBlockWithMarks(leftMark: string, rightMark: string
     const endTestPos = endPos + rightMark.length;
 
     let matched = false;
-    let newPos = 0;
 
     if (startTestPos >= 0 && endTestPos <= state.doc.length) {
       const leftTest = state.sliceDoc(startTestPos, startTestPos + leftMark.length);
@@ -84,7 +83,7 @@ export default function toggleBlockWithMarks(leftMark: string, rightMark: string
     }
 
     if (matched) {
-      newPos = startTestPos;
+      const newPos = startTestPos;
       return {
         range: EditorSelection.range(newPos, newPos + selectedText.length),
         changes: {
@@ -92,7 +91,7 @@ export default function toggleBlockWithMarks(leftMark: string, rightMark: string
         },
       };
     } else {
-      newPos = startPos + leftMark.length;
+      const newPos = startPos + leftMark.length;
       return {
         range: EditorSelection.range(newPos, newPos + selectedText.length),
         changes: {
