@@ -215,12 +215,16 @@ final class EditorViewController: NSViewController {
     webView.actionDelegate = self
     webView.disableWindowOcclusionDetection()
 
-    let theme = AppTheme.current.editorTheme
+    let htmlInputs = (
+      editorHtml: AppPreferences.editorConfig(theme: AppTheme.current.editorTheme).toHtml,
+      editorStyle: AppCustomization.editorStyle.fileContents,
+      userStyles: AppCustomization.stylesDirectory.styleContents()
+    )
     DispatchQueue.global(qos: .userInitiated).async {
       let html = [
-        AppPreferences.editorConfig(theme: theme).toHtml,
-        AppCustomization.editorStyle.fileContents,
-        AppCustomization.stylesDirectory.styleContents().joined(separator: "\n"),
+        htmlInputs.editorHtml,
+        htmlInputs.editorStyle,
+        htmlInputs.userStyles.joined(separator: "\n"),
       ].joined(separator: "\n\n")
 
       DispatchQueue.main.async {
@@ -235,11 +239,13 @@ final class EditorViewController: NSViewController {
     // [macOS 15] Detect Writing Tools visibility to work around issues
     if #available(macOS 15.1, *) {
       writingToolsObservation = webView.observe(\.isWritingToolsActive) { [weak self] _, _ in
-        guard let self else {
-          return
-        }
+        Task { @MainActor in
+          guard let self else {
+            return
+          }
 
-        self.updateWritingTools(isActive: self.webView.isWritingToolsActive)
+          self.updateWritingTools(isActive: self.webView.isWritingToolsActive)
+        }
       }
     }
 
@@ -270,7 +276,7 @@ final class EditorViewController: NSViewController {
   private var loadingContinuations = [PreloadContinuation]()
   private var resetContinuations = [PreloadContinuation]()
 
-  deinit {
+  isolated deinit {
     workspaceMetadataTask?.cancel()
     documentOutlineTask?.cancel()
     agentEventTask?.cancel()
@@ -512,6 +518,7 @@ extension EditorViewController {
 /**
  Continuation wrapper for managing the lifecycle of a preload operation.
  */
+@MainActor
 private final class PreloadContinuation {
   private var continuation: CheckedContinuation<Void, Never>?
 

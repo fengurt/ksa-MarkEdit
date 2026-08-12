@@ -21,7 +21,10 @@ enum AppUpdater {
   }
 
   static func checkForUpdates(explicitly: Bool) async {
-    guard explicitly || automatically else {
+    let checksAutomatically = await MainActor.run {
+      AppRuntimeConfig.updateBehavior != .never && !AppPreferences.Updater.completelyDisabled
+    }
+    guard explicitly || checksAutomatically else {
       return Logger.log(.info, "App update checks have been skipped")
     }
 
@@ -48,7 +51,10 @@ enum AppUpdater {
     }
 
     // Check if the new version was skipped for implicit updates
-    guard explicitly || !AppPreferences.Updater.skippedVersions.contains(version.name) else {
+    let isSkipped = await MainActor.run {
+      AppPreferences.Updater.skippedVersions.contains(version.name)
+    }
+    guard explicitly || !isSkipped else {
       return
     }
 
@@ -83,11 +89,6 @@ enum AppUpdater {
 // MARK: - Private
 
 private extension AppUpdater {
-  static var automatically: Bool {
-    // Can be disabled through either settings.json or an incompatible update
-    AppRuntimeConfig.updateBehavior != .never && !AppPreferences.Updater.completelyDisabled
-  }
-
   static func extractReleaseInfo(from version: AppVersion) async -> ReleaseInfo? {
     guard let info = (version.assets?.first { $0.name == "ReleaseInfo.json" }) else {
       Logger.log(.error, "Missing ReleaseInfo.json")

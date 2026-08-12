@@ -333,7 +333,9 @@ private extension ClipboardCaptureService {
 }
 
 private enum SharedCaptureSettings {
-  private static let defaults = UserDefaults(suiteName: appGroup) ?? .standard
+  private static var defaults: UserDefaults {
+    UserDefaults(suiteName: appGroup) ?? .standard
+  }
   static var enabled: Bool {
     get { defaults.bool(forKey: "conversationCaptureEnabled") }
     set { defaults.set(newValue, forKey: "conversationCaptureEnabled") }

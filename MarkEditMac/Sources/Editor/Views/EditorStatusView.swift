@@ -11,6 +11,7 @@ import MarkEditKit
 
 // [macOS 26] Clean these up
 
+@MainActor
 private protocol ButtonLabeling {
   var labelView: LabelView { get }
 }
@@ -111,8 +112,9 @@ extension EditorStatusView {
 
 // MARK: - Private
 
+@MainActor
 private enum Constants {
-  static let titleFont: NSFont = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+  static var titleFont: NSFont { .monospacedDigitSystemFont(ofSize: 11, weight: .regular) }
 }
 
 private class GlassButton: NSButton, ButtonLabeling {

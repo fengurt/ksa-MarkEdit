@@ -55,7 +55,7 @@ final class PreviewViewController: NSViewController {
     NSNib.Name("Main")
   }
 
-  deinit {
+  isolated deinit {
     if let mouseDownMonitor {
       NSEvent.removeMonitor(mouseDownMonitor)
       self.mouseDownMonitor = nil
@@ -122,7 +122,7 @@ extension PreviewViewController: WKNavigationDelegate {
   func webView(
     _ webView: WKWebView,
     decidePolicyFor navigationAction: WKNavigationAction,
-    decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
   ) {
     decisionHandler(navigationAction.navigationType == .linkActivated ? .cancel : .allow)
   }

@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: ResourceModules/package-lock.json
       - name: Verify signatures, hashes, sandbox policy, and archive parsers
@@ -34,10 +34,10 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: AgentSDK/package-lock.json
       - name: Validate TypeScript SDK
@@ -54,9 +54,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
       - name: Install supported CLI protocol fixtures
         run: >-
           npm install --prefix "$RUNNER_TEMP/agent-clis" --no-package-lock --no-save
@@ -84,9 +84,10 @@ jobs:
         working-directory: Cloud
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@1.97
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
+          toolchain: 1.97.1
           components: clippy, rustfmt
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -112,24 +113,16 @@ jobs:
           grep -F 'TENCENT_APP_ID: "1308586823"' /tmp/ksamint-compose.yml
 
   test:
-    name: Tests (${{ matrix.arch }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-26
-            arch: arm64
-          - runner: macos-26-intel
-            arch: x86_64
-    runs-on: ${{ matrix.runner }}
+    name: Tests (ARM64, macOS 26)
+    runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: WebApp/package-lock.json
 
@@ -141,6 +134,7 @@ jobs:
         run: |
           corepack enable
           yarn install --immutable
+          yarn npm audit --severity high --all
           yarn build
           yarn test
 
@@ -184,24 +178,16 @@ jobs:
             CODE_SIGNING_REQUIRED=NO
 
   compatibility:
-    name: macOS 15 compatibility (${{ matrix.arch }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-15
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
-    runs-on: ${{ matrix.runner }}
+    name: macOS 15 ARM64 compatibility
+    runs-on: macos-15
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
       - name: Build CoreEditor
         working-directory: CoreEditor
         run: |
@@ -228,17 +214,17 @@ jobs:
             CODE_SIGNING_REQUIRED=NO
 
   development-artifact:
-    name: Universal development app
+    name: ARM64 development app
     needs: [test, compatibility, resource-modules, local-agent-cli-contracts]
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22.x
+          node-version: 24.19.0
       - name: Build CoreEditor
         working-directory: CoreEditor
         run: |
@@ -252,7 +238,7 @@ jobs:
           npm run build
           npm run build:mac
           npm run validate:mac-bundle
-      - name: Build universal app
+      - name: Build ARM64 app
         run: |
           xcodebuild build \
             -project MarkEdit.xcodeproj \
@@ -260,7 +246,7 @@ jobs:
             -configuration Release \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -destination 'generic/platform=macOS' \
-            ARCHS="arm64 x86_64" \
+            ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=NO \
             SWIFT_OPTIMIZATION_LEVEL="-Osize" \
             CODE_SIGN_IDENTITY="" \
@@ -284,9 +270,9 @@ jobs:
           release_limit=6291456
           required_margin=102400
           ci_limit="$((release_limit - required_margin))"
-          echo "Universal UDBZ size: $dmg_size bytes (CI limit: $ci_limit; release limit: $release_limit)"
+          echo "ARM64 UDBZ size: $dmg_size bytes (CI limit: $ci_limit; release limit: $release_limit)"
           test "$dmg_size" -le "$ci_limit"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: ksamint-MarkEdit-development

@@ -39,15 +39,11 @@ extension NSObject {
 
 private extension NSObject {
   enum States {
-    static var loaded = false
+    static let loadGate = AccessibilityBundleLoadGate()
   }
 
   @objc func swizzled_loadAXBundles() -> Bool {
-    defer {
-      States.loaded = true
-    }
-
-    guard !States.loaded else {
+    guard States.loadGate.beginLoading() else {
       return false
     }
 
@@ -55,10 +51,37 @@ private extension NSObject {
       return self.swizzled_loadAXBundles()
     }
 
+    let loader = AccessibilityBundleLoader(object: self)
     DispatchQueue.global(qos: .userInitiated).async {
-      _ = self.swizzled_loadAXBundles()
+      loader.load()
     }
 
     return true
+  }
+}
+
+private final class AccessibilityBundleLoadGate: @unchecked Sendable {
+  private let lock = NSLock()
+  private var loaded = false
+
+  func beginLoading() -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+
+    guard !loaded else { return false }
+    loaded = true
+    return true
+  }
+}
+
+private final class AccessibilityBundleLoader: @unchecked Sendable {
+  private let object: NSObject
+
+  init(object: NSObject) {
+    self.object = object
+  }
+
+  func load() {
+    _ = object.swizzled_loadAXBundles()
   }
 }

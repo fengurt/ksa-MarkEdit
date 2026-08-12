@@ -16,6 +16,7 @@ import SharedUI
 /**
  UserDefaults wrapper with handy getters and setters.
  */
+@MainActor
 enum AppPreferences {
   enum General {
     @Storage(key: "general.appearance", defaultValue: .system)
@@ -317,12 +318,14 @@ enum AppPreferences {
   }
 }
 
+@MainActor
 extension FontStyle {
   var webFontFace: WebFontFace {
     WebFontFace(family: cssFontFamily, weight: cssFontWeight, style: cssFontStyle)
   }
 }
 
+@MainActor
 extension AppPreferences {
   static func editorConfig(theme: String) -> EditorConfig {
     EditorConfig(
@@ -373,6 +376,7 @@ extension AppPreferences {
   }
 }
 
+@MainActor
 extension AppPreferences.Window {
   struct CodableColor: Codable {
     let hex: UInt32
@@ -405,6 +409,7 @@ extension AppPreferences.Window {
 
 // MARK: - Types
 
+@MainActor
 enum Appearance: Codable {
   case system
   case light
@@ -481,7 +486,10 @@ enum NewFilenameExtension: String, Codable, CaseIterable {
   }
 
   static func preferredExtension(for typeName: String) -> Self {
-    (allCases.first { $0.exportedType == typeName }) ?? AppPreferences.General.newFilenameExtension
+    if let matched = allCases.first(where: { $0.exportedType == typeName }) {
+      return matched
+    }
+    return MainActor.assumeIsolated { AppPreferences.General.newFilenameExtension }
   }
 }
 
@@ -495,6 +503,7 @@ extension NSWindow.TabbingMode: @retroactive Codable {}
 
 // MARK: - Private
 
+@MainActor
 private extension AppPreferences {
   static func performUpdates(action: @escaping (EditorViewController) -> Void) {
     Task { @MainActor in
@@ -506,6 +515,7 @@ private extension AppPreferences {
 }
 
 @propertyWrapper
+@MainActor
 struct Storage<T: Codable> {
   private let key: String
   private let defaultValue: T
@@ -531,6 +541,7 @@ struct Storage<T: Codable> {
   }
 }
 
+@MainActor
 private enum Coders {
   static let encoder = JSONEncoder()
   static let decoder = JSONDecoder()

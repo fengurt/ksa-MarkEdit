@@ -342,15 +342,19 @@ extension EditorDocument {
   }
 
   override func writableTypes(for saveOperation: NSDocument.SaveOperationType) -> [String] {
+    let preferredExtension = MainActor.assumeIsolated {
+      AppPreferences.General.newFilenameExtension.rawValue
+    }
     // Include all markdown and plaintext types, but prioritize the configured default
     let exportedTypes = NewFilenameExtension.allCases
       .sorted { lhs, _ in
-        lhs.rawValue == AppPreferences.General.newFilenameExtension.rawValue
+        lhs.rawValue == preferredExtension
       }
       .map { $0.exportedType }
 
     // Enable *.textbundle only when we have the bundle, typically for a duplicated draft
-    return textBundle == nil ? exportedTypes : ["org.textbundle.package"] + exportedTypes
+    let hasTextBundle = MainActor.assumeIsolated { textBundle != nil }
+    return hasTextBundle ? ["org.textbundle.package"] + exportedTypes : exportedTypes
   }
 
   override func fileNameExtension(forType typeName: String, saveOperation: NSDocument.SaveOperationType) -> String? {
@@ -392,14 +396,19 @@ extension EditorDocument {
 
 extension EditorDocument {
   override func read(from data: Data, ofType typeName: String) throws {
+    let suggestedEncoding = MainActor.assumeIsolated {
+      AppDocumentController.suggestedTextEncoding
+    }
+    let defaultEncoding = MainActor.assumeIsolated {
+      AppPreferences.General.defaultTextEncoding
+    }
     DispatchQueue.global(qos: .userInitiated).async {
       let newValue = {
-        if let encoding = AppDocumentController.suggestedTextEncoding {
+        if let encoding = suggestedEncoding {
           return encoding.decode(data: data)
         }
 
-        let encoding = AppPreferences.General.defaultTextEncoding
-        return encoding.decode(data: data, guessEncoding: true)
+        return defaultEncoding.decode(data: data, guessEncoding: true)
       }()
 
       DispatchQueue.main.async {
@@ -608,8 +617,11 @@ extension EditorDocument {
       return try super.read(from: fileWrapper, ofType: typeName)
     }
 
-    textBundle = try TextBundleWrapper(fileWrapper: fileWrapper)
-    try read(from: textBundle?.data ?? Data(), ofType: typeName)
+    let bundle = try TextBundleWrapper(fileWrapper: fileWrapper)
+    MainActor.assumeIsolated {
+      textBundle = bundle
+    }
+    try read(from: bundle.data, ofType: typeName)
   }
 
   override func write(to url: URL, ofType typeName: String) throws {
@@ -617,8 +629,10 @@ extension EditorDocument {
       return try super.write(to: url, ofType: typeName)
     }
 
-    let fileWrapper = try? textBundle?.fileWrapper(with: try data(ofType: typeName))
-    try fileWrapper?.write(to: url, originalContentsURL: nil)
+    try MainActor.assumeIsolated {
+      let fileWrapper = try textBundle?.fileWrapper(with: data(ofType: typeName))
+      try fileWrapper?.write(to: url, originalContentsURL: nil)
+    }
   }
 
   override func duplicate() throws -> NSDocument {
@@ -754,7 +768,9 @@ private extension EditorDocument {
       //  1. To make it clear to users that their changes are saved
       //  2. To avoid leftover .sb copies when a document is closed too quickly
       let closeDelayed = {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: performClose)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+          performClose()
+        }
       }
 
       // Saved
