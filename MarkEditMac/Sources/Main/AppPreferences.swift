@@ -486,7 +486,10 @@ enum NewFilenameExtension: String, Codable, CaseIterable {
   }
 
   static func preferredExtension(for typeName: String) -> Self {
-    (allCases.first { $0.exportedType == typeName }) ?? AppPreferences.General.newFilenameExtension
+    if let matched = allCases.first(where: { $0.exportedType == typeName }) {
+      return matched
+    }
+    return MainActor.assumeIsolated { AppPreferences.General.newFilenameExtension }
   }
 }
 

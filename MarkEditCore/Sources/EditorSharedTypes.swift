@@ -47,7 +47,7 @@ public struct RuntimeInfo: Codable, Equatable {
   }
 }
 
-public enum EditorIndentBehavior: String, Codable {
+public enum EditorIndentBehavior: String, Codable, Sendable {
   case never = "never"
   case paragraph = "paragraph"
   case line = "line"
