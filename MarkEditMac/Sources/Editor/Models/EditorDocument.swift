@@ -629,10 +629,8 @@ extension EditorDocument {
       return try super.write(to: url, ofType: typeName)
     }
 
-    let fileWrapper: FileWrapper? = try MainActor.assumeIsolated {
-      try textBundle?.fileWrapper(with: data(ofType: typeName))
-    }
     try MainActor.assumeIsolated {
+      let fileWrapper = try textBundle?.fileWrapper(with: data(ofType: typeName))
       try fileWrapper?.write(to: url, originalContentsURL: nil)
     }
   }
