@@ -18,7 +18,7 @@ puts <<~RUBY
       strategy :github_latest
     end
 
-    depends_on macos: ">= :sequoia"
+    depends_on macos: :sequoia
     depends_on arch: :arm64
 
     app "ksamint MarkEdit.app"

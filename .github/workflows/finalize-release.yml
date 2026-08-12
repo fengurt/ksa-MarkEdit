@@ -149,8 +149,15 @@ jobs:
             cask="fengurt/ksamint/ksamint-markedit"
             mkdir -p "$HOME/.ssh"
             chmod 700 "$HOME/.ssh"
-            printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" > "$HOME/.ssh/ksamint_tap"
+            if [[ "$HOMEBREW_TAP_DEPLOY_KEY" == *"BEGIN OPENSSH PRIVATE KEY"* ]]; then
+              normalized_key="${HOMEBREW_TAP_DEPLOY_KEY//\\n/$'\n'}"
+              printf '%s\n' "$normalized_key" > "$HOME/.ssh/ksamint_tap"
+            else
+              printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" \
+                | base64 --decode > "$HOME/.ssh/ksamint_tap"
+            fi
             chmod 600 "$HOME/.ssh/ksamint_tap"
+            ssh-keygen -y -f "$HOME/.ssh/ksamint_tap" >/dev/null
             ssh-keyscan github.com >> "$HOME/.ssh/known_hosts"
             export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/ksamint_tap -o IdentitiesOnly=yes"
             if [ -d "$tap" ]; then
@@ -160,7 +167,10 @@ jobs:
             mkdir -p "$tap/Casks"
             ruby Scripts/render-cask.rb "$version" "$sha" > "$tap/Casks/ksamint-markedit.rb"
             brew style --cask "$cask"
-            brew audit --new --strict --cask "$cask"
+            # This is an update in our existing Tap. `--new` is reserved for
+            # a future submission to homebrew/cask after GitHub detaches this
+            # repository from its upstream fork network.
+            brew audit --strict --cask "$cask"
             brew install --cask --appdir="$RUNNER_TEMP/cask-apps" "$cask"
             test -d "$RUNNER_TEMP/cask-apps/ksamint MarkEdit.app"
             brew uninstall --cask "$cask"
