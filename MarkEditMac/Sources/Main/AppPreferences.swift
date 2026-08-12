@@ -512,6 +512,7 @@ private extension AppPreferences {
 }
 
 @propertyWrapper
+@MainActor
 struct Storage<T: Codable> {
   private let key: String
   private let defaultValue: T
@@ -537,6 +538,7 @@ struct Storage<T: Codable> {
   }
 }
 
+@MainActor
 private enum Coders {
   static let encoder = JSONEncoder()
   static let decoder = JSONDecoder()

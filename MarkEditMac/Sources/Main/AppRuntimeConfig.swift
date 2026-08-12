@@ -14,8 +14,8 @@ import MarkEditKit
 ///
 /// The underlying file is stored as "settings.json" in AppCustomization.
 enum AppRuntimeConfig {
-  struct Definition: Codable, Sendable {
-    enum ToolbarTranslucency: Codable, Sendable {
+  struct Definition: Codable {
+    enum ToolbarTranslucency: Codable {
       case readable
       case `default`
       case vibrant
@@ -72,13 +72,13 @@ enum AppRuntimeConfig {
       }
     }
 
-    enum UpdateBehavior: String, Codable, Sendable {
+    enum UpdateBehavior: String, Codable {
       case quiet = "quiet"
       case notify = "notify"
       case never = "never"
     }
 
-    struct HotKey: Codable, Sendable {
+    struct HotKey: Codable {
       let key: String
       let modifiers: [String]
     }
@@ -282,7 +282,7 @@ enum AppRuntimeConfig {
   }
 }
 
-struct CustomToolbarItem: Codable, Sendable {
+struct CustomToolbarItem: Codable {
   let title: String
   let icon: String
   let actionName: String?

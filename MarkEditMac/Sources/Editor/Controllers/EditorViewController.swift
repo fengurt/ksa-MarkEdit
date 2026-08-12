@@ -216,13 +216,13 @@ final class EditorViewController: NSViewController {
     webView.disableWindowOcclusionDetection()
 
     let htmlInputs = (
-      config: AppPreferences.editorConfig(theme: AppTheme.current.editorTheme),
+      editorHtml: AppPreferences.editorConfig(theme: AppTheme.current.editorTheme).toHtml,
       editorStyle: AppCustomization.editorStyle.fileContents,
       userStyles: AppCustomization.stylesDirectory.styleContents()
     )
     DispatchQueue.global(qos: .userInitiated).async {
       let html = [
-        htmlInputs.config.toHtml,
+        htmlInputs.editorHtml,
         htmlInputs.editorStyle,
         htmlInputs.userStyles.joined(separator: "\n"),
       ].joined(separator: "\n\n")
