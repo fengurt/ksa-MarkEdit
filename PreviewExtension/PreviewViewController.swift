@@ -55,7 +55,7 @@ final class PreviewViewController: NSViewController {
     NSNib.Name("Main")
   }
 
-  deinit {
+  isolated deinit {
     if let mouseDownMonitor {
       NSEvent.removeMonitor(mouseDownMonitor)
       self.mouseDownMonitor = nil
