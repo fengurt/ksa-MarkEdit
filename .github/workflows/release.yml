@@ -42,20 +42,33 @@ jobs:
 
       - name: Verify tag and version
         run: |
+          set -euo pipefail
           version="${RELEASE_TAG#v}"
-          test "$version" = "$(sed -n 's/^MARKETING_VERSION = //p' Build.xcconfig)"
-          test "$version" = "$(node -p "require('./WebApp/package.json').version")"
-          test "$version" = "$(node -p "require('./AgentSDK/package.json').version")"
-          test "$version" = "$(sed -n 's/^version = \"\\(.*\\)\"/\\1/p' Cloud/Cargo.toml | head -1)"
-          # GitHub's checkout action fetches the requested tag as a detached
-          # commit and may not retain the local tag ref. Verify the immutable
-          # remote tag target instead of relying on local tag enumeration.
-          remote_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')"
-          if [ -z "$remote_tag_commit" ]; then
-            remote_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
-          fi
-          test -n "$remote_tag_commit"
-          test "$remote_tag_commit" = "$(git rev-parse HEAD)"
+          assert_equal() {
+            label="$1"
+            expected="$2"
+            actual="$3"
+            if [ "$actual" != "$expected" ]; then
+              printf '%s mismatch: expected <%s>, got <%s>\n' \
+                "$label" "$expected" "$actual" >&2
+              exit 1
+            fi
+          }
+          assert_equal Build.xcconfig "$version" \
+            "$(sed -n 's/^MARKETING_VERSION = //p' Build.xcconfig)"
+          assert_equal WebApp/package.json "$version" \
+            "$(node -p "require('./WebApp/package.json').version")"
+          assert_equal AgentSDK/package.json "$version" \
+            "$(node -p "require('./AgentSDK/package.json').version")"
+          assert_equal Cloud/Cargo.toml "$version" \
+            "$(sed -n 's/^version = \"\\(.*\\)\"/\\1/p' Cloud/Cargo.toml | head -1)"
+          # Fetch the immutable release tag into an isolated ref. This works
+          # whether checkout retained a local tag ref or only a detached HEAD.
+          validation_ref="refs/tags/release-validation/$RELEASE_TAG"
+          git fetch --force origin \
+            "refs/tags/$RELEASE_TAG:$validation_ref"
+          remote_tag_commit="$(git rev-list -n 1 "$validation_ref")"
+          assert_equal release-tag "$(git rev-parse HEAD)" "$remote_tag_commit"
           node Scripts/validate-localizations.mjs
 
       - name: Build CoreEditor
