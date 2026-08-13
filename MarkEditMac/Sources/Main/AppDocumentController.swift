@@ -23,7 +23,7 @@ final class AppDocumentController: NSDocumentController {
     min(super.maximumRecentDocumentCount, 8)
   }
 
-  nonisolated override func makeDocument(
+  override nonisolated func makeDocument(
     withContentsOf url: URL,
     ofType typeName: String
   ) throws -> NSDocument {
