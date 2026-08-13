@@ -237,11 +237,7 @@ extension EditorDocument {
   }
 
   override class func canConcurrentlyReadDocuments(ofType type: String) -> Bool {
-    // NSDocument is main-actor isolated in Swift 6. Returning true makes
-    // AppKit construct EditorDocument on its concurrent opening queue before
-    // read(from:ofType:) is called, which trips Swift's executor precondition.
-    // Content decoding still moves off the main thread inside read(from:).
-    false
+    true
   }
 
   override var fileURL: URL? {

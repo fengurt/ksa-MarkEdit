@@ -54,18 +54,28 @@ sleep 1
 open -a "$app" "$fixture"
 sleep 4
 
-if ! kill -0 "$app_pid" >/dev/null 2>&1; then
-  echo "kmd crashed while opening a Markdown document" >&2
-  exit 1
-fi
-
 after_reports=$before_reports
 if [ -d "$diagnostic_directory" ]; then
   after_reports=$(find "$diagnostic_directory" -maxdepth 1 -type f -name 'kmd-*.ips' | wc -l | tr -d ' ')
 fi
 
+print_latest_crash() {
+  latest_report=$(find "$diagnostic_directory" -maxdepth 1 -type f -name 'kmd-*.ips' -print 2>/dev/null | sort | tail -1)
+  if [ -n "$latest_report" ]; then
+    echo "Latest crash report: $latest_report" >&2
+    sed -n '1,180p' "$latest_report" >&2
+  fi
+}
+
+if ! kill -0 "$app_pid" >/dev/null 2>&1; then
+  echo "kmd crashed while opening a Markdown document" >&2
+  print_latest_crash
+  exit 1
+fi
+
 if [ "$after_reports" -gt "$before_reports" ]; then
   echo "kmd generated a crash report while opening a Markdown document" >&2
+  print_latest_crash
   exit 1
 fi
 
