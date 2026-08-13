@@ -32,7 +32,9 @@ final class QuickActionCoordinator {
     do {
       let requestURL = try pendingDirectory().appending(path: "\(id).json")
       let request = try JSONDecoder().decode(
-        QuickActionRequestV1.self, from: Data(contentsOf: requestURL))
+        QuickActionRequestV1.self,
+        from: Data(contentsOf: requestURL)
+      )
       guard request.version == 1, request.id == id,
         Date().timeIntervalSince(request.createdAt) < 10 * 60
       else {
@@ -54,8 +56,7 @@ final class QuickActionCoordinator {
   }
 
   private func execute(_ action: QuickActionKind, urls: [URL], appDelegate: AppDelegate)
-    async throws
-  {
+    async throws {
     switch action {
     case .preview:
       guard let first = urls.first else { throw QuickActionError.emptySelection }
@@ -87,8 +88,7 @@ final class QuickActionCoordinator {
       defer { workspaceRootURL?.stopAccessingSecurityScopedResource() }
       let directory = selected.hasDirectoryPath ? selected : selected.deletingLastPathComponent()
       if !selected.hasDirectoryPath,
-        workspaceRootURL.map({ !contains(directory, root: $0) }) != false
-      {
+        workspaceRootURL.map({ !contains(directory, root: $0) }) != false {
         throw QuickActionError.selectFolderForCreation
       }
       let destination = uniqueURL(in: directory, name: "\(Localized.Workspace.untitledFile).md")
@@ -115,7 +115,9 @@ final class QuickActionCoordinator {
       let outputDirectory = allInsideWorkspace ? nil : chooseDocumentExportDirectory(markdownFiles)
       guard allInsideWorkspace || outputDirectory != nil else { return }
       let outputs = try await documentExport.convert(
-        markdownFiles, outputDirectory: outputDirectory)
+        markdownFiles,
+        outputDirectory: outputDirectory
+      )
       NSWorkspace.shared.activateFileViewerSelecting(outputs)
     }
   }
@@ -141,7 +143,9 @@ final class QuickActionCoordinator {
       \(links)
       """
     try Data(content.utf8).write(
-      to: uniqueURL(in: directory, name: "\(title).md"), options: .atomic)
+      to: uniqueURL(in: directory, name: "\(title).md"),
+      options: .atomic
+    )
   }
 
   private func copyIntoWorkspace(_ urls: [URL]) throws {
@@ -201,8 +205,11 @@ final class QuickActionCoordinator {
   private func resolve(_ bookmark: Data) throws -> URL {
     var stale = false
     let url = try URL(
-      resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil,
-      bookmarkDataIsStale: &stale)
+      resolvingBookmarkData: bookmark,
+      options: [.withSecurityScope],
+      relativeTo: nil,
+      bookmarkDataIsStale: &stale
+    )
     guard !stale, url.startAccessingSecurityScopedResource() else {
       throw CocoaError(.fileReadNoPermission)
     }
@@ -219,7 +226,8 @@ final class QuickActionCoordinator {
   private func pendingDirectory() throws -> URL {
     guard
       let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit")
+        forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
+      )
     else {
       throw CocoaError(.fileReadNoPermission)
     }
@@ -234,7 +242,8 @@ final class QuickActionCoordinator {
     while FileManager.default.fileExists(atPath: candidate.path) {
       index += 1
       candidate = directory.appending(
-        path: ext.isEmpty ? "\(base) \(index)" : "\(base) \(index).\(ext)")
+        path: ext.isEmpty ? "\(base) \(index)" : "\(base) \(index).\(ext)"
+      )
     }
     return candidate
   }
@@ -272,7 +281,8 @@ private actor DatamergeDocumentExportService {
           mode: "quick",
           filename: stem,
           title: stem
-        ))
+        )
+      )
       let (responseData, response) = try await URLSession.shared.data(for: request)
       guard let http = response as? HTTPURLResponse,
         http.statusCode == 200,
@@ -282,9 +292,13 @@ private actor DatamergeDocumentExportService {
         throw QuickActionError.documentExportFailed
       }
       let destination = uniqueDestination(
-        in: outputDirectory ?? source.deletingLastPathComponent(), name: stem)
+        in: outputDirectory ?? source.deletingLastPathComponent(),
+        name: stem
+      )
       try responseData.write(
-        to: destination, options: [.atomic, .completeFileProtectionUnlessOpen])
+        to: destination,
+        options: [.atomic, .completeFileProtectionUnlessOpen]
+      )
       outputs.append(destination)
     }
     return outputs
@@ -421,24 +435,31 @@ actor FormatConversionService: ConversionProvider {
     }
     let root = supported[0].deletingLastPathComponent()
     return ConversionPlanV1(
-      request: request, supported: supported, usesRemoteService: remote,
+      request: request,
+      supported: supported,
+      usesRemoteService: remote,
       outputDirectory: root.appending(
-        path: "ksamint-converted-\(request.id.uuidString.prefix(8))", directoryHint: .isDirectory))
+        path: "ksamint-converted-\(request.id.uuidString.prefix(8))",
+        directoryHint: .isDirectory
+      )
+    )
   }
 
   func execute(_ plan: ConversionPlanV1, progress: @escaping @Sendable (Double) -> Void)
-    async throws -> ConversionResultV1
-  {
+    async throws -> ConversionResultV1 {
     if plan.usesRemoteService {
       throw QuickActionError.remoteProviderNotConfigured
     }
     try FileManager.default.createDirectory(
-      at: plan.outputDirectory, withIntermediateDirectories: true)
+      at: plan.outputDirectory,
+      withIntermediateDirectories: true
+    )
     var outputs: [URL] = []
     for (index, url) in plan.supported.enumerated() {
       if cancelled.contains(plan.request.id) { throw CancellationError() }
       let output = plan.outputDirectory.appending(
-        path: "\((url.lastPathComponent as NSString).deletingPathExtension).md")
+        path: "\((url.lastPathComponent as NSString).deletingPathExtension).md"
+      )
       let content = try localMarkdown(url)
       try Data(content.utf8).write(to: output, options: .atomic)
       outputs.append(output)
@@ -452,11 +473,13 @@ actor FormatConversionService: ConversionProvider {
   private func localMarkdown(_ url: URL) throws -> String {
     if url.hasDirectoryPath {
       let children = try FileManager.default.contentsOfDirectory(
-        at: url, includingPropertiesForKeys: nil)
-      return "# \(url.lastPathComponent)\n\n"
-        + children.sorted { $0.lastPathComponent < $1.lastPathComponent }.map {
-          "- \($0.lastPathComponent)"
-        }.joined(separator: "\n")
+        at: url,
+        includingPropertiesForKeys: nil
+      )
+      let entries = children
+        .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        .map { "- \($0.lastPathComponent)" }
+      return "# \(url.lastPathComponent)\n\n" + entries.joined(separator: "\n")
     }
     let ext = url.pathExtension.lowercased()
     if ext == "zip" {
@@ -470,16 +493,17 @@ actor FormatConversionService: ConversionProvider {
     if ["html", "htm"].contains(ext) {
       guard
         let attributed = try? NSAttributedString(
-          data: Data(text.utf8), options: [.documentType: NSAttributedString.DocumentType.html],
-          documentAttributes: nil)
+          data: Data(text.utf8),
+          options: [.documentType: NSAttributedString.DocumentType.html],
+          documentAttributes: nil
+        )
       else { return text }
       return attributed.string
     }
     return "# \(url.lastPathComponent)\n\n```\(ext)\n\(text)\n```\n"
   }
 
-  private func archiveManifest(_ url: URL, executable: String, arguments: [String]) throws -> String
-  {
+  private func archiveManifest(_ url: URL, executable: String, arguments: [String]) throws -> String {
     let process = Process()
     let output = Pipe()
     let errors = Pipe()

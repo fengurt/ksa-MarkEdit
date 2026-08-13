@@ -40,8 +40,7 @@ extension AppDelegate {
     return menu
   }
 
-  func createNewFile(fileName: String? = nil, initialContent: String? = nil, isIntent: Bool = false)
-  {
+  func createNewFile(fileName: String? = nil, initialContent: String? = nil, isIntent: Bool = false) {
     // In EditorDocument, this is used as an external filename
     AppDocumentController.suggestedFilename = fileName
 

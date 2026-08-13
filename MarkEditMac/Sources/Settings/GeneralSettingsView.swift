@@ -203,8 +203,7 @@ struct GeneralSettingsView: View {
       }
     }
     .onAppear(perform: refreshCaptureServiceState)
-    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification))
-    { _ in
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
       refreshCaptureServiceState()
     }
   }

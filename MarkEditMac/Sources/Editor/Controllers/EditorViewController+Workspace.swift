@@ -69,16 +69,14 @@ extension EditorViewController {
       let bookmark = AppPreferences.General.workspaceFolderBookmarks[
         fileURL.standardizedFileURL.path],
       let restoredSession = try? WorkspaceSession.restore(from: bookmark),
-      restoredSession.contains(fileURL)
-    {
+      restoredSession.contains(fileURL) {
       workspaceSession = restoredSession
     }
 
     if workspaceSession == nil,
       let bookmark = AppPreferences.General.workspaceFolderBookmark,
       let restoredSession = try? WorkspaceSession.restore(from: bookmark),
-      document?.fileURL.map({ restoredSession.contains($0) }) != false
-    {
+      document?.fileURL.map({ restoredSession.contains($0) }) != false {
       workspaceSession = restoredSession
     }
 
@@ -399,8 +397,7 @@ extension EditorViewController {
         } else {
           await WorkspaceHubSnapshot.local()
         }
-      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) {
-        [weak self] action, path in
+      let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] action, path in
         guard let self else { return }
         switch action {
         case "open":
@@ -573,8 +570,7 @@ extension EditorViewController {
     session.persist(for: [url])
     let targetWindow = view.window
 
-    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) {
-      [weak self] document, _, error in
+    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { [weak self] document, _, error in
       if let error {
         self?.showWorkspaceError(error.localizedDescription)
         return
@@ -596,8 +592,7 @@ extension EditorViewController {
         if let newWindow = contentViewController.view.window,
           let targetWindow,
           newWindow !== targetWindow,
-          newWindow.tabGroup !== targetWindow.tabGroup
-        {
+          newWindow.tabGroup !== targetWindow.tabGroup {
           targetWindow.addTabbedWindow(newWindow, ordered: .above)
         }
 
@@ -641,7 +636,9 @@ extension EditorViewController {
       do {
         if isDirectory {
           try FileManager.default.createDirectory(
-            at: destination, withIntermediateDirectories: false)
+            at: destination,
+            withIntermediateDirectories: false
+          )
         } else {
           try Data().write(to: destination, options: .withoutOverwriting)
           openWorkspaceFile(destination, lineNumber: nil)
@@ -938,8 +935,7 @@ extension EditorViewController {
 
   fileprivate func currentMetadata(at url: URL) async throws -> WorkspaceDocumentMetadata {
     if let document = NSDocumentController.shared.document(for: url) as? EditorDocument,
-      let metadata = await document.currentWorkspaceMetadata()
-    {
+      let metadata = await document.currentWorkspaceMetadata() {
       return metadata
     }
     return try WorkspaceMetadataFile.read(at: url)

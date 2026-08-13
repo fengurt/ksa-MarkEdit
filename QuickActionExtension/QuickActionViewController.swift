@@ -57,7 +57,10 @@ import UniformTypeIdentifiers
         action: kind,
         resourceBookmarks: try inputURLs.map {
           try $0.bookmarkData(
-            options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+          )
         }
       )
       guard

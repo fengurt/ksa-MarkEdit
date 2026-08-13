@@ -67,13 +67,19 @@ final class FinderTools: FIFinderSync {
       let quickActions = NSMenu(title: String(localized: "kmd Quick Actions"))
       for (index, action) in WorkspaceQuickAction.allCases.enumerated() {
         let item = NSMenuItem(
-          title: action.title, action: #selector(runQuickAction(_:)), keyEquivalent: "")
+          title: action.title,
+          action: #selector(runQuickAction(_:)),
+          keyEquivalent: ""
+        )
         item.tag = index
         item.target = self
         quickActions.addItem(item)
       }
       let wrapper = NSMenuItem(
-        title: String(localized: "kmd Quick Actions"), action: nil, keyEquivalent: "")
+        title: String(localized: "kmd Quick Actions"),
+        action: nil,
+        keyEquivalent: ""
+      )
       wrapper.submenu = quickActions
       menu.addItem(wrapper)
       menu.addItem(.separator())
@@ -126,7 +132,10 @@ extension FinderTools {
         action: WorkspaceQuickAction.allCases[sender.tag],
         resourceBookmarks: try urls.map {
           try $0.bookmarkData(
-            options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+          )
         }
       )
       guard
@@ -137,7 +146,9 @@ extension FinderTools {
       let directory = container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
       try JSONEncoder().encode(request).write(
-        to: directory.appending(path: "\(request.id).json"), options: .atomic)
+        to: directory.appending(path: "\(request.id).json"),
+        options: .atomic
+      )
       guard
         let callbackURL = URL(
           string: "ksamint-markedit://quick-action?id=\(request.id)"
