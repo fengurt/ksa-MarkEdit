@@ -267,6 +267,7 @@ jobs:
           strip "$app/Contents/PlugIns/QuickActionExtension.appex/Contents/MacOS/QuickActionExtension"
           strip "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app/Contents/MacOS/ConversationCaptureHelper"
           codesign --force --deep --sign - "$app"
+          Scripts/test-document-open-smoke.sh "$app"
           hdiutil create \
             -volname "kmd" \
             -srcfolder "$app" \
