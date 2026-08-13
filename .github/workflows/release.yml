@@ -329,13 +329,11 @@ jobs:
               esac
             done
             if $all_accepted; then
-              gh workflow run finalize-release.yml --repo "$GITHUB_REPOSITORY" \
-                --ref main -f tag="$RELEASE_TAG" || true
               exit 0
             fi
             sleep 30
           done
-          echo "Notarization remains in progress. The draft release and submission IDs are preserved for the scheduled finalizer."
+          echo "Notarization remains in progress. The draft release and submission IDs are preserved. Run the finalizer manually later; no submission is repeated."
 
       - name: Remove temporary signing material
         if: always()

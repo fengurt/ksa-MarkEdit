@@ -1,8 +1,9 @@
 name: Finalize notarized release
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  workflow_run:
+    workflows: ["Signed release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -19,6 +20,9 @@ concurrency:
 
 jobs:
   finalize:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: macos-26
     environment: release
     env:
