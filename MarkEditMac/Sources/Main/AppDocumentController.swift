@@ -19,8 +19,39 @@ final class AppDocumentController: NSDocumentController {
   static var suggestedTextEncoding: EditorTextEncoding?
   static var suggestedFilename: String?
 
-  override var maximumRecentDocumentCount: Int {
-    min(super.maximumRecentDocumentCount, 8)
+  override nonisolated var maximumRecentDocumentCount: Int {
+    if Thread.isMainThread {
+      return MainActor.assumeIsolated {
+        min(super.maximumRecentDocumentCount, 8)
+      }
+    }
+
+    return DispatchQueue.main.sync {
+      MainActor.assumeIsolated {
+        min(super.maximumRecentDocumentCount, 8)
+      }
+    }
+  }
+
+  override nonisolated func makeDocument(
+    withContentsOf url: URL,
+    ofType typeName: String
+  ) throws -> NSDocument {
+    // AppKit calls this override on its concurrent document-opening queue when
+    // EditorDocument opts into concurrent reads. Swift 6 isolates NSDocument's
+    // initializer to the main actor, so construct the document there while its
+    // read(from:) implementation continues decoding content in the background.
+    if Thread.isMainThread {
+      return try MainActor.assumeIsolated {
+        try super.makeDocument(withContentsOf: url, ofType: typeName)
+      }
+    }
+
+    return try DispatchQueue.main.sync {
+      try MainActor.assumeIsolated {
+        try super.makeDocument(withContentsOf: url, ofType: typeName)
+      }
+    }
   }
 
   override func beginOpenPanel(_ openPanel: NSOpenPanel, forTypes inTypes: [String]?) async -> Int {

@@ -267,13 +267,14 @@ jobs:
           strip "$app/Contents/PlugIns/QuickActionExtension.appex/Contents/MacOS/QuickActionExtension"
           strip "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app/Contents/MacOS/ConversationCaptureHelper"
           codesign --force --deep --sign - "$app"
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
+          Scripts/test-document-open-smoke.sh "$app"
           hdiutil create \
             -volname "kmd" \
             -srcfolder "$app" \
             -ov \
             -format UDBZ \
             "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg"
-          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
           dmg_size="$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")"
           release_limit=6291456
           required_margin=102400
