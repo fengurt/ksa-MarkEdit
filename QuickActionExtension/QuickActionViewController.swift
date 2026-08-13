@@ -27,10 +27,12 @@ import UniformTypeIdentifiers
     }
     let group = DispatchGroup()
     let values = LockedURLs()
-    for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+    for provider in providers
+    where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
       group.enter()
       provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, _ in
-        let url = item as? URL ?? (item as? Data).flatMap { URL(dataRepresentation: $0, relativeTo: nil) }
+        let url =
+          item as? URL ?? (item as? Data).flatMap { URL(dataRepresentation: $0, relativeTo: nil) }
         if let url { values.append(url) }
         group.leave()
       }
@@ -42,7 +44,8 @@ import UniformTypeIdentifiers
 
   @objc private func runAction(_ sender: NSButton) {
     guard let kind = sender.identifier.flatMap({ QuickActionKind(rawValue: $0.rawValue) }),
-          !inputURLs.isEmpty else {
+      !inputURLs.isEmpty
+    else {
       NSSound.beep()
       return
     }
@@ -53,21 +56,29 @@ import UniformTypeIdentifiers
         createdAt: Date(),
         action: kind,
         resourceBookmarks: try inputURLs.map {
-          try $0.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+          try $0.bookmarkData(
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+          )
         }
       )
-      guard let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
-      ) else { throw CocoaError(.fileWriteNoPermission) }
+      guard
+        let container = FileManager.default.containerURL(
+          forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
+        )
+      else { throw CocoaError(.fileWriteNoPermission) }
       let directory = container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
       try JSONEncoder().encode(request).write(
         to: directory.appending(path: "\(request.id).json"),
         options: [.atomic, .completeFileProtectionUnlessOpen]
       )
-      guard let callbackURL = URL(
-        string: "ksamint-markedit://quick-action?id=\(request.id)"
-      ) else { throw CocoaError(.fileWriteInvalidFileName) }
+      guard
+        let callbackURL = URL(
+          string: "ksamint-markedit://quick-action?id=\(request.id)"
+        )
+      else { throw CocoaError(.fileWriteInvalidFileName) }
       NSWorkspace.shared.open(callbackURL)
       context?.completeRequest(returningItems: nil)
     } catch {
@@ -90,7 +101,8 @@ private final class LockedURLs: @unchecked Sendable {
 }
 
 private enum QuickActionKind: String, Codable, CaseIterable {
-  case preview, openEditor, conversationInbox, saveReference, addWorkspace, analyzeAgent, convertMarkdown
+  case preview, openEditor, conversationInbox, saveReference, addWorkspace, analyzeAgent,
+    createMarkdown, convertMarkdown, convertDocx
 
   var title: String {
     switch self {
@@ -100,7 +112,9 @@ private enum QuickActionKind: String, Codable, CaseIterable {
     case .saveReference: String(localized: "Save as Reference")
     case .addWorkspace: String(localized: "Add to Workspace")
     case .analyzeAgent: String(localized: "Analyze with Local Agent")
+    case .createMarkdown: String(localized: "New Markdown File")
     case .convertMarkdown: String(localized: "Convert to Markdown")
+    case .convertDocx: String(localized: "Convert Markdown to DOCX")
     }
   }
 }

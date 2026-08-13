@@ -1236,6 +1236,10 @@ canvas:focus-visible {
   grid-column: span 8;
 }
 
+.hub-panel.recent-panel.history-panel {
+  grid-column: span 12;
+}
+
 .panel-heading {
   display: flex;
   align-items: baseline;
@@ -1424,6 +1428,12 @@ canvas:focus-visible {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
+}
+
+.conversation-inbox-panel .button-row {
+  display: flex;
+  margin-top: auto;
+  gap: 6px;
 }
 
 .conversation-inbox-panel textarea {

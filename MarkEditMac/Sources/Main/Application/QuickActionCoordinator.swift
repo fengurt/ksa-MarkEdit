@@ -1,4 +1,5 @@
 import AppKit
+import Security
 import UniformTypeIdentifiers
 
 enum QuickActionKind: String, Codable {
@@ -8,7 +9,9 @@ enum QuickActionKind: String, Codable {
   case saveReference
   case addWorkspace
   case analyzeAgent
+  case createMarkdown
   case convertMarkdown
+  case convertDocx
 }
 
 struct QuickActionRequestV1: Codable {
@@ -23,18 +26,25 @@ struct QuickActionRequestV1: Codable {
 final class QuickActionCoordinator {
   static let shared = QuickActionCoordinator()
   private let conversion = FormatConversionService()
+  private let documentExport = DatamergeDocumentExportService()
 
   func handle(id: UUID, appDelegate: AppDelegate) async {
     do {
       let requestURL = try pendingDirectory().appending(path: "\(id).json")
-      let request = try JSONDecoder().decode(QuickActionRequestV1.self, from: Data(contentsOf: requestURL))
+      let request = try JSONDecoder().decode(
+        QuickActionRequestV1.self,
+        from: Data(contentsOf: requestURL)
+      )
       guard request.version == 1, request.id == id,
-            Date().timeIntervalSince(request.createdAt) < 10 * 60 else {
+        Date().timeIntervalSince(request.createdAt) < 10 * 60
+      else {
         throw QuickActionError.invalidRequest
       }
       let urls = try request.resourceBookmarks.map(resolve)
       defer {
-        urls.forEach { $0.stopAccessingSecurityScopedResource() }
+        for url in urls {
+          url.stopAccessingSecurityScopedResource()
+        }
         try? FileManager.default.removeItem(at: requestURL)
       }
       try await execute(request.action, urls: urls, appDelegate: appDelegate)
@@ -45,7 +55,8 @@ final class QuickActionCoordinator {
     }
   }
 
-  private func execute(_ action: QuickActionKind, urls: [URL], appDelegate: AppDelegate) async throws {
+  private func execute(_ action: QuickActionKind, urls: [URL], appDelegate: AppDelegate)
+    async throws {
     switch action {
     case .preview:
       guard let first = urls.first else { throw QuickActionError.emptySelection }
@@ -68,12 +79,46 @@ final class QuickActionCoordinator {
       } else {
         throw QuickActionError.noEditorForAgent
       }
+    case .createMarkdown:
+      guard let selected = urls.first else { throw QuickActionError.emptySelection }
+      var workspaceRootURL: URL?
+      if !selected.hasDirectoryPath {
+        workspaceRootURL = try? workspaceRoot()
+      }
+      defer { workspaceRootURL?.stopAccessingSecurityScopedResource() }
+      let directory = selected.hasDirectoryPath ? selected : selected.deletingLastPathComponent()
+      if !selected.hasDirectoryPath,
+        workspaceRootURL.map({ !contains(directory, root: $0) }) != false {
+        throw QuickActionError.selectFolderForCreation
+      }
+      let destination = uniqueURL(in: directory, name: "\(Localized.Workspace.untitledFile).md")
+      try Data().write(to: destination, options: .atomic)
+      NSWorkspace.shared.activateFileViewerSelecting([destination])
     case .convertMarkdown:
       let plan = try await conversion.plan(ConversionRequestV1(resources: urls))
       guard confirm(plan) else { return }
       _ = try await conversion.execute(plan) { progress in
         NotificationCenter.default.post(name: .conversionProgress, object: progress)
       }
+    case .convertDocx:
+      let markdownFiles = urls.filter {
+        !$0.hasDirectoryPath && ["md", "markdown"].contains($0.pathExtension.lowercased())
+      }
+      guard !markdownFiles.isEmpty else { throw QuickActionError.unsupported }
+      guard confirmDocumentExport() else { return }
+      let workspaceRootURL = try? workspaceRoot()
+      defer { workspaceRootURL?.stopAccessingSecurityScopedResource() }
+      let allInsideWorkspace =
+        workspaceRootURL.map { root in
+          markdownFiles.allSatisfy { contains($0, root: root) }
+        } ?? false
+      let outputDirectory = allInsideWorkspace ? nil : chooseDocumentExportDirectory(markdownFiles)
+      guard allInsideWorkspace || outputDirectory != nil else { return }
+      let outputs = try await documentExport.convert(
+        markdownFiles,
+        outputDirectory: outputDirectory
+      )
+      NSWorkspace.shared.activateFileViewerSelecting(outputs)
     }
   }
 
@@ -83,20 +128,24 @@ final class QuickActionCoordinator {
     let directory = root.appending(path: "References", directoryHint: .isDirectory)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let title = urls.count == 1 ? urls[0].lastPathComponent : "Imported resources"
-    let links = urls.map { "- [\($0.lastPathComponent)](\($0.path(percentEncoded: false)))" }.joined(separator: "\n")
+    let links = urls.map { "- [\($0.lastPathComponent)](\($0.path(percentEncoded: false)))" }
+      .joined(separator: "\n")
     let content = """
-    ---
-    type: Reference
-    generated: \(ISO8601DateFormatter().string(from: Date()))
-    sources: \(urls.count)
-    tags: [reference]
-    ---
+      ---
+      type: Reference
+      generated: \(ISO8601DateFormatter().string(from: Date()))
+      sources: \(urls.count)
+      tags: [reference]
+      ---
 
-    # \(title)
+      # \(title)
 
-    \(links)
-    """
-    try Data(content.utf8).write(to: uniqueURL(in: directory, name: "\(title).md"), options: .atomic)
+      \(links)
+      """
+    try Data(content.utf8).write(
+      to: uniqueURL(in: directory, name: "\(title).md"),
+      options: .atomic
+    )
   }
 
   private func copyIntoWorkspace(_ urls: [URL]) throws {
@@ -111,28 +160,75 @@ final class QuickActionCoordinator {
   private func confirm(_ plan: ConversionPlanV1) -> Bool {
     let alert = NSAlert()
     alert.messageText = String(localized: "Convert to Markdown")
-    alert.informativeText = plan.usesRemoteService
-      ? String(localized: "The selected PDF or document image will be uploaded over TLS to the configured Tencent MinerU Precision VLM service. The source is deleted after submission and results expire after one hour.")
+    alert.informativeText =
+      plan.usesRemoteService
+      ? String(
+        localized:
+          "The selected PDF or document image will be uploaded over TLS to the configured Tencent MinerU Precision VLM service. The source is deleted after submission and results expire after one hour."
+      )
       : String(localized: "A new Markdown result will be created. Source files are not modified.")
     alert.addButton(withTitle: String(localized: "Convert"))
     alert.addButton(withTitle: String(localized: "Cancel"))
     return alert.runModal() == .alertFirstButtonReturn
   }
 
+  private func confirmDocumentExport() -> Bool {
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Convert Markdown to DOCX")
+    alert.informativeText = String(
+      localized:
+        "The selected Markdown will be sent over TLS to the Datamerge conversion service. DOCX files are saved next to the sources; the Markdown files are not modified."
+    )
+    alert.addButton(withTitle: String(localized: "Convert"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    return alert.runModal() == .alertFirstButtonReturn
+  }
+
+  private func chooseDocumentExportDirectory(_ sources: [URL]) -> URL? {
+    let panel = NSOpenPanel()
+    panel.title = String(localized: "Choose DOCX Output Folder")
+    panel.prompt = String(localized: "Choose")
+    panel.canChooseDirectories = true
+    panel.canChooseFiles = false
+    panel.canCreateDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.directoryURL = sources.first?.deletingLastPathComponent()
+    return panel.runModal() == .OK ? panel.url : nil
+  }
+
+  private func contains(_ url: URL, root: URL) -> Bool {
+    let path = url.standardizedFileURL.pathComponents
+    let rootPath = root.standardizedFileURL.pathComponents
+    return path.count >= rootPath.count && Array(path.prefix(rootPath.count)) == rootPath
+  }
+
   private func resolve(_ bookmark: Data) throws -> URL {
     var stale = false
-    let url = try URL(resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &stale)
-    guard !stale, url.startAccessingSecurityScopedResource() else { throw CocoaError(.fileReadNoPermission) }
+    let url = try URL(
+      resolvingBookmarkData: bookmark,
+      options: [.withSecurityScope],
+      relativeTo: nil,
+      bookmarkDataIsStale: &stale
+    )
+    guard !stale, url.startAccessingSecurityScopedResource() else {
+      throw CocoaError(.fileReadNoPermission)
+    }
     return url.standardizedFileURL
   }
 
   private func workspaceRoot() throws -> URL {
-    guard let bookmark = AppPreferences.General.workspaceFolderBookmark else { throw QuickActionError.noWorkspace }
+    guard let bookmark = AppPreferences.General.workspaceFolderBookmark else {
+      throw QuickActionError.noWorkspace
+    }
     return try resolve(bookmark)
   }
 
   private func pendingDirectory() throws -> URL {
-    guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit") else {
+    guard
+      let container = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
+      )
+    else {
       throw CocoaError(.fileReadNoPermission)
     }
     return container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
@@ -145,9 +241,143 @@ final class QuickActionCoordinator {
     var candidate = directory.appending(path: name)
     while FileManager.default.fileExists(atPath: candidate.path) {
       index += 1
-      candidate = directory.appending(path: ext.isEmpty ? "\(base) \(index)" : "\(base) \(index).\(ext)")
+      candidate = directory.appending(
+        path: ext.isEmpty ? "\(base) \(index)" : "\(base) \(index).\(ext)"
+      )
     }
     return candidate
+  }
+}
+
+/// Uses a least-privilege Datamerge standard key stored in this Mac's
+/// Keychain. The administrator credential is used only once to provision that
+/// key and is never embedded in, logged by, or returned to the application.
+private actor DatamergeDocumentExportService {
+  private static let endpoint = URL(string: "https://datame.opcglobal.cn/api/conversion/convert")!
+  private static let maximumSourceBytes = 10 * 1024 * 1024
+
+  func convert(_ sources: [URL], outputDirectory: URL?) async throws -> [URL] {
+    var outputs: [URL] = []
+    for source in sources {
+      let data = try Data(contentsOf: source, options: .mappedIfSafe)
+      guard !data.isEmpty, data.count <= Self.maximumSourceBytes,
+        let markdown = String(data: data, encoding: .utf8)
+      else {
+        throw QuickActionError.fileLimit
+      }
+      let stem = (source.lastPathComponent as NSString).deletingPathExtension
+      guard let apiKey = DatamergeConversionCredential.apiKey() else {
+        throw QuickActionError.documentExportNotConfigured
+      }
+      var request = URLRequest(url: Self.endpoint)
+      request.httpMethod = "POST"
+      request.timeoutInterval = 60
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      request.setValue(apiKey, forHTTPHeaderField: "x-datamerge-key")
+      request.httpBody = try JSONEncoder().encode(
+        DocumentExportRequest(
+          content: markdown,
+          output: "docx",
+          mode: "quick",
+          filename: stem,
+          title: stem
+        )
+      )
+      let (responseData, response) = try await URLSession.shared.data(for: request)
+      guard let http = response as? HTTPURLResponse,
+        http.statusCode == 200,
+        responseData.count >= 4,
+        responseData.starts(with: [0x50, 0x4B, 0x03, 0x04])
+      else {
+        throw QuickActionError.documentExportFailed
+      }
+      let destination = uniqueDestination(
+        in: outputDirectory ?? source.deletingLastPathComponent(),
+        name: stem
+      )
+      try responseData.write(
+        to: destination,
+        options: [.atomic, .completeFileProtectionUnlessOpen]
+      )
+      outputs.append(destination)
+    }
+    return outputs
+  }
+
+  private func uniqueDestination(in directory: URL, name: String) -> URL {
+    var index = 1
+    var candidate = directory.appending(path: "\(name).docx")
+    while FileManager.default.fileExists(atPath: candidate.path) {
+      index += 1
+      candidate = directory.appending(path: "\(name) \(index).docx")
+    }
+    return candidate
+  }
+}
+
+private struct DocumentExportRequest: Encodable {
+  let content: String
+  let output: String
+  let mode: String
+  let filename: String
+  let title: String
+}
+
+enum DatamergeConversionCredential {
+  private static let service = "art.apuch.kmd.datamerge-conversion"
+  private static let account = "standard-api-key"
+
+  static var isConfigured: Bool { apiKey() != nil }
+
+  static func apiKey() -> String? {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+    var result: CFTypeRef?
+    guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+      let data = result as? Data,
+      let value = String(data: data, encoding: .utf8),
+      !value.isEmpty
+    else { return nil }
+    return value
+  }
+
+  static func save(_ value: String) throws {
+    let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !normalized.isEmpty else { throw QuickActionError.documentExportNotConfigured }
+    let base: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+    ]
+    let attributes: [String: Any] = [
+      kSecValueData as String: Data(normalized.utf8),
+      kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+    ]
+    let status = SecItemUpdate(base as CFDictionary, attributes as CFDictionary)
+    if status == errSecItemNotFound {
+      var item = base
+      for (key, value) in attributes {
+        item[key] = value
+      }
+      let addStatus = SecItemAdd(item as CFDictionary, nil)
+      guard addStatus == errSecSuccess else { throw CocoaError(.fileWriteNoPermission) }
+    } else if status != errSecSuccess {
+      throw CocoaError(.fileWriteNoPermission)
+    }
+  }
+
+  static func remove() {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+    ]
+    SecItemDelete(query as CFDictionary)
   }
 }
 
@@ -185,7 +415,10 @@ actor FormatConversionService: ConversionProvider {
     resources.filter { url in
       if url.hasDirectoryPath { return true }
       let ext = url.pathExtension.lowercased()
-      return ["txt", "md", "markdown", "html", "htm", "json", "yaml", "yml", "csv", "zip", "tar", "tgz", "pdf", "png", "jpg", "jpeg", "tiff", "heic"].contains(ext)
+      return [
+        "txt", "md", "markdown", "html", "htm", "json", "yaml", "yml", "csv", "zip", "tar", "tgz",
+        "pdf", "png", "jpg", "jpeg", "tiff", "heic",
+      ].contains(ext)
     }
   }
 
@@ -197,20 +430,36 @@ actor FormatConversionService: ConversionProvider {
       let values = try url.resourceValues(forKeys: [.fileSizeKey])
       if (values.fileSize ?? 0) > 200 * 1024 * 1024 { throw QuickActionError.fileLimit }
     }
-    let remote = supported.contains { ["pdf", "png", "jpg", "jpeg", "tiff", "heic"].contains($0.pathExtension.lowercased()) }
+    let remote = supported.contains {
+      ["pdf", "png", "jpg", "jpeg", "tiff", "heic"].contains($0.pathExtension.lowercased())
+    }
     let root = supported[0].deletingLastPathComponent()
-    return ConversionPlanV1(request: request, supported: supported, usesRemoteService: remote, outputDirectory: root.appending(path: "ksamint-converted-\(request.id.uuidString.prefix(8))", directoryHint: .isDirectory))
+    return ConversionPlanV1(
+      request: request,
+      supported: supported,
+      usesRemoteService: remote,
+      outputDirectory: root.appending(
+        path: "ksamint-converted-\(request.id.uuidString.prefix(8))",
+        directoryHint: .isDirectory
+      )
+    )
   }
 
-  func execute(_ plan: ConversionPlanV1, progress: @escaping @Sendable (Double) -> Void) async throws -> ConversionResultV1 {
+  func execute(_ plan: ConversionPlanV1, progress: @escaping @Sendable (Double) -> Void)
+    async throws -> ConversionResultV1 {
     if plan.usesRemoteService {
       throw QuickActionError.remoteProviderNotConfigured
     }
-    try FileManager.default.createDirectory(at: plan.outputDirectory, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(
+      at: plan.outputDirectory,
+      withIntermediateDirectories: true
+    )
     var outputs: [URL] = []
     for (index, url) in plan.supported.enumerated() {
       if cancelled.contains(plan.request.id) { throw CancellationError() }
-      let output = plan.outputDirectory.appending(path: "\((url.lastPathComponent as NSString).deletingPathExtension).md")
+      let output = plan.outputDirectory.appending(
+        path: "\((url.lastPathComponent as NSString).deletingPathExtension).md"
+      )
       let content = try localMarkdown(url)
       try Data(content.utf8).write(to: output, options: .atomic)
       outputs.append(output)
@@ -223,8 +472,14 @@ actor FormatConversionService: ConversionProvider {
 
   private func localMarkdown(_ url: URL) throws -> String {
     if url.hasDirectoryPath {
-      let children = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
-      return "# \(url.lastPathComponent)\n\n" + children.sorted { $0.lastPathComponent < $1.lastPathComponent }.map { "- \($0.lastPathComponent)" }.joined(separator: "\n")
+      let children = try FileManager.default.contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: nil
+      )
+      let entries = children
+        .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        .map { "- \($0.lastPathComponent)" }
+      return "# \(url.lastPathComponent)\n\n" + entries.joined(separator: "\n")
     }
     let ext = url.pathExtension.lowercased()
     if ext == "zip" {
@@ -236,7 +491,13 @@ actor FormatConversionService: ConversionProvider {
     let text = try String(contentsOf: url, encoding: .utf8)
     if ["md", "markdown", "txt"].contains(ext) { return text }
     if ["html", "htm"].contains(ext) {
-      guard let attributed = try? NSAttributedString(data: Data(text.utf8), options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil) else { return text }
+      guard
+        let attributed = try? NSAttributedString(
+          data: Data(text.utf8),
+          options: [.documentType: NSAttributedString.DocumentType.html],
+          documentAttributes: nil
+        )
+      else { return text }
       return attributed.string
     }
     return "# \(url.lastPathComponent)\n\n```\(ext)\n\(text)\n```\n"
@@ -256,14 +517,18 @@ actor FormatConversionService: ConversionProvider {
       let detail = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
       throw QuickActionError.archiveListing(detail ?? "Archive listing failed")
     }
-    let listing = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    let listing =
+      String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
     let entries = listing.split(whereSeparator: \.isNewline).prefix(200_000)
-    return "# \(url.lastPathComponent)\n\n" + entries.map { "- `\($0)`" }.joined(separator: "\n") + "\n"
+    return "# \(url.lastPathComponent)\n\n" + entries.map { "- `\($0)`" }.joined(separator: "\n")
+      + "\n"
   }
 }
 
 private enum QuickActionError: LocalizedError {
-  case invalidRequest, emptySelection, noWorkspace, noEditorForAgent, unsupported, batchLimit, fileLimit, remoteProviderNotConfigured
+  case invalidRequest, emptySelection, noWorkspace, noEditorForAgent, unsupported, batchLimit,
+    fileLimit, remoteProviderNotConfigured, documentExportNotConfigured, documentExportFailed,
+    selectFolderForCreation
   case archiveListing(String)
 
   var errorDescription: String? {
@@ -275,7 +540,13 @@ private enum QuickActionError: LocalizedError {
     case .unsupported: "None of the selected resources has a configured conversion provider."
     case .batchLimit: "A conversion batch can contain at most 50 files."
     case .fileLimit: "Each conversion source must be 200 MB or smaller."
-    case .remoteProviderNotConfigured: "The Tencent MinerU Precision VLM provider is not configured on this server yet."
+    case .remoteProviderNotConfigured:
+      "The Tencent MinerU Precision VLM provider is not configured on this server yet."
+    case .documentExportNotConfigured: "Add a Datamerge conversion key in kmd Settings first."
+    case .documentExportFailed:
+      "The Datamerge DOCX conversion service did not return a valid document."
+    case .selectFolderForCreation:
+      "Select a folder, or authorize its parent as the kmd workspace, before creating a Markdown file."
     case .archiveListing(let detail): detail
     }
   }

@@ -107,14 +107,14 @@ extension AppDelegate {
 
 // MARK: - Private
 
-private extension AppDelegate {
-  enum States {
+extension AppDelegate {
+  fileprivate enum States {
     @MainActor static var openPanelShownDate: TimeInterval = 0
     @MainActor static var untitledFileOpenedDate: TimeInterval = 0
   }
 
   @discardableResult
-  func openOrCreateDocument(sender: NSApplication) -> Bool {
+  fileprivate func openOrCreateDocument(sender: NSApplication) -> Bool {
     switch AppPreferences.General.newWindowBehavior {
     case .openDocument:
       // The system occasionally runs this twice in a row, prevent duplicate panels
@@ -127,6 +127,14 @@ private extension AppDelegate {
       return false
     case .newDocument:
       States.untitledFileOpenedDate = Date.timeIntervalSinceReferenceDate
+      if AppPreferences.General.showHistoryOnLaunch {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+          guard let editor = NSApp.currentEditor,
+            editor.document?.fileURL == nil
+          else { return }
+          editor.showWorkspaceHub()
+        }
+      }
       return true
     }
   }

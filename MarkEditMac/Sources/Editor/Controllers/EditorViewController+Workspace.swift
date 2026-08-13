@@ -58,23 +58,25 @@ extension EditorViewController {
     }
 
     if workspaceSession == nil {
-      workspaceSession = view.window?.tabbedWindows?
+      workspaceSession =
+        view.window?.tabbedWindows?
         .compactMap { ($0.contentViewController as? EditorViewController)?.workspaceSession }
         .first
     }
 
     if workspaceSession == nil,
-       let fileURL = document?.fileURL,
-       let bookmark = AppPreferences.General.workspaceFolderBookmarks[fileURL.standardizedFileURL.path],
-       let restoredSession = try? WorkspaceSession.restore(from: bookmark),
-       restoredSession.contains(fileURL) {
+      let fileURL = document?.fileURL,
+      let bookmark = AppPreferences.General.workspaceFolderBookmarks[
+        fileURL.standardizedFileURL.path],
+      let restoredSession = try? WorkspaceSession.restore(from: bookmark),
+      restoredSession.contains(fileURL) {
       workspaceSession = restoredSession
     }
 
     if workspaceSession == nil,
-       let bookmark = AppPreferences.General.workspaceFolderBookmark,
-       let restoredSession = try? WorkspaceSession.restore(from: bookmark),
-       document?.fileURL.map({ restoredSession.contains($0) }) != false {
+      let bookmark = AppPreferences.General.workspaceFolderBookmark,
+      let restoredSession = try? WorkspaceSession.restore(from: bookmark),
+      document?.fileURL.map({ restoredSession.contains($0) }) != false {
       workspaceSession = restoredSession
     }
 
@@ -210,8 +212,8 @@ extension EditorViewController {
 
 // MARK: - Workspace Selection
 
-private extension EditorViewController {
-  func chooseWorkspaceFolder() {
+extension EditorViewController {
+  fileprivate func chooseWorkspaceFolder() {
     let panel = NSOpenPanel()
     panel.canChooseFiles = false
     panel.canChooseDirectories = true
@@ -239,8 +241,9 @@ private extension EditorViewController {
     }
   }
 
-  func bindWorkspaceSession(_ session: WorkspaceSession) {
-    let tabbedEditors = view.window?.tabbedWindows?
+  fileprivate func bindWorkspaceSession(_ session: WorkspaceSession) {
+    let tabbedEditors =
+      view.window?.tabbedWindows?
       .compactMap { $0.contentViewController as? EditorViewController } ?? []
     let editors = tabbedEditors.isEmpty ? [self] : tabbedEditors
 
@@ -256,7 +259,7 @@ private extension EditorViewController {
     }
   }
 
-  func resizeWorkspaceSidebar(by delta: Double) {
+  fileprivate func resizeWorkspaceSidebar(by delta: Double) {
     let maximumWidth = max(200, view.bounds.width - 420)
     switch workspaceSidebarMode {
     case .outline:
@@ -388,11 +391,12 @@ extension EditorViewController {
       guard let self else {
         return
       }
-      let snapshot = if let session = self.workspaceSession {
-        await session.hubSnapshot()
-      } else {
-        await WorkspaceHubSnapshot.local()
-      }
+      let snapshot =
+        if let session = self.workspaceSession {
+          await session.hubSnapshot()
+        } else {
+          await WorkspaceHubSnapshot.local()
+        }
       let contentViewController = WorkspaceHubViewController(snapshot: snapshot) { [weak self] action, path in
         guard let self else { return }
         switch action {
@@ -425,6 +429,10 @@ extension EditorViewController {
           }
         case "openConversationInbox":
           ConversationCaptureCoordinator.shared.showInbox()
+        case "openCaptureHistory":
+          ConversationCaptureCoordinator.shared.openCaptureHistory()
+        case "searchCaptures":
+          ConversationCaptureCoordinator.shared.searchCaptureHistory()
         default:
           break
         }
@@ -443,8 +451,8 @@ extension EditorViewController {
   }
 }
 
-private extension EditorViewController {
-  func openRenderedPreviewLink(_ link: String) {
+extension EditorViewController {
+  fileprivate func openRenderedPreviewLink(_ link: String) {
     if let url = URL(string: link), let scheme = url.scheme?.lowercased() {
       guard ["http", "https", "mailto"].contains(scheme) else {
         NSSound.beep()
@@ -484,11 +492,11 @@ private final class WorkspaceHubViewController: NSViewController {
     if let data = try? JSONEncoder().encode(snapshot) {
       let base64 = data.base64EncodedString()
       let source = """
-      (() => {
-        const bytes = Uint8Array.from(atob('\(base64)'), value => value.charCodeAt(0));
-        window.__KSAMINT_MAC_HUB__ = JSON.parse(new TextDecoder().decode(bytes));
-      })();
-      """
+        (() => {
+          const bytes = Uint8Array.from(atob('\(base64)'), value => value.charCodeAt(0));
+          window.__KSAMINT_MAC_HUB__ = JSON.parse(new TextDecoder().decode(bytes));
+        })();
+        """
       contentController.addUserScript(
         WKUserScript(
           source: source,
@@ -519,7 +527,8 @@ private final class WorkspaceHubViewController: NSViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    guard let indexURL = URL(string: "\(WorkspaceHubSchemeHandler.scheme)://app/mac-index.html") else {
+    guard let indexURL = URL(string: "\(WorkspaceHubSchemeHandler.scheme)://app/mac-index.html")
+    else {
       return
     }
     webView.load(URLRequest(url: indexURL))
@@ -539,8 +548,9 @@ private final class WorkspaceHubMessageHandler: NSObject, WKScriptMessageHandler
     didReceive message: WKScriptMessage
   ) {
     guard message.name == "ksamintHub",
-          let payload = message.body as? [String: Any],
-          let action = payload["action"] as? String else {
+      let payload = message.body as? [String: Any],
+      let action = payload["action"] as? String
+    else {
       return
     }
     onAction(action, payload["path"] as? String)
@@ -549,8 +559,8 @@ private final class WorkspaceHubMessageHandler: NSObject, WKScriptMessageHandler
 
 // MARK: - File Operations
 
-private extension EditorViewController {
-  func openWorkspaceFile(_ url: URL, lineNumber: Int?) {
+extension EditorViewController {
+  fileprivate func openWorkspaceFile(_ url: URL, lineNumber: Int?) {
     guard let session = workspaceSession, session.contains(url) else {
       showWorkspaceError(Localized.Workspace.outsideWorkspace)
       return
@@ -571,16 +581,18 @@ private extension EditorViewController {
       }
 
       Task { @MainActor in
-        guard let contentViewController = editorDocument.windowControllers.first?.contentViewController
-                as? EditorViewController else {
+        guard
+          let contentViewController = editorDocument.windowControllers.first?.contentViewController
+            as? EditorViewController
+        else {
           return
         }
 
         contentViewController.workspaceSession = session
         if let newWindow = contentViewController.view.window,
-           let targetWindow,
-           newWindow !== targetWindow,
-           newWindow.tabGroup !== targetWindow.tabGroup {
+          let targetWindow,
+          newWindow !== targetWindow,
+          newWindow.tabGroup !== targetWindow.tabGroup {
           targetWindow.addTabbedWindow(newWindow, ordered: .above)
         }
 
@@ -596,7 +608,7 @@ private extension EditorViewController {
     }
   }
 
-  func createWorkspaceItem(in directory: URL, isDirectory: Bool) {
+  fileprivate func createWorkspaceItem(in directory: URL, isDirectory: Bool) {
     guard validateWorkspaceURL(directory) else {
       return
     }
@@ -607,20 +619,26 @@ private extension EditorViewController {
       }
 
       let title = isDirectory ? Localized.Workspace.newFolder : Localized.Workspace.newFile
-      let defaultValue = isDirectory
+      let defaultValue =
+        isDirectory
         ? Localized.Workspace.untitledFolder
         : "\(Localized.Workspace.untitledFile).\(AppPreferences.General.newFilenameExtension.rawValue)"
-      guard let name = await showTextBox(
-        title: title,
-        placeholder: Localized.Workspace.name,
-        defaultValue: defaultValue
-      ), let destination = validatedDestination(name: name, in: directory) else {
+      guard
+        let name = await showTextBox(
+          title: title,
+          placeholder: Localized.Workspace.name,
+          defaultValue: defaultValue
+        ), let destination = validatedDestination(name: name, in: directory)
+      else {
         return
       }
 
       do {
         if isDirectory {
-          try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+          try FileManager.default.createDirectory(
+            at: destination,
+            withIntermediateDirectories: false
+          )
         } else {
           try Data().write(to: destination, options: .withoutOverwriting)
           openWorkspaceFile(destination, lineNumber: nil)
@@ -633,22 +651,23 @@ private extension EditorViewController {
     }
   }
 
-  func renameWorkspaceItem(_ sourceURL: URL) {
+  fileprivate func renameWorkspaceItem(_ sourceURL: URL) {
     guard validateWorkspaceURL(sourceURL), canMoveWorkspaceItem(sourceURL) else {
       return
     }
 
     Task { @MainActor [weak self] in
       guard let self,
-            let name = await showTextBox(
-              title: Localized.Workspace.rename,
-              placeholder: Localized.Workspace.name,
-              defaultValue: sourceURL.lastPathComponent
-            ),
-            let destinationURL = validatedDestination(
-              name: name,
-              in: sourceURL.deletingLastPathComponent()
-            ) else {
+        let name = await showTextBox(
+          title: Localized.Workspace.rename,
+          placeholder: Localized.Workspace.name,
+          defaultValue: sourceURL.lastPathComponent
+        ),
+        let destinationURL = validatedDestination(
+          name: name,
+          in: sourceURL.deletingLastPathComponent()
+        )
+      else {
         return
       }
 
@@ -656,15 +675,16 @@ private extension EditorViewController {
     }
   }
 
-  func moveWorkspaceItem(_ sourceURL: URL, to destinationDirectory: URL) -> Bool {
+  fileprivate func moveWorkspaceItem(_ sourceURL: URL, to destinationDirectory: URL) -> Bool {
     guard validateWorkspaceURL(sourceURL),
-          validateWorkspaceURL(destinationDirectory),
-          canMoveWorkspaceItem(sourceURL),
-          let destinationURL = validatedDestination(
-            name: sourceURL.lastPathComponent,
-            in: destinationDirectory
-          ),
-          sourceURL.standardizedFileURL != destinationURL.standardizedFileURL else {
+      validateWorkspaceURL(destinationDirectory),
+      canMoveWorkspaceItem(sourceURL),
+      let destinationURL = validatedDestination(
+        name: sourceURL.lastPathComponent,
+        in: destinationDirectory
+      ),
+      sourceURL.standardizedFileURL != destinationURL.standardizedFileURL
+    else {
       return false
     }
 
@@ -672,7 +692,7 @@ private extension EditorViewController {
   }
 
   @discardableResult
-  func performMove(_ sourceURL: URL, to destinationURL: URL) -> Bool {
+  fileprivate func performMove(_ sourceURL: URL, to destinationURL: URL) -> Bool {
     do {
       try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
       if let openDocument = NSDocumentController.shared.document(for: sourceURL) {
@@ -687,7 +707,7 @@ private extension EditorViewController {
     }
   }
 
-  func moveWorkspaceItemToTrash(_ url: URL) {
+  fileprivate func moveWorkspaceItemToTrash(_ url: URL) {
     guard validateWorkspaceURL(url), canMoveWorkspaceItem(url) else {
       return
     }
@@ -719,7 +739,7 @@ private extension EditorViewController {
     }
   }
 
-  func validateWorkspaceURL(_ url: URL) -> Bool {
+  fileprivate func validateWorkspaceURL(_ url: URL) -> Bool {
     guard let session = workspaceSession, session.contains(url) else {
       showWorkspaceError(Localized.Workspace.outsideWorkspace)
       return false
@@ -727,13 +747,14 @@ private extension EditorViewController {
     return true
   }
 
-  func validatedDestination(name rawName: String, in directory: URL) -> URL? {
+  fileprivate func validatedDestination(name rawName: String, in directory: URL) -> URL? {
     let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty,
-          name != ".",
-          name != "..",
-          !name.contains("/"),
-          !name.contains(":") else {
+      name != ".",
+      name != "..",
+      !name.contains("/"),
+      !name.contains(":")
+    else {
       showWorkspaceError(Localized.Workspace.invalidName)
       return nil
     }
@@ -749,7 +770,7 @@ private extension EditorViewController {
     return destination
   }
 
-  func canMoveWorkspaceItem(_ url: URL) -> Bool {
+  fileprivate func canMoveWorkspaceItem(_ url: URL) -> Bool {
     guard url.standardizedFileURL != workspaceSession?.rootURL.standardizedFileURL else {
       showWorkspaceError(Localized.Workspace.cannotMoveRoot)
       return false
@@ -762,7 +783,7 @@ private extension EditorViewController {
     return true
   }
 
-  func showWorkspaceError(_ message: String) {
+  fileprivate func showWorkspaceError(_ message: String) {
     Task { @MainActor [weak self] in
       guard let self else {
         return
@@ -778,8 +799,8 @@ private extension EditorViewController {
 
 // MARK: - Tags and Categories
 
-private extension EditorViewController {
-  func performTaxonomyAction(
+extension EditorViewController {
+  fileprivate func performTaxonomyAction(
     _ action: WorkspaceTaxonomyAction,
     item: WorkspaceTaxonomyItem
   ) {
@@ -814,9 +835,11 @@ private extension EditorViewController {
       }
 
       if action != .delete {
-        guard let destination = destination?.trimmingCharacters(
-          in: .whitespacesAndNewlines
-        ), !destination.isEmpty, destination != item.displayName else {
+        guard
+          let destination = destination?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+          ), !destination.isEmpty, destination != item.displayName
+        else {
           return
         }
       }
@@ -873,7 +896,7 @@ private extension EditorViewController {
     }
   }
 
-  func transformedMetadata(
+  fileprivate func transformedMetadata(
     _ metadata: WorkspaceDocumentMetadata,
     item: WorkspaceTaxonomyItem,
     action: WorkspaceTaxonomyAction,
@@ -882,7 +905,7 @@ private extension EditorViewController {
     var metadata = metadata
 
     switch item {
-    case let .tag(tag):
+    case .tag(let tag):
       let sourceIdentity = tag.identity
       var tags = metadata.tags.filter {
         WorkspaceDocumentMetadata.canonicalTagIdentity($0) != sourceIdentity
@@ -892,7 +915,7 @@ private extension EditorViewController {
       }
       metadata.tags = WorkspaceDocumentMetadata(tags: tags).tags
 
-    case let .category(category):
+    case .category(let category):
       guard let currentCategory = metadata.category else {
         return metadata
       }
@@ -910,15 +933,15 @@ private extension EditorViewController {
     return metadata
   }
 
-  func currentMetadata(at url: URL) async throws -> WorkspaceDocumentMetadata {
+  fileprivate func currentMetadata(at url: URL) async throws -> WorkspaceDocumentMetadata {
     if let document = NSDocumentController.shared.document(for: url) as? EditorDocument,
-       let metadata = await document.currentWorkspaceMetadata() {
+      let metadata = await document.currentWorkspaceMetadata() {
       return metadata
     }
     return try WorkspaceMetadataFile.read(at: url)
   }
 
-  func applyMetadata(_ metadata: WorkspaceDocumentMetadata, at url: URL) async throws {
+  fileprivate func applyMetadata(_ metadata: WorkspaceDocumentMetadata, at url: URL) async throws {
     if let document = NSDocumentController.shared.document(for: url) as? EditorDocument {
       try await document.applyWorkspaceMetadata { _ in metadata }
       return
@@ -947,7 +970,7 @@ private extension EditorViewController {
     }
   }
 
-  func registerMetadataUndo(_ snapshots: [URL: WorkspaceDocumentMetadata]) {
+  fileprivate func registerMetadataUndo(_ snapshots: [URL: WorkspaceDocumentMetadata]) {
     undoManager?.registerUndo(withTarget: self) { target in
       target.workspaceMetadataTask?.cancel()
       target.workspaceMetadataTask = Task { @MainActor [weak target] in

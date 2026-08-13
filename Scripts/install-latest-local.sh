@@ -108,12 +108,13 @@ echo "$archs" | grep -qw arm64
 if echo "$archs" | grep -qw x86_64; then exit 1; fi
 codesign --verify --deep --strict --verbose=2 "$candidate"
 spctl --assess --type execute -vv "$candidate"
-# The release workflow staples the distributed DMG. Gatekeeper assessment of
-# the copied app proves that Apple accepted its Developer ID ticket; the app
-# bundle does not need a second, separately stapled ticket.
-if [ "$source_mode" != release ]; then
-  xcrun stapler validate "$candidate"
+# The distributed DMG carries its own ticket. Also staple the exact accepted
+# App after extraction so the installed bundle remains verifiable offline and
+# the safe-install gate is identical for Release and CI artifacts.
+if [ "$source_mode" = release ]; then
+  xcrun stapler staple "$candidate"
 fi
+xcrun stapler validate "$candidate"
 
 actual_team=$(codesign -dvv "$candidate" 2>&1 | sed -n 's/^TeamIdentifier=//p')
 if [ -z "$team_id" ]; then team_id=$actual_team; fi

@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Convert Markdown to DOCX" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir Markdown en DOCX" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown を DOCX に変換" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 转 DOCX" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 轉 DOCX" } }
+      }
+    },
+    "New Markdown File" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouveau fichier Markdown" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新規 Markdown ファイル" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建 Markdown 文件" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "新增 Markdown 檔案" } }
+      }
+    },
     "kmd Quick Actions" : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actions rapides kmd" } },
