@@ -23,6 +23,12 @@ jobs:
           node-version: 24.19.0
           cache: npm
           cache-dependency-path: WebApp/package-lock.json
+      - name: Build CoreEditor
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
       - name: Test and build installable PWA
         working-directory: WebApp
         env:
