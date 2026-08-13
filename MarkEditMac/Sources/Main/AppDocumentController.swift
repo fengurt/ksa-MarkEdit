@@ -19,8 +19,18 @@ final class AppDocumentController: NSDocumentController {
   static var suggestedTextEncoding: EditorTextEncoding?
   static var suggestedFilename: String?
 
-  override var maximumRecentDocumentCount: Int {
-    min(super.maximumRecentDocumentCount, 8)
+  override nonisolated var maximumRecentDocumentCount: Int {
+    if Thread.isMainThread {
+      return MainActor.assumeIsolated {
+        min(super.maximumRecentDocumentCount, 8)
+      }
+    }
+
+    return DispatchQueue.main.sync {
+      MainActor.assumeIsolated {
+        min(super.maximumRecentDocumentCount, 8)
+      }
+    }
   }
 
   override nonisolated func makeDocument(
