@@ -18,18 +18,22 @@ final class FinderTools: FIFinderSync {
     let bookmarks = defaults?.array(forKey: "workspaceBookmarks") as? [Data] ?? []
     securityScopedWorkspaceURLs = bookmarks.compactMap { bookmark in
       var stale = false
-      guard let url = try? URL(
-        resolvingBookmarkData: bookmark,
-        options: [.withSecurityScope],
-        relativeTo: nil,
-        bookmarkDataIsStale: &stale
-      ), !stale, url.startAccessingSecurityScopedResource() else { return nil }
+      guard
+        let url = try? URL(
+          resolvingBookmarkData: bookmark,
+          options: [.withSecurityScope],
+          relativeTo: nil,
+          bookmarkDataIsStale: &stale
+        ), !stale, url.startAccessingSecurityScopedResource()
+      else { return nil }
       return url.standardizedFileURL
     }
     let fallbackPaths = defaults?.stringArray(forKey: "workspacePaths") ?? []
-    let urls = securityScopedWorkspaceURLs + fallbackPaths.map {
-      URL(fileURLWithPath: $0, isDirectory: true).standardizedFileURL
-    }
+    let urls =
+      securityScopedWorkspaceURLs
+      + fallbackPaths.map {
+        URL(fileURLWithPath: $0, isDirectory: true).standardizedFileURL
+      }
     FIFinderSyncController.default().directoryURLs = Set(urls)
   }
 
@@ -62,12 +66,14 @@ final class FinderTools: FIFinderSync {
     if menuKind == .contextualMenuForItems || menuKind == .contextualMenuForContainer {
       let quickActions = NSMenu(title: String(localized: "kmd Quick Actions"))
       for (index, action) in WorkspaceQuickAction.allCases.enumerated() {
-        let item = NSMenuItem(title: action.title, action: #selector(runQuickAction(_:)), keyEquivalent: "")
+        let item = NSMenuItem(
+          title: action.title, action: #selector(runQuickAction(_:)), keyEquivalent: "")
         item.tag = index
         item.target = self
         quickActions.addItem(item)
       }
-      let wrapper = NSMenuItem(title: String(localized: "kmd Quick Actions"), action: nil, keyEquivalent: "")
+      let wrapper = NSMenuItem(
+        title: String(localized: "kmd Quick Actions"), action: nil, keyEquivalent: "")
       wrapper.submenu = quickActions
       menu.addItem(wrapper)
       menu.addItem(.separator())
@@ -107,8 +113,8 @@ private let logger = os.Logger()
 private let fileTypes = [".md", ".markdown", ".txt", ""]
 private let fileBaseName = String(localized: "Untitled")
 
-private extension FinderTools {
-  @objc func runQuickAction(_ sender: NSMenuItem) {
+extension FinderTools {
+  @objc fileprivate func runQuickAction(_ sender: NSMenuItem) {
     guard WorkspaceQuickAction.allCases.indices.contains(sender.tag) else { return }
     let urls = FIFinderSyncController.default().selectedItemURLs() ?? []
     guard !urls.isEmpty else { return logger.log(level: .error, "Missing selectedItemURLs") }
@@ -119,25 +125,31 @@ private extension FinderTools {
         createdAt: Date(),
         action: WorkspaceQuickAction.allCases[sender.tag],
         resourceBookmarks: try urls.map {
-          try $0.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+          try $0.bookmarkData(
+            options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
         }
       )
-      guard let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
-      ) else { throw CocoaError(.fileWriteNoPermission) }
+      guard
+        let container = FileManager.default.containerURL(
+          forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
+        )
+      else { throw CocoaError(.fileWriteNoPermission) }
       let directory = container.appending(path: "QuickActions/Pending", directoryHint: .isDirectory)
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-      try JSONEncoder().encode(request).write(to: directory.appending(path: "\(request.id).json"), options: .atomic)
-      guard let callbackURL = URL(
-        string: "ksamint-markedit://quick-action?id=\(request.id)"
-      ) else { throw CocoaError(.fileWriteInvalidFileName) }
+      try JSONEncoder().encode(request).write(
+        to: directory.appending(path: "\(request.id).json"), options: .atomic)
+      guard
+        let callbackURL = URL(
+          string: "ksamint-markedit://quick-action?id=\(request.id)"
+        )
+      else { throw CocoaError(.fileWriteInvalidFileName) }
       NSWorkspace.shared.open(callbackURL)
     } catch {
       logger.log(level: .error, "Quick Action failed: \(error.localizedDescription)")
     }
   }
 
-  @objc func newTextFile(_ sender: NSMenuItem) {
+  @objc fileprivate func newTextFile(_ sender: NSMenuItem) {
     guard let directory = FIFinderSyncController.default().targetedURL() else {
       return logger.log(level: .error, "Missing targetedURL")
     }
@@ -158,7 +170,8 @@ private extension FinderTools {
 }
 
 private enum WorkspaceQuickAction: String, Codable, CaseIterable {
-  case preview, openEditor, conversationInbox, saveReference, addWorkspace, analyzeAgent, convertMarkdown
+  case preview, openEditor, conversationInbox, saveReference, addWorkspace, analyzeAgent,
+    createMarkdown, convertMarkdown, convertDocx
 
   var title: String {
     switch self {
@@ -168,7 +181,9 @@ private enum WorkspaceQuickAction: String, Codable, CaseIterable {
     case .saveReference: String(localized: "Save as Reference")
     case .addWorkspace: String(localized: "Add to Workspace")
     case .analyzeAgent: String(localized: "Analyze with Local Agent")
+    case .createMarkdown: String(localized: "New Markdown File")
     case .convertMarkdown: String(localized: "Convert to Markdown")
+    case .convertDocx: String(localized: "Convert Markdown to DOCX")
     }
   }
 }
@@ -181,8 +196,8 @@ private struct WorkspaceQuickActionRequest: Codable {
   let resourceBookmarks: [Data]
 }
 
-private extension FileManager {
-  func uniqueFileURL(
+extension FileManager {
+  fileprivate func uniqueFileURL(
     in directory: URL,
     baseName: String,
     pathExtension: String

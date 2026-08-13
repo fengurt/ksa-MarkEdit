@@ -107,11 +107,21 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
         </div>
       </header>
       <section className="hub-grid">
-        <article className="hub-panel action-panel conversation-inbox-panel">
-          <p className="eyebrow">Claude · ChatGPT · Clipboard</p>
-          <h2>{t('conversationInbox')}</h2>
-          <p>{snapshot.conversationPendingCount ?? 0} {t('needsReview').toLocaleLowerCase()}</p>
-          <button type="button" onClick={() => send('openConversationInbox')}>{t('open')}</button>
+        <article className="hub-panel recent-panel history-panel">
+          <div className="panel-heading">
+            <h2>{t('activityHistory')}</h2>
+            <button type="button" onClick={() => send('clearHistory')}>{t('clearHistory')}</button>
+          </div>
+          <ul className="recent-list activity-list">
+            {snapshot.activities.slice(0, 30).map(item => (
+              <li key={item.id}>
+                <button type="button" onClick={() => send('openRecent', item.path)}>
+                  <strong>{item.title}</strong>
+                  <span>{t(item.kind)} · {new Date(item.timestamp).toLocaleString()}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </article>
         <article className="hub-panel recent-panel">
           <div className="panel-heading">
@@ -129,21 +139,15 @@ export function MacHubApp({ snapshot }: { snapshot: MacHubSnapshot }) {
             ))}
           </ul>
         </article>
-        <article className="hub-panel recent-panel">
-          <div className="panel-heading">
-            <h2>{t('activityHistory')}</h2>
-            <button type="button" onClick={() => send('clearHistory')}>{t('clearHistory')}</button>
+        <article className="hub-panel action-panel conversation-inbox-panel">
+          <p className="eyebrow">Claude · ChatGPT · Clipboard</p>
+          <h2>{t('conversationInbox')}</h2>
+          <p>{snapshot.conversationPendingCount ?? 0} {t('needsReview').toLocaleLowerCase()}</p>
+          <div className="button-row">
+            <button type="button" onClick={() => send('openConversationInbox')}>{t('open')}</button>
+            <button type="button" onClick={() => send('openCaptureHistory')}>{t('activityHistory')}</button>
+            <button type="button" onClick={() => send('searchCaptures')}>{t('search')}</button>
           </div>
-          <ul className="recent-list activity-list">
-            {snapshot.activities.slice(0, 30).map(item => (
-              <li key={item.id}>
-                <button type="button" onClick={() => send('openRecent', item.path)}>
-                  <strong>{item.title}</strong>
-                  <span>{t(item.kind)} · {new Date(item.timestamp).toLocaleString()}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
         </article>
         {!snapshot.hasWorkspace && (
           <article className="hub-panel action-panel">

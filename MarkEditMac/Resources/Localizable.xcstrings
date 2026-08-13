@@ -1,6 +1,118 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Convert Markdown to DOCX" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir Markdown en DOCX" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown を DOCX に変換" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 转 DOCX" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 轉 DOCX" } }
+      }
+    },
+    "Choose DOCX Output Folder" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir le dossier de sortie DOCX" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 出力フォルダを選択" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择 DOCX 输出文件夹" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "選擇 DOCX 輸出資料夾" } }
+      }
+    },
+    "Choose" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "選択" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "選擇" } }
+      }
+    },
+    "Default view" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vue par défaut" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デフォルト表示" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "默认视图" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "預設檢視" } }
+      }
+    },
+    "Datamerge standard API key" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé API standard Datamerge" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Datamerge 標準 API キー" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Datamerge 标准 API 密钥" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "Datamerge 標準 API 金鑰" } }
+      }
+    },
+    "DOCX conversion is configured" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La conversion DOCX est configurée" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 変換は設定済みです" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 转换已配置" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 轉換已設定" } }
+      }
+    },
+    "DOCX conversion is not configured" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La conversion DOCX n’est pas configurée" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 変換は未設定です" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 转换尚未配置" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "DOCX 轉換尚未設定" } }
+      }
+    },
+    "Markdown to DOCX" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Markdown vers DOCX" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown から DOCX" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 转 DOCX" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 轉 DOCX" } }
+      }
+    },
+    "Remove Key" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer la clé" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーを削除" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除密钥" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "移除金鑰" } }
+      }
+    },
+    "Replace Key" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Remplacer la clé" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーを置換" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "替换密钥" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "替換金鑰" } }
+      }
+    },
+    "Save Key" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer la clé" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーを保存" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存密钥" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "儲存金鑰" } }
+      }
+    },
+    "The key is stored only in this Mac’s Keychain and is never written to app preferences, logs, or Markdown files." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La clé est stockée uniquement dans le Trousseau de ce Mac et n’est jamais écrite dans les préférences, les journaux ou les fichiers Markdown." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーはこの Mac のキーチェーンにのみ保存され、設定、ログ、Markdown ファイルには書き込まれません。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "密钥仅保存在此 Mac 的钥匙串中，不会写入 App 偏好、日志或 Markdown 文件。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "金鑰僅儲存在此 Mac 的鑰匙圈中，不會寫入 App 偏好、日誌或 Markdown 檔案。" } }
+      }
+    },
+    "Show history when opening a blank window" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher l’historique à l’ouverture d’une fenêtre vide" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "空のウインドウを開いたときに履歴を表示" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开空白窗口时显示历史记录" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟空白視窗時顯示歷史記錄" } }
+      }
+    },
+    "The selected Markdown will be sent over TLS to the Datamerge conversion service. DOCX files are saved next to the sources; the Markdown files are not modified." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le Markdown sélectionné sera envoyé via TLS au service de conversion Datamerge. Les fichiers DOCX sont enregistrés à côté des sources ; les fichiers Markdown ne sont pas modifiés." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "選択した Markdown は TLS 経由で Datamerge 変換サービスへ送信されます。DOCX はソースの隣に保存され、Markdown は変更されません。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选 Markdown 将通过 TLS 发送至 Datamerge 转换服务。DOCX 保存在源文件旁边，Markdown 不会被修改。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "所選 Markdown 將透過 TLS 傳送至 Datamerge 轉換服務。DOCX 會儲存在來源檔案旁，Markdown 不會被修改。" } }
+      }
+    },
     "Approval is required in System Settings › Login Items" : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une autorisation est requise dans Réglages Système › Ouverture" } },

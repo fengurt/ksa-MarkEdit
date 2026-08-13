@@ -140,6 +140,21 @@ implemented. PDF/image conversion remains disabled unless a Tencent-hosted
 MinerU Precision VLM provider using the audited Data Merge wrapper is configured;
 there is no tokenless or lower-quality fallback.
 
+Clipboard capture is opt-in under **Settings › General**. When enabled, its
+sandboxed Login Item shows a menu-bar control, saves high-confidence
+conversations immediately under `Conversations`, and keeps other captures in a
+device-local encrypted review queue for 30 days. The Hub opens activity history
+by default for a blank window and links directly to capture history and its
+workspace-wide search. The cloud interval affects only encrypted sync; local
+capture is immediate.
+
+Finder integration includes **New Markdown File**, local **Convert to
+Markdown**, and **Convert Markdown to DOCX**. DOCX export requires explicit
+upload confirmation and a Datamerge `standard` key stored in the user's macOS
+Keychain. The production admin key is used only to provision that restricted
+credential through the Datamerge Admin API and is never embedded in the app,
+preferences, logs, or repository.
+
 The Web PWA encrypts files and paths before direct upload. It can import
 Markdown, UTF-8 text, and safe HTML from files, complete browser-selected
 folders, drag and drop, or credential-free HTTPS URLs. Imports are stored in

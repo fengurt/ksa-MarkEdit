@@ -7,15 +7,13 @@
 
 import AppKit
 import AppKitExtensions
-import UniformTypeIdentifiers
+import FontPicker
 import MarkEditCore
 import MarkEditKit
-import FontPicker
 import SharedUI
+import UniformTypeIdentifiers
 
-/**
- UserDefaults wrapper with handy getters and setters.
- */
+/// UserDefaults wrapper with handy getters and setters.
 @MainActor
 enum AppPreferences {
   enum General {
@@ -27,6 +25,12 @@ enum AppPreferences {
 
     @Storage(key: "general.blank-document-startup-migrated", defaultValue: false)
     static var blankDocumentStartupMigrated: Bool
+
+    /// Presents the local Hub over a newly created blank document so recent
+    /// documents and activity are immediately available without blocking the
+    /// editor's fast startup path.
+    @Storage(key: "general.show-history-on-launch", defaultValue: true)
+    static var showHistoryOnLaunch: Bool
 
     @Storage(key: "general.new-filename-extension", defaultValue: .md)
     static var newFilenameExtension: NewFilenameExtension
@@ -243,7 +247,8 @@ enum AppPreferences {
     @Storage(key: "window.workspace-sidebar-visible", defaultValue: true)
     static var workspaceSidebarVisible: Bool
 
-    @Storage(key: "window.workspace-sidebar-mode", defaultValue: WorkspaceSidebarMode.outline.rawValue)
+    @Storage(
+      key: "window.workspace-sidebar-mode", defaultValue: WorkspaceSidebarMode.outline.rawValue)
     static var workspaceSidebarMode: Int
 
     @Storage(key: "window.workspace-outline-width", defaultValue: 240.0)
@@ -339,15 +344,15 @@ extension AppPreferences {
       showLineNumbers: Editor.showLineNumbers,
       showActiveLineIndicator: Editor.showActiveLineIndicator,
       invisiblesBehavior: {
-      #if DEBUG
-        if ProcessInfo.processInfo.environment["DEBUG_TAKING_SCREENSHOTS"] == "YES" {
-          return .always
-        } else {
+        #if DEBUG
+          if ProcessInfo.processInfo.environment["DEBUG_TAKING_SCREENSHOTS"] == "YES" {
+            return .always
+          } else {
+            return Editor.invisiblesBehavior
+          }
+        #else
           return Editor.invisiblesBehavior
-        }
-      #else
-        return Editor.invisiblesBehavior
-      #endif
+        #endif
       }(),
       readOnlyMode: false,
       typewriterMode: Editor.typewriterMode,
@@ -485,7 +490,7 @@ enum NewFilenameExtension: String, Codable, CaseIterable {
   }
 
   var uniformType: UTType {
-    UTType(exportedType) ?? .plainText // public.plain-text
+    UTType(exportedType) ?? .plainText  // public.plain-text
   }
 
   static func preferredExtension(for typeName: String) -> Self {
@@ -532,8 +537,8 @@ extension NSWindow.TabbingMode: @retroactive Codable {}
 // MARK: - Private
 
 @MainActor
-private extension AppPreferences {
-  static func performUpdates(action: @escaping (EditorViewController) -> Void) {
+extension AppPreferences {
+  fileprivate static func performUpdates(action: @escaping (EditorViewController) -> Void) {
     Task { @MainActor in
       for editor in EditorPreloader.shared.viewControllers() {
         action(editor)

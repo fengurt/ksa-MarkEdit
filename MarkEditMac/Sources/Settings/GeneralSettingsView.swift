@@ -5,15 +5,16 @@
 //  Created by cyan on 1/26/23.
 //
 
-import SwiftUI
-import SettingsUI
 import MarkEditKit
+import SettingsUI
 import SharedUI
+import SwiftUI
 
 @MainActor
 struct GeneralSettingsView: View {
   @State private var appearance = AppPreferences.General.appearance
   @State private var newWindowBehavior = AppPreferences.General.newWindowBehavior
+  @State private var showHistoryOnLaunch = AppPreferences.General.showHistoryOnLaunch
   @State private var quitAlwaysKeepsWindows = AppPreferences.General.quitAlwaysKeepsWindows
   @State private var newFilenameExtension = AppPreferences.General.newFilenameExtension
   @State private var defaultTextEncoding = AppPreferences.General.defaultTextEncoding
@@ -22,6 +23,8 @@ struct GeneralSettingsView: View {
   @State private var conversationCaptureSyncInterval =
     AppPreferences.General.conversationCaptureSyncInterval
   @State private var captureServiceState = ConversationCaptureCoordinator.shared.serviceState
+  @State private var datamergeApiKey = ""
+  @State private var datamergeKeyConfigured = DatamergeConversionCredential.isConfigured
 
   var body: some View {
     SettingsForm {
@@ -46,6 +49,13 @@ struct GeneralSettingsView: View {
           AppPreferences.General.newWindowBehavior = newWindowBehavior
         }
         .formMenuPicker()
+
+        Toggle("Show history when opening a blank window", isOn: $showHistoryOnLaunch)
+          .onChange(of: showHistoryOnLaunch) {
+            AppPreferences.General.showHistoryOnLaunch = showHistoryOnLaunch
+          }
+          .formLabel(String(localized: "Default view"))
+          .formBreathingInset()
 
         Toggle(Localized.Settings.quitAlwaysKeepsWindows, isOn: $quitAlwaysKeepsWindows)
           .onChange(of: quitAlwaysKeepsWindows) {
@@ -103,8 +113,8 @@ struct GeneralSettingsView: View {
             captureServiceState.localizedDescription,
             systemImage: captureServiceState.systemImage
           )
-            .font(.caption)
-            .foregroundStyle(Color(nsColor: captureServiceState.color))
+          .font(.caption)
+          .foregroundStyle(Color(nsColor: captureServiceState.color))
 
           if captureServiceState == .approvalRequired {
             Button("Open Login Item Settings…") {
@@ -121,9 +131,11 @@ struct GeneralSettingsView: View {
             }
           }
 
-          Text("High-confidence Claude and ChatGPT transcripts are saved locally to Conversations. Other text stays encrypted for 30 days until reviewed. Clipboard capture does not request Accessibility, Screen Recording, or keyboard access.")
-            .formDescription()
-            .frame(width: 360, alignment: .leading)
+          Text(
+            "High-confidence Claude and ChatGPT transcripts are saved locally to Conversations. Other text stays encrypted for 30 days until reviewed. Clipboard capture does not request Accessibility, Screen Recording, or keyboard access."
+          )
+          .formDescription()
+          .frame(width: 360, alignment: .leading)
         }
         .formLabel(alignment: .top, String(localized: "Conversation Inbox"))
 
@@ -138,14 +150,61 @@ struct GeneralSettingsView: View {
         }
         .formMenuPicker()
 
-        Text("Captured conversations are always saved locally immediately. This interval applies only after end-to-end encrypted cloud sync is enabled.")
+        Text(
+          "Captured conversations are always saved locally immediately. This interval applies only after end-to-end encrypted cloud sync is enabled."
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .frame(width: 360, alignment: .leading)
+      }
+
+      Section {
+        VStack(alignment: .leading, spacing: 8) {
+          SecureField("Datamerge standard API key", text: $datamergeApiKey)
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 280)
+
+          HStack {
+            Button(datamergeKeyConfigured ? "Replace Key" : "Save Key") {
+              do {
+                try DatamergeConversionCredential.save(datamergeApiKey)
+                datamergeApiKey = ""
+                datamergeKeyConfigured = true
+              } catch {
+                NSSound.beep()
+              }
+            }
+            .disabled(datamergeApiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+            if datamergeKeyConfigured {
+              Button("Remove Key") {
+                DatamergeConversionCredential.remove()
+                datamergeKeyConfigured = false
+                datamergeApiKey = ""
+              }
+            }
+          }
+
+          Label(
+            datamergeKeyConfigured
+              ? "DOCX conversion is configured" : "DOCX conversion is not configured",
+            systemImage: datamergeKeyConfigured ? "checkmark.circle.fill" : "key.slash"
+          )
           .font(.caption)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(datamergeKeyConfigured ? Color.green : Color.secondary)
+
+          Text(
+            "The key is stored only in this Mac’s Keychain and is never written to app preferences, logs, or Markdown files."
+          )
+          .formDescription()
           .frame(width: 360, alignment: .leading)
+        }
+        .formLabel(alignment: .top, String(localized: "Markdown to DOCX"))
       }
     }
     .onAppear(perform: refreshCaptureServiceState)
-    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification))
+    { _ in
       refreshCaptureServiceState()
     }
   }
