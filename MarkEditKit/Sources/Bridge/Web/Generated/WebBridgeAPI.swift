@@ -63,7 +63,7 @@ public final class WebBridgeAPI {
   }
 }
 
-public struct MenuItemState: Codable, Equatable {
+public struct MenuItemState: Codable, Equatable, Sendable {
   /// Whether enabled; defaults to true.
   public var isEnabled: Bool?
   /// Whether selected; defaults to false.

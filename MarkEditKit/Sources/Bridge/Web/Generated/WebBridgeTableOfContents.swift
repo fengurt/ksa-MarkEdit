@@ -47,18 +47,30 @@ public final class WebBridgeTableOfContents {
   }
 }
 
-public struct HeadingInfo: Codable, Equatable {
+public struct HeadingInfo: Codable, Equatable, Sendable {
   public var title: String
   public var level: Int
   public var from: Int
   public var to: Int
   public var selected: Bool
+  public var sectionEnd: Int
+  public var sectionWordCount: Int
+  public var documentWordCount: Int
+  public var lineStart: Int
+  public var lineEnd: Int
+  public var directChildCount: Int
 
-  public init(title: String, level: Int, from: Int, to: Int, selected: Bool) {
+  public init(title: String, level: Int, from: Int, to: Int, selected: Bool, sectionEnd: Int, sectionWordCount: Int, documentWordCount: Int, lineStart: Int, lineEnd: Int, directChildCount: Int) {
     self.title = title
     self.level = level
     self.from = from
     self.to = to
     self.selected = selected
+    self.sectionEnd = sectionEnd
+    self.sectionWordCount = sectionWordCount
+    self.documentWordCount = documentWordCount
+    self.lineStart = lineStart
+    self.lineEnd = lineEnd
+    self.directChildCount = directChildCount
   }
 }
