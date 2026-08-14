@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: signed-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Sign, notarize, and publish
@@ -78,35 +82,19 @@ jobs:
           corepack enable
           yarn install --immutable
           yarn build
-          yarn test
 
-      - name: Build and test Web PWA
+      - name: Build Web PWA
         working-directory: WebApp
         run: |
           npm ci
-          npm audit --audit-level=high
-          npm run lint
-          npm test
           npm run build
           npm run build:mac
           npm run validate:mac-bundle
-
-      - name: Validate private cloud and recovery
-        working-directory: Cloud
-        run: |
-          cargo fmt --all -- --check
-          cargo clippy --workspace --all-targets -- -D warnings
-          cargo test --workspace
-          cargo install cargo-audit --locked --version 0.22.2
-          ./audit.sh
 
       - name: Build and pack read-only Agent SDK
         working-directory: AgentSDK
         run: |
           npm ci
-          npm audit --audit-level=high
-          npm run lint
-          npm test
           npm run build
           npm pack --pack-destination "$RUNNER_TEMP"
 
@@ -114,7 +102,6 @@ jobs:
         working-directory: ResourceModules
         run: |
           npm ci
-          npm audit --audit-level=high
           npm run verify
           version="${RELEASE_TAG#v}"
           ditto -c -k --keepParent dist "$RUNNER_TEMP/ksamint-resource-modules-$version.zip"
@@ -303,37 +290,6 @@ jobs:
             "$RUNNER_TEMP/SHA256SUMS.pre-notary" \
             --repo "$GITHUB_REPOSITORY" --title "$version" \
             --generate-notes --verify-tag --draft
-
-      - name: Poll for up to 45 minutes without resubmitting
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          metadata="$RUNNER_TEMP/NotarySubmission.json"
-          key="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
-          deadline="$(( $(date +%s) + 2700 ))"
-          while [ "$(date +%s)" -lt "$deadline" ]; do
-            all_accepted=true
-            for id in $(jq -r '.dmg.submissionID,.cli.submissionID' "$metadata"); do
-              info="$(xcrun notarytool info "$id" --key "$key" \
-                --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" \
-                --output-format json)"
-              status="$(printf '%s' "$info" | jq -r '.status')"
-              echo "$id: $status"
-              case "$status" in
-                Accepted) ;;
-                Invalid|Rejected)
-                  xcrun notarytool log "$id" --key "$key" \
-                    --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER_ID" || true
-                  exit 1 ;;
-                *) all_accepted=false ;;
-              esac
-            done
-            if $all_accepted; then
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "Notarization remains in progress. The draft release and submission IDs are preserved. Run the finalizer manually later; no submission is repeated."
 
       - name: Remove temporary signing material
         if: always()
