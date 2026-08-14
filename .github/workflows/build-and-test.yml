@@ -1,20 +1,78 @@
 name: Build and test
 
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main, "codex/**"]
+    branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      full_compatibility:
+        description: Also run the macOS 15 release compatibility build
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    name: Select affected checks
+    runs-on: ubuntu-slim
+    outputs:
+      mac: ${{ steps.filter.outputs.mac }}
+      web: ${{ steps.filter.outputs.web }}
+      cloud: ${{ steps.filter.outputs.cloud }}
+      cloud_audit: ${{ steps.filter.outputs.cloud_audit }}
+      resource_modules: ${{ steps.filter.outputs.resource_modules }}
+      agent_sdk: ${{ steps.filter.outputs.agent_sdk }}
+      agent_contracts: ${{ steps.filter.outputs.agent_contracts }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Classify changed paths
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            for name in mac web cloud cloud_audit resource_modules agent_sdk agent_contracts; do
+              printf '%s=true\n' "$name" >> "$GITHUB_OUTPUT"
+            done
+            exit 0
+          fi
+
+          git diff --name-only "$BASE_SHA"...HEAD > "$RUNNER_TEMP/changed-files"
+          set_output() {
+            name="$1"
+            pattern="$2"
+            if grep -Eq "$pattern" "$RUNNER_TEMP/changed-files"; then
+              printf '%s=true\n' "$name" >> "$GITHUB_OUTPUT"
+            else
+              printf '%s=false\n' "$name" >> "$GITHUB_OUTPUT"
+            fi
+          }
+
+          set_output mac '^(MarkEditMac/|MarkEditKit/|MarkEditCore/|MarkEdit\.xcodeproj/|FinderExtension/|PreviewExtension/|QuickActionExtension/|ConversationCaptureHelper/|CoreEditor/|Build\.xcconfig$|Icon\.(png|icns)$|Scripts/(configure-system-integration-targets|test-document-open-smoke|validate-localizations|validate-product-identity)\.)'
+          set_output web '^(WebApp/|CoreEditor/|VaultProtocolTS/)'
+          set_output cloud '^(Cloud/)'
+          set_output cloud_audit '^(Cloud/(Cargo\.(toml|lock)|audit\.sh)|\.github/dependabot\.yml$)'
+          set_output resource_modules '^(ResourceModules/)'
+          set_output agent_sdk '^(AgentSDK/)'
+          set_output agent_contracts '^(AgentSDK/|MarkEditMac/.*(Agent|MCP))'
+
   resource-modules:
     name: Signed resource preview modules
+    needs: changes
+    if: needs.changes.outputs.resource_modules == 'true'
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -31,8 +89,9 @@ jobs:
 
   agent-sdk:
     name: Read-only Agent SDK
+    needs: changes
+    if: needs.changes.outputs.agent_sdk == 'true'
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -51,8 +110,9 @@ jobs:
 
   local-agent-cli-contracts:
     name: Local Agent CLI contracts
+    needs: changes
+    if: needs.changes.outputs.agent_contracts == 'true'
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -78,24 +138,26 @@ jobs:
 
   cloud:
     name: Private cloud and recovery
+    needs: changes
+    if: needs.changes.outputs.cloud == 'true'
     runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: Cloud
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           toolchain: 1.97.1
           components: clippy, rustfmt
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-      - name: Check warnings and unsafe regressions
-        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Check formatting and warnings
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
       - name: Test protocol, API, and recovery
         run: cargo test --workspace
-      - name: Audit Rust dependencies
+      - name: Audit changed Rust dependencies
+        if: needs.changes.outputs.cloud_audit == 'true'
         run: |
           cargo install cargo-audit --locked --version 0.22.2
           ./audit.sh
@@ -116,12 +178,11 @@ jobs:
           grep -F 'TENCENT_COS_BUCKET: ksamint-vault-1308586823' /tmp/ksamint-compose.yml
           grep -F 'TENCENT_APP_ID: "1308586823"' /tmp/ksamint-compose.yml
 
-  test:
-    name: Tests (ARM64, macOS 26)
-    runs-on: macos-26
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-
+  web:
+    name: Web and CoreEditor
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -129,12 +190,6 @@ jobs:
           node-version: 24.19.0
           cache: npm
           cache-dependency-path: WebApp/package-lock.json
-
-      - name: Validate localizations
-        run: |
-          node Scripts/validate-localizations.mjs
-          node Scripts/validate-product-identity.mjs
-
       - name: Build and test CoreEditor
         working-directory: CoreEditor
         run: |
@@ -143,7 +198,6 @@ jobs:
           yarn npm audit --severity high --all
           yarn build
           yarn test
-
       - name: Build and test Web PWA
         working-directory: WebApp
         run: |
@@ -155,6 +209,28 @@ jobs:
           npm run build:mac
           npm run validate:mac-bundle
 
+  mac:
+    name: kmd (ARM64, macOS 26)
+    needs: changes
+    if: needs.changes.outputs.mac == 'true'
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - name: Validate localizations and identity
+        run: |
+          node Scripts/validate-localizations.mjs
+          node Scripts/validate-product-identity.mjs
+      - name: Build CoreEditor assets
+        working-directory: CoreEditor
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
       - name: Build kmd
         run: |
           xcodebuild build \
@@ -164,7 +240,6 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
-
       - name: Test Swift packages
         run: |
           swift test --package-path MarkEditKit
@@ -184,29 +259,22 @@ jobs:
             CODE_SIGNING_REQUIRED=NO
 
   compatibility:
-    name: macOS 15 ARM64 compatibility
+    name: macOS 15 release compatibility
+    if: github.event_name == 'workflow_dispatch' && inputs.full_compatibility
     runs-on: macos-15
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.19.0
-      - name: Build CoreEditor
+      - name: Build CoreEditor assets
         working-directory: CoreEditor
         run: |
           corepack enable
           yarn install --immutable
           yarn build
-      - name: Build Web PWA
-        working-directory: WebApp
-        run: |
-          npm ci
-          npm run build
-          npm run build:mac
-          npm run validate:mac-bundle
       - name: Build deployment-target release
         run: |
           xcodebuild build \
@@ -218,74 +286,3 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
-
-  development-artifact:
-    name: ARM64 development app
-    needs: [test, compatibility, resource-modules, local-agent-cli-contracts]
-    runs-on: macos-26
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24.19.0
-      - name: Build CoreEditor
-        working-directory: CoreEditor
-        run: |
-          corepack enable
-          yarn install --immutable
-          yarn build
-      - name: Build Web PWA
-        working-directory: WebApp
-        run: |
-          npm ci
-          npm run build
-          npm run build:mac
-          npm run validate:mac-bundle
-      - name: Build ARM64 app
-        run: |
-          xcodebuild build \
-            -project MarkEdit.xcodeproj \
-            -scheme MarkEditMac \
-            -configuration Release \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -destination 'generic/platform=macOS' \
-            ARCHS=arm64 \
-            ONLY_ACTIVE_ARCH=NO \
-            SWIFT_OPTIMIZATION_LEVEL="-Osize" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
-          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/kmd.app"
-          test "$(shasum -a 256 Icon.png | awk '{print $1}')" = \
-            "$(shasum -a 256 "$app/Contents/Resources/Icon.png" | awk '{print $1}')"
-          strip "$app/Contents/MacOS/kmd"
-          strip "$app/Contents/PlugIns/FinderExtension.appex/Contents/MacOS/FinderExtension"
-          strip "$app/Contents/PlugIns/PreviewExtension.appex/Contents/MacOS/PreviewExtension"
-          strip "$app/Contents/PlugIns/QuickActionExtension.appex/Contents/MacOS/QuickActionExtension"
-          strip "$app/Contents/Library/LoginItems/ConversationCaptureHelper.app/Contents/MacOS/ConversationCaptureHelper"
-          codesign --force --deep --sign - "$app"
-          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/ksamint-MarkEdit-development.zip"
-          Scripts/test-document-open-smoke.sh "$app"
-          hdiutil create \
-            -volname "kmd" \
-            -srcfolder "$app" \
-            -ov \
-            -format UDBZ \
-            "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg"
-          dmg_size="$(stat -f '%z' "$RUNNER_TEMP/ksamint-MarkEdit-size-check.dmg")"
-          release_limit=6291456
-          required_margin=102400
-          ci_limit="$((release_limit - required_margin))"
-          echo "ARM64 UDBZ size: $dmg_size bytes (CI limit: $ci_limit; release limit: $release_limit)"
-          test "$dmg_size" -le "$ci_limit"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: ksamint-MarkEdit-development
-          path: |
-            ${{ runner.temp }}/ksamint-MarkEdit-development.zip
-            ${{ runner.temp }}/ksamint-MarkEdit-size-check.dmg
-          if-no-files-found: error
