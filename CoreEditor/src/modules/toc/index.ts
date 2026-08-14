@@ -1,5 +1,5 @@
 import { KeyBinding } from '@codemirror/view';
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, Text } from '@codemirror/state';
 import { HeadingInfo } from './types';
 import { getSyntaxTree } from '../lezer';
 import { scrollToSelection } from '../selection';
@@ -25,6 +25,9 @@ export const tocKeymap: KeyBinding[] = [
     },
   },
 ];
+
+let cachedWordDocument: Text | undefined;
+let cachedWordPositions: number[] = [];
 
 export function getTableOfContents() {
   const editor = window.editor;
@@ -60,6 +63,12 @@ export function getTableOfContents() {
         from: node.from as CodeGen_Int,
         to: node.to as CodeGen_Int,
         selected: false,
+        sectionEnd: state.doc.length as CodeGen_Int,
+        sectionWordCount: 0 as CodeGen_Int,
+        documentWordCount: 0 as CodeGen_Int,
+        lineStart: state.doc.lineAt(node.from).number as CodeGen_Int,
+        lineEnd: state.doc.lines as CodeGen_Int,
+        directChildCount: 0 as CodeGen_Int,
       });
     },
   });
@@ -71,9 +80,77 @@ export function getTableOfContents() {
     // Mark an item as selected if the main selection is between the current item and the next item
     const selection = state.selection.main.head;
     item.selected = selection >= item.from && selection < (next?.from ?? Number.MAX_SAFE_INTEGER);
+
+  }
+
+  if (results.length === 0) {
+    return results;
+  }
+
+  const sectionEndIndices = Array.from({ length: results.length }, () => results.length);
+  const parentStack: number[] = [];
+  for (let index = 0; index < results.length; ++index) {
+    while (parentStack.length > 0 && results[parentStack[parentStack.length - 1]].level >= results[index].level) {
+      const completedIndex = parentStack.pop() as number;
+      results[completedIndex].sectionEnd = results[index].from;
+      sectionEndIndices[completedIndex] = index;
+    }
+    if (parentStack.length > 0) {
+      const parentIndex = parentStack[parentStack.length - 1];
+      results[parentIndex].directChildCount = (results[parentIndex].directChildCount + 1) as CodeGen_Int;
+    }
+    parentStack.push(index);
+  }
+
+  const wordPositions = getWordPositions(state.doc);
+  const headingWordPrefix = [0];
+  for (const heading of results) {
+    const count = lowerBound(wordPositions, heading.to) - lowerBound(wordPositions, heading.from);
+    headingWordPrefix.push(headingWordPrefix[headingWordPrefix.length - 1] + count);
+  }
+  const documentWordCount = wordPositions.length;
+
+  for (let index = 0; index < results.length; ++index) {
+    const item = results[index];
+    const rawSectionWords = lowerBound(wordPositions, item.sectionEnd) - lowerBound(wordPositions, item.to);
+    const nestedHeadingWords = headingWordPrefix[sectionEndIndices[index]] - headingWordPrefix[index + 1];
+    item.documentWordCount = documentWordCount as CodeGen_Int;
+    item.sectionWordCount = (rawSectionWords - nestedHeadingWords) as CodeGen_Int;
+    item.lineEnd = state.doc.lineAt(Math.max(item.to, item.sectionEnd) - 1).number as CodeGen_Int;
   }
 
   return results;
+}
+
+function getWordPositions(document: Text) {
+  if (cachedWordDocument === document) {
+    return cachedWordPositions;
+  }
+
+  cachedWordDocument = document;
+  cachedWordPositions = [];
+  const segmenter = new Intl.Segmenter(undefined, { granularity: 'word' });
+
+  for (const segment of segmenter.segment(document.toString())) {
+    if (segment.isWordLike === true) {
+      cachedWordPositions.push(segment.index);
+    }
+  }
+  return cachedWordPositions;
+}
+
+function lowerBound(values: number[], target: number) {
+  let low = 0;
+  let high = values.length;
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    if (values[middle] < target) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
 }
 
 export function getLinkAnchor(title: string) {

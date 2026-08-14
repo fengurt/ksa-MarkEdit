@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld child sections" : {
+      "comment" : "Document outline metadata: number of direct child sections",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld sous-sections" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 個の子セクション" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个子章节" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "%lld 個子章節" } }
+      }
+    },
+    "%lld headings · %lld document words" : {
+      "comment" : "Document outline summary: heading count and full document word count",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld titres · %lld mots au total" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 見出し · 全文 %lld 語" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个标题 · 全文 %lld 字" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "%lld 個標題 · 全文 %lld 字" } }
+      }
+    },
+    "%lld words · %@ · lines %lld–%lld" : {
+      "comment" : "Document outline section metadata: word count, document percentage, and line range",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld mots · %@ · lignes %lld–%lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 語 · %@ · %lld～%lld 行" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 字 · %@ · 第 %lld–%lld 行" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "%lld 字 · %@ · 第 %lld–%lld 行" } }
+      }
+    },
+    "Document structure overview" : {
+      "comment" : "Accessibility label for the live H1-H3 document structure graph",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vue d’ensemble de la structure du document" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "文書構造の概要" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文档结构概览" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "文件結構概覽" } }
+      }
+    },
     "Convert Markdown to DOCX" : {
       "localizations" : {
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Convertir Markdown en DOCX" } },

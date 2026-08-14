@@ -135,7 +135,7 @@ public final class WebBridgeCore {
   }
 }
 
-public struct WebBridgeCoreGetEditorStateReturnType: Codable, Equatable {
+public struct WebBridgeCoreGetEditorStateReturnType: Codable, Equatable, Sendable {
   public var hasFocus: Bool
   public var hasSelection: Bool
 
@@ -145,7 +145,7 @@ public struct WebBridgeCoreGetEditorStateReturnType: Codable, Equatable {
   }
 }
 
-public struct ReadableContentPair: Codable, Equatable {
+public struct ReadableContentPair: Codable, Equatable, Sendable {
   public var fullText: ReadableContent
   public var selection: ReadableContent?
 
@@ -155,7 +155,7 @@ public struct ReadableContentPair: Codable, Equatable {
   }
 }
 
-public struct ReadableContent: Codable, Equatable {
+public struct ReadableContent: Codable, Equatable, Sendable {
   public var sourceText: String
   public var trimmedText: String
   public var paragraphCount: Int
@@ -169,7 +169,7 @@ public struct ReadableContent: Codable, Equatable {
   }
 }
 
-public enum ReplaceGranularity: String, Codable {
+public enum ReplaceGranularity: String, Codable, Sendable {
   case wholeDocument = "wholeDocument"
   case selection = "selection"
 }

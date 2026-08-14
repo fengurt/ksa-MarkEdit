@@ -109,6 +109,8 @@ extension EditorViewController {
 
     if workspaceSidebarVisible && mode == .search {
       workspaceSidebarView?.focusSearch()
+    } else if workspaceSidebarVisible && mode == .outline {
+      scheduleDocumentOutlineUpdate()
     } else if !workspaceSidebarVisible {
       startTextEditing()
     }
@@ -344,6 +346,9 @@ extension EditorViewController {
 
   func scheduleDocumentOutlineUpdate() {
     documentOutlineTask?.cancel()
+    guard workspaceSidebarVisible, workspaceSidebarMode == .outline else {
+      return
+    }
     documentOutlineTask = Task { @MainActor [weak self] in
       try? await Task.sleep(for: .milliseconds(100))
       guard let self, !Task.isCancelled else { return }
