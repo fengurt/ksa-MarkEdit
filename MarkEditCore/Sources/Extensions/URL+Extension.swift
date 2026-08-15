@@ -7,6 +7,16 @@
 import Foundation
 
 public extension URL {
+  /// The sandbox maps Documents into the app container. Ad-hoc development builds are not
+  /// sandboxed, so use an isolated Application Support directory instead of scanning the
+  /// user's real Documents folder.
+  static var appDocumentsDirectory: URL {
+    guard Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true else { return .documentsDirectory }
+    return .applicationSupportDirectory
+      .appending(path: "kmd Development", directoryHint: .isDirectory)
+      .appending(path: "Documents", directoryHint: .isDirectory)
+  }
+
   static var standardDirectories: [String: String] {
     [
       "home": Self.homeDirectory,

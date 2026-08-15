@@ -13,7 +13,7 @@ import MarkEditKit
 /// Defaults match the sandboxed app; tests can point these at temporary directories.
 enum ExtensionEnvironment {
   /// Base directory holding extensions.json and the scripts/ folder.
-  nonisolated(unsafe) static var documentsDirectory = URL.documentsDirectory
+  nonisolated(unsafe) static var documentsDirectory = URL.appDocumentsDirectory
 
   /// Base directory for the cached registry index.
   nonisolated(unsafe) static var cachesDirectory = URL.cachesDirectory

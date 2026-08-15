@@ -56,6 +56,31 @@ enum ClipboardSourceContextReader {
   }
 }
 
+enum ClipboardStorageEnvironment {
+  static let appGroupIdentifier = "group.art.apuch.ksamint-markedit"
+
+  static var sharedRootURL: URL {
+    if hasAppGroupEntitlement,
+       let groupURL = FileManager.default.containerURL(
+         forSecurityApplicationGroupIdentifier: appGroupIdentifier
+       ) {
+      return groupURL
+    }
+    return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appending(path: "kmd Development", directoryHint: .isDirectory)
+  }
+
+  static var hasAppGroupEntitlement: Bool {
+    guard let task = SecTaskCreateFromSelf(nil),
+          let groups = SecTaskCopyValueForEntitlement(
+            task,
+            "com.apple.security.application-groups" as CFString,
+            nil
+          ) as? [String] else { return false }
+    return groups.contains(appGroupIdentifier)
+  }
+}
+
 struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
   let id: String
   let capturedAt: Date
@@ -544,25 +569,8 @@ private extension ClipboardHistoryStore {
   }
 
   func historyDirectoryURL() throws -> URL {
-    if hasAppGroupEntitlement(),
-       let groupURL = FileManager.default.containerURL(
-         forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
-       ) {
-      return groupURL.appending(path: "ClipboardHistory", directoryHint: .isDirectory)
-    }
-    return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-      .appending(path: "kmd Development", directoryHint: .isDirectory)
+    ClipboardStorageEnvironment.sharedRootURL
       .appending(path: "ClipboardHistory", directoryHint: .isDirectory)
-  }
-
-  func hasAppGroupEntitlement() -> Bool {
-    guard let task = SecTaskCreateFromSelf(nil),
-          let groups = SecTaskCopyValueForEntitlement(
-            task,
-            "com.apple.security.application-groups" as CFString,
-            nil
-          ) as? [String] else { return false }
-    return groups.contains("group.art.apuch.ksamint-markedit")
   }
 
   func historyKey() throws -> SymmetricKey {

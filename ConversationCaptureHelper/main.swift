@@ -463,7 +463,7 @@ private enum SharedCaptureSettings {
     return url.standardizedFileURL
   }
   static var pendingDirectory: URL? {
-    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)?
+    ClipboardStorageEnvironment.sharedRootURL
       .appending(path: "ConversationInbox/Pending", directoryHint: .isDirectory)
   }
 }

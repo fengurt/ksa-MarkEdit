@@ -72,7 +72,7 @@ struct AppCustomization {
   }
 
   var fileURL: URL {
-    URL.documentsDirectory.appending(
+    URL.appDocumentsDirectory.appending(
       path: fileType.fileName,
       directoryHint: fileType.isDirectory ? .isDirectory : .notDirectory
     ).resolvingSymbolicLink
