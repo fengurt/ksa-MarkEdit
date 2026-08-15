@@ -544,10 +544,25 @@ private extension ClipboardHistoryStore {
   }
 
   func historyDirectoryURL() throws -> URL {
-    let baseURL = FileManager.default.containerURL(
-      forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
-    ) ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    return baseURL.appending(path: "ClipboardHistory", directoryHint: .isDirectory)
+    if hasAppGroupEntitlement(),
+       let groupURL = FileManager.default.containerURL(
+         forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
+       ) {
+      return groupURL.appending(path: "ClipboardHistory", directoryHint: .isDirectory)
+    }
+    return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appending(path: "kmd Development", directoryHint: .isDirectory)
+      .appending(path: "ClipboardHistory", directoryHint: .isDirectory)
+  }
+
+  func hasAppGroupEntitlement() -> Bool {
+    guard let task = SecTaskCreateFromSelf(nil),
+          let groups = SecTaskCopyValueForEntitlement(
+            task,
+            "com.apple.security.application-groups" as CFString,
+            nil
+          ) as? [String] else { return false }
+    return groups.contains("group.art.apuch.ksamint-markedit")
   }
 
   func historyKey() throws -> SymmetricKey {
