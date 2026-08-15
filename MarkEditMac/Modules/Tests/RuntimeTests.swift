@@ -90,10 +90,7 @@ final class RuntimeTests: XCTestCase {
   }
 
   func testLabeledSearchFieldFallsBackWhenPrivateBezelIsUnavailable() {
-    let searchField = LabeledSearchField(
-      modernStyle: true,
-      modernBezelProvider: { _ in nil }
-    )
+    let searchField = LabeledSearchField(modernStyle: true) { _ in nil }
     searchField.frame = CGRect(x: 0, y: 0, width: 240, height: 40)
 
     searchField.layout()
