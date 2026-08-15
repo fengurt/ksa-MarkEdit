@@ -79,6 +79,17 @@ enum ClipboardStorageEnvironment {
           ) as? [String] else { return false }
     return groups.contains(appGroupIdentifier)
   }
+
+  static func developmentKey(named fileName: String) throws -> SymmetricKey {
+    let directory = sharedRootURL.appending(path: "Keys", directoryHint: .isDirectory)
+    let url = directory.appending(path: fileName, directoryHint: .notDirectory)
+    if let data = try? Data(contentsOf: url), data.count == 32 { return SymmetricKey(data: data) }
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let data = Data(SymmetricKey(size: .bits256).withUnsafeBytes(Array.init))
+    try data.write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
+    try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    return SymmetricKey(data: data)
+  }
 }
 
 struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
@@ -575,6 +586,9 @@ private extension ClipboardHistoryStore {
 
   func historyKey() throws -> SymmetricKey {
     if let overrideKey { return overrideKey }
+    if !ClipboardStorageEnvironment.hasAppGroupEntitlement {
+      return try ClipboardStorageEnvironment.developmentKey(named: "clipboard-history-v1.key")
+    }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: Self.keyService,

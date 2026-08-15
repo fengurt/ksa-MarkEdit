@@ -330,6 +330,7 @@ enum DatamergeConversionCredential {
   static var isConfigured: Bool { apiKey() != nil }
 
   static func apiKey() -> String? {
+    guard Bundle.main.bundleIdentifier?.hasSuffix(".dev") != true else { return nil }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -347,6 +348,9 @@ enum DatamergeConversionCredential {
   }
 
   static func save(_ value: String) throws {
+    guard Bundle.main.bundleIdentifier?.hasSuffix(".dev") != true else {
+      throw QuickActionError.documentExportNotConfigured
+    }
     let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !normalized.isEmpty else { throw QuickActionError.documentExportNotConfigured }
     let base: [String: Any] = [
@@ -372,6 +376,7 @@ enum DatamergeConversionCredential {
   }
 
   static func remove() {
+    guard Bundle.main.bundleIdentifier?.hasSuffix(".dev") != true else { return }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,

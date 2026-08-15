@@ -253,6 +253,7 @@ private final class ClipboardCaptureService: NSObject {
   }
 
   private func pendingKey() throws -> SymmetricKey {
+    if !ClipboardStorageEnvironment.hasAppGroupEntitlement { return try ClipboardStorageEnvironment.developmentKey(named: "conversation-pending-v1.key") }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccessGroup as String: keychainAccessGroup(),
