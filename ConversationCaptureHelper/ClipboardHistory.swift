@@ -627,7 +627,7 @@ private extension ClipboardSourceContextReader {
     var focusedValue: CFTypeRef?
     guard AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedValue) == .success,
           let focusedValue, CFGetTypeID(focusedValue) == AXUIElementGetTypeID() else { return (nil, nil) }
-    let window = unsafeBitCast(focusedValue, to: AXUIElement.self)
+    let window = unsafeDowncast(focusedValue, to: AXUIElement.self)
     return (
       attribute(kAXDocumentAttribute as CFString, from: window),
       attribute(kAXTitleAttribute as CFString, from: window)
