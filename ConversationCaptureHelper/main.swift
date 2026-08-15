@@ -64,6 +64,13 @@ private final class ClipboardCaptureService: NSObject {
     let hotKey = ClipboardPaletteHotKey { [weak self] in self?.toggleClipboardPalette() }
     paletteShortcutAvailable = hotKey.register()
     paletteHotKey = hotKey
+    if !paletteShortcutAvailable {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        guard let self, let paletteHotKey else { return }
+        paletteShortcutAvailable = paletteHotKey.register()
+        rebuildMenu()
+      }
+    }
     installStatusItem()
     purgeExpired()
     schedule(after: 0.75)
