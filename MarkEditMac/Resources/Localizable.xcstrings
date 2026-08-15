@@ -1,6 +1,38 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Open Accessibility Settings…" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir les réglages d’accessibilité…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アクセシビリティ設定を開く…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开辅助功能设置…" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟輔助使用設定…" } }
+      }
+    },
+    "High-confidence Claude and ChatGPT transcripts are saved locally to Conversations. Other long text stays encrypted for 30 days until reviewed." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les conversations Claude et ChatGPT détectées avec une forte confiance sont enregistrées localement dans Conversations. Les autres textes longs restent chiffrés pendant 30 jours avant validation." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "信頼度の高い Claude と ChatGPT の会話は Conversations にローカル保存されます。その他の長いテキストは確認されるまで30日間暗号化されます。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "高置信度的 Claude 和 ChatGPT 对话会保存到本地 Conversations。其他长文本在确认前会加密保留 30 天。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "高可信度的 Claude 和 ChatGPT 對話會儲存至本機 Conversations。其他長文字在確認前會加密保留 30 天。" } }
+      }
+    },
+    "Press Control-Shift-V anywhere to open the encrypted recent clipboard list. Use categories, the arrow keys, and Return. Monitoring needs no Accessibility permission; direct paste is optional and requests it separately." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appuyez sur Contrôle-Maj-V partout pour ouvrir la liste chiffrée du presse-papiers récent. Utilisez les catégories, les flèches et Retour. La surveillance ne nécessite pas l’accessibilité ; le collage direct est facultatif et la demande séparément." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "どこでも Control-Shift-V を押すと、暗号化された最近のクリップボード一覧が開きます。カテゴリ、矢印キー、Return を使用できます。監視にアクセシビリティ権限は不要で、直接ペーストのみ別途要求します。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在任意位置按 Control-Shift-V 可打开加密的最近剪贴板列表。可使用分类、方向键和回车。监听无需辅助功能权限；直接粘贴为可选功能并单独申请权限。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在任意位置按 Control-Shift-V 可開啟加密的最近剪貼簿清單。可使用分類、方向鍵和 Return。監聽不需輔助使用權限；直接貼上為選用功能並另外申請權限。" } }
+      }
+    },
+    "Show Clipboard History" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher l’historique du presse-papiers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴を表示" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示剪贴板历史" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "顯示剪貼簿記錄" } }
+      }
+    },
     "%lld child sections" : {
       "comment" : "Document outline metadata: number of direct child sections",
       "localizations" : {

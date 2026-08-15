@@ -1,6 +1,63 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cancel" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消" } }
+    } },
+    "Clear" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "消去" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "清除" } }
+    } },
+    "Clear Clipboard History…" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer l’historique du presse-papiers…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴を消去…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除剪贴板历史…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "清除剪貼簿記錄…" } }
+    } },
+    "Clear clipboard history?" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer l’historique du presse-papiers ?" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴を消去しますか？" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除剪贴板历史？" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "清除剪貼簿記錄？" } }
+    } },
+    "Clipboard History" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Historique du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板历史" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "剪貼簿記錄" } }
+    } },
+    "Code" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Code" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "コード" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "代码" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "程式碼" } }
+    } },
+    "Enable Direct Paste…" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer le collage direct…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "直接ペーストを有効にする…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用直接粘贴…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "啟用直接貼上…" } }
+    } },
+    "Files" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fichiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檔案" } }
+    } },
+    "Links" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liens" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "リンク" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "链接" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "連結" } }
+    } },
+    "Recent" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Récent" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }
+    } },
+    "Recent clipboard content" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contenu récent du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近のクリップボード内容" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近剪贴内容" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近剪貼內容" } }
+    } },
+    "Search recent clipboard content" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher dans le presse-papiers récent" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近のクリップボードを検索" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索最近剪贴内容" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋最近剪貼內容" } }
+    } },
+    "Show Clipboard History" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher l’historique du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴を表示" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示剪贴板历史" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "顯示剪貼簿記錄" } }
+    } },
+    "Text" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Texte" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "テキスト" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文本" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "文字" } }
+    } },
+    "The global shortcut is already used by another app" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le raccourci global est déjà utilisé par une autre app" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "グローバルショートカットは別のアプリで使用中です" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全局快捷键已被其他应用占用" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "全域快速鍵已被其他 App 使用" } }
+    } },
+    "This removes the encrypted recent clipboard list from this Mac." : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime de ce Mac la liste chiffrée du presse-papiers récent." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "このMacから暗号化された最近のクリップボード一覧を削除します。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从本机移除加密的最近剪贴板列表。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "這會從本機移除加密的最近剪貼簿清單。" } }
+    } },
+    "Unknown application" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Application inconnue" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "不明なアプリ" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未知应用" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未知 App" } }
+    } },
+    "↑↓ Select · Return Copy · Esc Close" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ Sélectionner · Retour Copier · Échap Fermer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 選択 · Return コピー · Esc 閉じる" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 选择 · 回车复制 · Esc 关闭" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 選擇 · Return 複製 · Esc 關閉" } }
+    } },
+    "↑↓ Select · Return Paste · Esc Close" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ Sélectionner · Retour Coller · Échap Fermer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 選択 · Return ペースト · Esc 閉じる" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 选择 · 回车粘贴 · Esc 关闭" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "↑↓ 選擇 · Return 貼上 · Esc 關閉" } }
+    } },
     "Capture Next Copy" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer la prochaine copie" } },
       "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のコピーを取り込む" } },
