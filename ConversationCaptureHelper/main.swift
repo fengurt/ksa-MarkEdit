@@ -282,7 +282,10 @@ private final class ClipboardCaptureService: NSObject {
     }
   }
 
-  private func commitClipboardItem(
+}
+
+private extension ClipboardCaptureService {
+  func commitClipboardItem(
     _ item: ClipboardHistoryItem,
     to application: NSRunningApplication?
   ) {
@@ -308,7 +311,7 @@ private final class ClipboardCaptureService: NSObject {
     }
   }
 
-  private func toggleClipboardPalette() {
+  func toggleClipboardPalette() {
     if clipboardPalette == nil {
       clipboardPalette = ClipboardPaletteController(store: clipboardHistory) { [weak self] item, application in
         self?.commitClipboardItem(item, to: application)
@@ -316,9 +319,7 @@ private final class ClipboardCaptureService: NSObject {
     }
     clipboardPalette?.toggle()
   }
-}
 
-private extension ClipboardCaptureService {
   private func installStatusItem() {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     item.button?.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: String(localized: "Conversation Inbox"))

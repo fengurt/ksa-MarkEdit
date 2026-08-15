@@ -349,10 +349,12 @@ final class ClipboardPaletteHotKey {
   func register() -> Bool {
     guard hotKeyRef == nil,
           let target = GetEventDispatcherTarget() else { return hotKeyRef != nil }
-    let eventTypes = [EventTypeSpec(
-      eventClass: OSType(kEventClassKeyboard),
-      eventKind: UInt32(kEventHotKeyPressed)
-    )]
+    let eventTypes = [
+      EventTypeSpec(
+        eventClass: OSType(kEventClassKeyboard),
+        eventKind: UInt32(kEventHotKeyPressed)
+      ),
+    ]
     let installStatus = InstallEventHandler(
       target,
       { _, event, userData in

@@ -26,7 +26,6 @@ enum ClipboardContentCategory: String, Codable, CaseIterable {
     }
   }
 }
-
 struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
   let id: String
   let capturedAt: Date
@@ -188,4 +187,3 @@ private extension ClipboardHistoryStore {
     throw CocoaError(.fileWriteNoPermission)
   }
 }
-
