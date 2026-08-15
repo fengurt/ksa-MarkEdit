@@ -319,9 +319,15 @@ private extension ClipboardCaptureService {
 
   func toggleClipboardPalette() {
     if clipboardPalette == nil {
-      clipboardPalette = ClipboardPaletteController(store: clipboardHistory) { [weak self] item, application in
-        self?.commitClipboardItem(item, to: application)
-      }
+      clipboardPalette = ClipboardPaletteController(
+        store: clipboardHistory,
+        onCommit: { [weak self] item, application in
+          self?.commitClipboardItem(item, to: application)
+        },
+        onDismiss: { [weak self] in
+          DispatchQueue.main.async { self?.clipboardPalette = nil }
+        }
+      )
     }
     clipboardPalette?.toggle()
   }

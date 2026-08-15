@@ -8,6 +8,7 @@ final class ClipboardPaletteController: NSObject {
 
   private let store: ClipboardHistoryStore
   private let onCommit: CommitHandler
+  private let onDismiss: () -> Void
   private let panel = NSPanel(
     contentRect: NSRect(x: 0, y: 0, width: 520, height: 390),
     styleMask: [.titled, .fullSizeContentView],
@@ -34,9 +35,14 @@ final class ClipboardPaletteController: NSObject {
   private var previousApplication: NSRunningApplication?
   private var eventMonitor: Any?
 
-  init(store: ClipboardHistoryStore, onCommit: @escaping CommitHandler) {
+  init(
+    store: ClipboardHistoryStore,
+    onCommit: @escaping CommitHandler,
+    onDismiss: @escaping () -> Void
+  ) {
     self.store = store
     self.onCommit = onCommit
+    self.onDismiss = onDismiss
     super.init()
     setUp()
   }
@@ -59,6 +65,7 @@ final class ClipboardPaletteController: NSObject {
     panel.orderOut(nil)
     removeEventMonitor()
     previousApplication?.activate(options: [.activateAllWindows])
+    onDismiss()
   }
 }
 
@@ -144,8 +151,10 @@ private extension ClipboardPaletteController {
     applyFilter()
     positionPanel()
     installEventMonitor()
-    NSApp.activate(ignoringOtherApps: true)
     panel.makeKeyAndOrderFront(nil)
+    panel.orderFrontRegardless()
+    NSRunningApplication.current.activate(options: [.activateAllWindows])
+    panel.makeKey()
     panel.makeFirstResponder(searchField)
   }
 
@@ -213,6 +222,7 @@ private extension ClipboardPaletteController {
     panel.orderOut(nil)
     removeEventMonitor()
     onCommit(item, previousApplication)
+    onDismiss()
   }
 
   @objc func categoryChanged(_ sender: NSSegmentedControl) {
@@ -248,6 +258,7 @@ private extension ClipboardPaletteController {
 extension ClipboardPaletteController: NSWindowDelegate {
   func windowWillClose(_ notification: Notification) {
     removeEventMonitor()
+    onDismiss()
   }
 }
 
