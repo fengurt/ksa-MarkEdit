@@ -3,7 +3,7 @@ import ApplicationServices
 import CryptoKit
 import Security
 
-enum ClipboardContentCategory: String, Codable, CaseIterable {
+enum ClipboardContentCategory: String, Codable, CaseIterable, Sendable {
   case text, link, code, file
 
   var localizedTitle: String {
@@ -25,7 +25,7 @@ enum ClipboardContentCategory: String, Codable, CaseIterable {
   }
 }
 
-struct ClipboardHistoryCapture {
+struct ClipboardHistoryCapture: Sendable {
   let content: String
   let sourceName: String?
   let sourceBundleID: String?
@@ -35,7 +35,7 @@ struct ClipboardHistoryCapture {
   let hasRichText: Bool
 }
 
-struct ClipboardSourceContext {
+struct ClipboardSourceContext: Sendable {
   let applicationName: String?
   let bundleIdentifier: String?
   let sourceURL: String?
@@ -46,7 +46,9 @@ struct ClipboardSourceContext {
 enum ClipboardSourceContextReader {
   static func read(pasteboard: NSPasteboard, application: NSRunningApplication?) -> ClipboardSourceContext {
     let metadata = pasteboardMetadata(pasteboard)
-    let accessibility = accessibilityMetadata(application)
+    let accessibility = metadata.url == nil || metadata.title == nil
+      ? accessibilityMetadata(application)
+      : (url: nil, title: nil)
     return ClipboardSourceContext(
       applicationName: application?.localizedName,
       bundleIdentifier: application?.bundleIdentifier,
@@ -70,6 +72,10 @@ enum ClipboardStorageEnvironment {
       .appending(path: "kmd Development", directoryHint: .isDirectory)
   }
 
+  static var isDevelopmentBundle: Bool {
+    Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
+  }
+
   static var hasAppGroupEntitlement: Bool {
     guard let task = SecTaskCreateFromSelf(nil),
           let groups = SecTaskCopyValueForEntitlement(
@@ -81,6 +87,7 @@ enum ClipboardStorageEnvironment {
   }
 
   static func developmentKey(named fileName: String) throws -> SymmetricKey {
+    guard isDevelopmentBundle else { throw CocoaError(.fileWriteNoPermission) }
     let directory = sharedRootURL.appending(path: "Keys", directoryHint: .isDirectory)
     let url = directory.appending(path: fileName, directoryHint: .notDirectory)
     if let data = try? Data(contentsOf: url), data.count == 32 { return SymmetricKey(data: data) }
@@ -92,7 +99,7 @@ enum ClipboardStorageEnvironment {
   }
 }
 
-struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
+struct ClipboardHistoryItem: Codable, Equatable, Identifiable, Sendable {
   let id: String
   let capturedAt: Date
   let sourceName: String?
@@ -152,7 +159,7 @@ struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
   }
 }
 
-struct ClipboardUserTag: Codable, Equatable, Identifiable {
+struct ClipboardUserTag: Codable, Equatable, Identifiable, Sendable {
   let id: String
   var name: String
 }
@@ -187,6 +194,8 @@ final class ClipboardHistoryStore {
   private static let maximumTagNameLength = 40
   private static let maximumItemBytes = 5 * 1024 * 1024
   private static let maximumJournalRecordBytes = 64 * 1024 * 1024
+  private static let compactionJournalBytes = 128 * 1024 * 1024
+  private static let compactionRecordCount = 20_000
   private static let keyService = "art.apuch.ksamint-markedit.clipboard-history"
   private static let keyAccount = "clipboard-history-v1"
 
@@ -197,6 +206,9 @@ final class ClipboardHistoryStore {
   private(set) var tags = [ClipboardUserTag]()
   private var itemPositions = [String: Int]()
   private var recentItemCount = 0
+  private var journalByteCount = 0
+  private var journalRecordCount = 0
+  var onKnowledgeChange: (() -> Void)?
 
   init(fileURL: URL? = nil, legacyFileURL: URL? = nil, key: SymmetricKey? = nil) {
     overrideJournalURL = fileURL
@@ -247,6 +259,7 @@ final class ClipboardHistoryStore {
     guard append(events) else { return false }
     items = candidate
     rebuildItemIndex()
+    finishMutation(syncKnowledge: item.isPermanent || item.isPinned || !item.tagIDs.isEmpty)
     return true
   }
 
@@ -271,6 +284,7 @@ final class ClipboardHistoryStore {
     let candidate = tags + [tag]
     guard append([.replaceTags(candidate)]) else { return nil }
     tags = candidate
+    finishMutation()
     return tag
   }
 
@@ -283,6 +297,7 @@ final class ClipboardHistoryStore {
     candidate[index].name = name
     guard append([.replaceTags(candidate)]) else { return false }
     tags = candidate
+    finishMutation()
     return true
   }
 
@@ -294,35 +309,41 @@ final class ClipboardHistoryStore {
     guard append([.replaceTags(candidateTags), .updateItems(candidateItems.map(Self.metadata))]) else { return }
     tags = candidateTags
     items = candidateItems
+    rebuildItemIndex()
+    finishMutation()
   }
 
   @discardableResult
   func togglePinned(itemID: String) -> Bool? {
-    guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+    guard let index = itemPositions[itemID] else { return nil }
     if !items[index].isPinned, items.filter(\.isPinned).count >= Self.maximumPinnedItems { return nil }
     var item = items[index]
     item.isPinned.toggle()
+    if item.isPinned { item.isPermanent = true }
     guard append([.updateItems([Self.metadata(item)])]) else { return nil }
     items[index] = item
     rebuildItemIndex()
+    finishMutation()
     return item.isPinned
   }
 
   @discardableResult
   func togglePermanent(itemID: String) -> Bool? {
-    guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+    guard let index = itemPositions[itemID] else { return nil }
     var item = items[index]
+    if item.isPermanent, item.isPinned || !item.tagIDs.isEmpty { return true }
     item.isPermanent.toggle()
     guard append([.updateItems([Self.metadata(item)])]) else { return nil }
     items[index] = item
     rebuildItemIndex()
+    finishMutation()
     return item.isPermanent
   }
 
   @discardableResult
   func toggleTag(_ tagID: String, for itemID: String) -> Bool? {
     guard tags.contains(where: { $0.id == tagID }),
-          let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+          let index = itemPositions[itemID] else { return nil }
     var item = items[index]
     let result: Bool
     if let tagIndex = item.tagIDs.firstIndex(of: tagID) {
@@ -330,10 +351,13 @@ final class ClipboardHistoryStore {
       result = false
     } else {
       item.tagIDs.append(tagID)
+      item.isPermanent = true
       result = true
     }
     guard append([.updateItems([Self.metadata(item)])]) else { return nil }
     items[index] = item
+    rebuildItemIndex()
+    finishMutation()
     return result
   }
 
@@ -343,9 +367,15 @@ final class ClipboardHistoryStore {
   }
 
   func clear() {
-    guard append([.clearItems]) else { return }
-    items.removeAll()
-    rebuildItemIndex()
+    let preserved = items.filter { $0.isPinned || $0.isPermanent }
+    do {
+      try rewriteJournal(items: preserved, tags: tags)
+      items = preserved
+      rebuildItemIndex()
+      finishMutation(syncKnowledge: false)
+    } catch {
+      return
+    }
   }
 
   static func category(for content: String, hasFiles: Bool) -> ClipboardContentCategory {
@@ -390,6 +420,12 @@ final class ClipboardHistoryStore {
 }
 
 private extension ClipboardHistoryStore {
+  enum JournalLoadResult {
+    case loaded
+    case missing
+    case corrupt
+  }
+
   func enforceCapacity() {
     trimLoadedItemsIfNeeded()
   }
@@ -397,25 +433,37 @@ private extension ClipboardHistoryStore {
   func load() {
     do {
       let journalURL = try historyJournalURL()
-      if FileManager.default.fileExists(atPath: journalURL.path), loadJournal(journalURL) {
+      switch loadJournal(journalURL) {
+      case .loaded:
         sanitizeLoadedState()
         return
+      case .corrupt:
+        // Never replace a newer, damaged journal with stale legacy data. The original
+        // ciphertext remains intact for explicit recovery or future repair tooling.
+        return
+      case .missing:
+        break
       }
       if let archive = loadLegacyArchive() {
         items = archive.items
         tags = archive.tags
         sanitizeLoadedState()
-        try rewriteJournal(with: .snapshot(ClipboardHistoryArchive(version: 3, items: items, tags: tags)))
+        try rewriteJournal(items: items, tags: tags)
       }
     } catch {
       // Clipboard monitoring must never interrupt copying or the host app.
     }
   }
 
-  func loadJournal(_ url: URL) -> Bool {
-    guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+  func loadJournal(_ url: URL) -> JournalLoadResult {
+    guard FileManager.default.fileExists(atPath: url.path) else { return .missing }
+    if (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) == 0 { return .missing }
+    try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    guard let handle = try? FileHandle(forUpdating: url) else { return .corrupt }
     defer { try? handle.close() }
     var decodedAny = false
+    journalByteCount = 0
+    journalRecordCount = 0
     while let header = readExactly(4, from: handle) {
       let length = Int(header[0]) | (Int(header[1]) << 8)
         | (Int(header[2]) << 16) | (Int(header[3]) << 24)
@@ -428,8 +476,15 @@ private extension ClipboardHistoryStore {
       guard let events else { break }
       events.forEach(apply)
       decodedAny = true
+      journalRecordCount += 1
+      journalByteCount += 4 + length
     }
-    return decodedAny
+    if decodedAny,
+       let fileSize = try? handle.seekToEnd(),
+       fileSize > UInt64(journalByteCount) {
+      try? handle.truncate(atOffset: UInt64(journalByteCount))
+    }
+    return decodedAny ? .loaded : .corrupt
   }
 
   func readExactly(_ count: Int, from handle: FileHandle) -> Data? {
@@ -469,8 +524,12 @@ private extension ClipboardHistoryStore {
       try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
       if !FileManager.default.fileExists(atPath: url.path) {
         guard FileManager.default.createFile(atPath: url.path, contents: nil) else { return false }
-        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUnlessOpen], ofItemAtPath: url.path)
+        try FileManager.default.setAttributes([
+          .protectionKey: FileProtectionType.completeUnlessOpen,
+          .posixPermissions: 0o600,
+        ], ofItemAtPath: url.path)
       }
+      try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
       let handle = try FileHandle(forWritingTo: url)
       defer { try? handle.close() }
       try handle.seekToEnd()
@@ -480,26 +539,88 @@ private extension ClipboardHistoryStore {
       var length = UInt32(combined.count).littleEndian
       try withUnsafeBytes(of: &length) { try handle.write(contentsOf: $0) }
       try handle.write(contentsOf: combined)
+      journalByteCount += 4 + combined.count
+      journalRecordCount += 1
       return true
     } catch { return false }
   }
 
-  func rewriteJournal(with event: ClipboardHistoryJournalEvent) throws {
+  func rewriteJournal(items: [ClipboardHistoryItem], tags: [ClipboardUserTag]) throws {
     let url = try historyJournalURL()
     try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
     let temporaryURL = url.deletingLastPathComponent().appending(path: ".history-v2-\(UUID().uuidString).tmp")
     defer { try? FileManager.default.removeItem(at: temporaryURL) }
-    let plaintext = try JSONEncoder().encode([event])
-    let sealed = try AES.GCM.seal(plaintext, using: historyKey())
-    guard let combined = sealed.combined else { throw CocoaError(.fileWriteUnknown) }
-    var record = Data()
-    var length = UInt32(combined.count).littleEndian
-    withUnsafeBytes(of: &length) { record.append(contentsOf: $0) }
-    record.append(combined)
-    try record.write(to: temporaryURL, options: .completeFileProtectionUnlessOpen)
+    guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil) else {
+      throw CocoaError(.fileWriteUnknown)
+    }
+    try FileManager.default.setAttributes([
+      .protectionKey: FileProtectionType.completeUnlessOpen,
+      .posixPermissions: 0o600,
+    ], ofItemAtPath: temporaryURL.path)
+    let handle = try FileHandle(forWritingTo: temporaryURL)
+    let key = try historyKey()
+    var recordCount = 0
+    defer { try? handle.close() }
+    try writeJournalRecord(
+      [.snapshot(ClipboardHistoryArchive(version: 3, items: [], tags: tags))],
+      to: handle,
+      key: key
+    )
+    recordCount += 1
+    var batch = [ClipboardHistoryJournalEvent]()
+    var estimatedBytes = 0
+    for item in items {
+      let itemBytes = item.content.utf8.count + 2_048
+      if !batch.isEmpty, estimatedBytes + itemBytes > 8 * 1024 * 1024 {
+        try writeJournalRecord(batch, to: handle, key: key)
+        recordCount += 1
+        batch.removeAll(keepingCapacity: true)
+        estimatedBytes = 0
+      }
+      batch.append(.upsert(item))
+      estimatedBytes += itemBytes
+    }
+    if !batch.isEmpty {
+      try writeJournalRecord(batch, to: handle, key: key)
+      recordCount += 1
+    }
+    try handle.synchronize()
+    try handle.close()
     if FileManager.default.fileExists(atPath: url.path) {
       _ = try FileManager.default.replaceItemAt(url, withItemAt: temporaryURL)
     } else { try FileManager.default.moveItem(at: temporaryURL, to: url) }
+    try FileManager.default.setAttributes([
+      .protectionKey: FileProtectionType.completeUnlessOpen,
+      .posixPermissions: 0o600,
+    ], ofItemAtPath: url.path)
+    journalByteCount = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+    journalRecordCount = recordCount
+  }
+
+  func writeJournalRecord(
+    _ events: [ClipboardHistoryJournalEvent],
+    to handle: FileHandle,
+    key: SymmetricKey
+  ) throws {
+    let plaintext = try JSONEncoder().encode(events)
+    let sealed = try AES.GCM.seal(plaintext, using: key)
+    guard let combined = sealed.combined, combined.count <= Self.maximumJournalRecordBytes else {
+      throw CocoaError(.fileWriteOutOfSpace)
+    }
+    var length = UInt32(combined.count).littleEndian
+    try withUnsafeBytes(of: &length) { try handle.write(contentsOf: $0) }
+    try handle.write(contentsOf: combined)
+  }
+
+  func finishMutation(syncKnowledge: Bool = true) {
+    compactJournalIfNeeded()
+    if syncKnowledge { onKnowledgeChange?() }
+  }
+
+  func compactJournalIfNeeded() {
+    guard journalByteCount >= Self.compactionJournalBytes
+      || journalRecordCount >= Self.compactionRecordCount else { return }
+    try? rewriteJournal(items: items, tags: tags)
   }
 
   func apply(_ event: ClipboardHistoryJournalEvent) {
@@ -675,5 +796,104 @@ private extension ClipboardSourceContextReader {
     var value: CFTypeRef?
     guard AXUIElementCopyAttributeValue(element, name, &value) == .success else { return nil }
     return value as? String
+  }
+}
+
+/// Materializes durable clipboard knowledge as ordinary Markdown so the workspace index,
+/// global search, encrypted Vault sync, and encrypted GitHub backup all share one source of truth.
+enum ClipboardKnowledgeArchive {
+  struct Report: Sendable, Equatable {
+    let written: Int
+    let unchanged: Int
+  }
+
+  static func reconcile(
+    items: [ClipboardHistoryItem],
+    tags: [ClipboardUserTag],
+    workspaceRoot: URL
+  ) throws -> Report {
+    let tagNames = Dictionary(uniqueKeysWithValues: tags.map { ($0.id, $0.name) })
+    var written = 0
+    var unchanged = 0
+    let labelCatalog = workspaceRoot
+      .appending(path: "Clipboard", directoryHint: .isDirectory)
+      .appending(path: "Labels.md", directoryHint: .notDirectory)
+    let labelMarkdown = labelsMarkdown(tags)
+    if let existing = try? String(contentsOf: labelCatalog, encoding: .utf8), existing == labelMarkdown {
+      unchanged += 1
+    } else {
+      try FileManager.default.createDirectory(
+        at: labelCatalog.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+      )
+      try Data(labelMarkdown.utf8).write(
+        to: labelCatalog,
+        options: [.atomic, .completeFileProtectionUnlessOpen]
+      )
+      written += 1
+    }
+    for item in items where item.isPermanent || item.isPinned || !item.tagIDs.isEmpty {
+      let calendar = Calendar(identifier: .gregorian)
+      let parts = calendar.dateComponents(in: TimeZone(secondsFromGMT: 0) ?? .current, from: item.capturedAt)
+      let directory = workspaceRoot
+        .appending(path: "Clipboard", directoryHint: .isDirectory)
+        .appending(path: String(format: "%04d", parts.year ?? 0), directoryHint: .isDirectory)
+        .appending(path: String(format: "%02d", parts.month ?? 0), directoryHint: .isDirectory)
+      let destination = directory.appending(path: "Clip--\(item.id).md", directoryHint: .notDirectory)
+      let markdown = markdown(item: item, tagNames: item.tagIDs.compactMap { tagNames[$0] })
+      if let existing = try? String(contentsOf: destination, encoding: .utf8), existing == markdown {
+        unchanged += 1
+        continue
+      }
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try Data(markdown.utf8).write(to: destination, options: [.atomic, .completeFileProtectionUnlessOpen])
+      written += 1
+    }
+    return Report(written: written, unchanged: unchanged)
+  }
+
+  private static func labelsMarkdown(_ tags: [ClipboardUserTag]) -> String {
+    let rows = tags.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+      .map { "- id: \(jsonString($0.id))\n  name: \(jsonString($0.name))" }
+      .joined(separator: "\n")
+    return """
+    ---
+    type: ClipboardLabelCatalog
+    category: "Clipboard/Configuration"
+    ---
+
+    # Clipboard Labels
+
+    \(rows)
+    """ + "\n"
+  }
+
+  private static func markdown(item: ClipboardHistoryItem, tagNames: [String]) -> String {
+    let displayTags = ["clipboard"] + tagNames.filter { $0.caseInsensitiveCompare("clipboard") != .orderedSame }
+    let encodedTags = displayTags.map(jsonString).joined(separator: ", ")
+    let primaryCategory = tagNames.first.map { "Clipboard/\($0)" } ?? "Clipboard"
+    let title = item.content.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
+      .first.map(String.init)?
+      .trimmingCharacters(in: CharacterSet(charactersIn: "# ")) ?? "Clipboard record"
+    var metadata = [
+      "type: ClipboardRecord",
+      "clipboard_id: \(item.id)",
+      "captured_at: \(ISO8601DateFormatter().string(from: item.capturedAt))",
+      "category: \(jsonString(primaryCategory))",
+      "tags: [\(encodedTags)]",
+      "favorite: \(item.isPinned ? "true" : "false")",
+      "permanent: true",
+    ]
+    if let sourceName = item.sourceName { metadata.append("captured_from: \(jsonString(sourceName))") }
+    if let sourceBundleID = item.sourceBundleID { metadata.append("source_bundle_id: \(jsonString(sourceBundleID))") }
+    if let sourceURL = item.sourceURL { metadata.append("source_url: \(jsonString(sourceURL))") }
+    if let sessionName = item.sessionName { metadata.append("source_session: \(jsonString(sessionName))") }
+    return "---\n\(metadata.joined(separator: "\n"))\n---\n\n# \(String(title.prefix(120)))\n\n\(item.content)\n"
+  }
+
+  private static func jsonString(_ value: String) -> String {
+    guard let data = try? JSONSerialization.data(withJSONObject: [value]),
+          let encoded = String(data: data, encoding: .utf8) else { return "\"\"" }
+    return String(encoded.dropFirst().dropLast())
   }
 }

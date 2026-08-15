@@ -47,8 +47,12 @@ private final class ClipboardCaptureService: NSObject {
   private var clipboardPalette: ClipboardPaletteController?
   private var paletteHotKey: ClipboardPaletteHotKey?
   private var paletteShortcutAvailable = false
+  private var knowledgeExportTask: Task<Void, Never>?
 
   func start() {
+    clipboardHistory.onKnowledgeChange = { [weak self] in
+      self?.scheduleKnowledgeExport()
+    }
     DistributedNotificationCenter.default().addObserver(
       self,
       selector: #selector(settingsChanged),
@@ -73,6 +77,7 @@ private final class ClipboardCaptureService: NSObject {
     }
     installStatusItem()
     purgeExpired()
+    scheduleKnowledgeExport()
     schedule(after: 0.75)
   }
 
@@ -296,6 +301,21 @@ private final class ClipboardCaptureService: NSObject {
 }
 
 private extension ClipboardCaptureService {
+  func scheduleKnowledgeExport() {
+    knowledgeExportTask?.cancel()
+    let items = clipboardHistory.items
+    let tags = clipboardHistory.tags
+    knowledgeExportTask = Task { [weak self] in
+      try? await Task.sleep(for: .milliseconds(250))
+      guard !Task.isCancelled, let root = SharedCaptureSettings.workspaceURL else { return }
+      defer { root.stopAccessingSecurityScopedResource() }
+      _ = try? await Task.detached(priority: .utility) {
+        try ClipboardKnowledgeArchive.reconcile(items: items, tags: tags, workspaceRoot: root)
+      }.value
+      if !Task.isCancelled { self?.knowledgeExportTask = nil }
+    }
+  }
+
   func commitClipboardItem(
     _ item: ClipboardHistoryItem,
     to application: NSRunningApplication?
@@ -404,7 +424,9 @@ private extension ClipboardCaptureService {
   @objc private func clearClipboardHistory() {
     let alert = NSAlert()
     alert.messageText = String(localized: "Clear clipboard history?")
-    alert.informativeText = String(localized: "This removes the encrypted recent clipboard list from this Mac.")
+    alert.informativeText = String(
+      localized: "This removes recent items but keeps favorite, labeled, and permanent records."
+    )
     alert.addButton(withTitle: String(localized: "Clear"))
     alert.addButton(withTitle: String(localized: "Cancel"))
     guard alert.runModal() == .alertFirstButtonReturn else { return }

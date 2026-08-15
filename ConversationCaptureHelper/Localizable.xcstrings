@@ -40,6 +40,21 @@
     "Files" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fichiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檔案" } }
     } },
+    "Favorite" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Favori" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "お気に入り" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
+    } },
+    "Favorites" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Favoris" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "お気に入り" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
+    } },
+    "Remove Favorite" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer des favoris" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "お気に入りを解除" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消收藏" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消收藏" } }
+    } },
+    "Add Labels…" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter des étiquettes…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベルを追加…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加标签…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "加入標籤…" } }
+    } },
+    "Labels" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étiquettes" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "標籤" } }
+    } },
     "Links" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liens" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "リンク" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "链接" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "連結" } }
     } },
@@ -90,6 +105,9 @@
     } },
     "This removes the encrypted recent clipboard list from this Mac." : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime de ce Mac la liste chiffrée du presse-papiers récent." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "このMacから暗号化された最近のクリップボード一覧を削除します。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从本机移除加密的最近剪贴板列表。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "這會從本機移除加密的最近剪貼簿清單。" } }
+    } },
+    "This removes recent items but keeps favorite, labeled, and permanent records." : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime les éléments récents mais conserve les favoris, les éléments étiquetés et permanents." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近の項目を削除しますが、お気に入り、ラベル付き、永久保存の項目は保持します。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会清除普通历史，但保留收藏、已加标签和永久记录。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "這會清除一般記錄，但保留收藏、已加標籤和永久記錄。" } }
     } },
     "The label “%@” will be removed. Clipboard items will not be deleted." : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’étiquette « %@ » sera supprimée. Les éléments du presse-papiers ne seront pas supprimés." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベル「%@」を削除します。クリップボード項目は削除されません。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签“%@”将被移除，剪贴板内容不会被删除。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "標籤「%@」將被移除，剪貼簿內容不會被刪除。" } }

@@ -1240,6 +1240,15 @@ canvas:focus-visible {
   grid-column: span 12;
 }
 
+.hub-panel.clipboard-knowledge-panel {
+  grid-column: span 12;
+}
+
+.clipboard-knowledge-panel .recent-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
 .panel-heading {
   display: flex;
   align-items: baseline;

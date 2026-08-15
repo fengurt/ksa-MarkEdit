@@ -18,6 +18,11 @@ import {
   uniqueImportPath,
 } from './import/BrowserImport';
 import { t } from './i18n';
+import {
+  clipboardKnowledgeTitle,
+  isClipboardKnowledgeRecord,
+  isFavoriteClipboardRecord,
+} from './clipboard/knowledge';
 import { canonicalTag } from './markdown/metadata';
 import { renderMarkdown } from './markdown/preview';
 import {
@@ -1019,6 +1024,9 @@ function Hub({
 }) {
   const tags = taxonomy(files);
   const categories = categoryCounts(files);
+  const clipboardRecords = files
+    .filter(isClipboardKnowledgeRecord)
+    .sort((left, right) => right.modifiedAt - left.modifiedAt);
   return (
     <main className="main-content hub">
       <header className="hub-header">
@@ -1057,6 +1065,24 @@ function Hub({
           <div className="tag-cloud">
             {tags.slice(0, 18).map(item => <span key={item.identity}>{item.name}<b>{item.count}</b></span>)}
           </div>
+        </article>
+        <article className="hub-panel recent-panel clipboard-knowledge-panel">
+          <div className="panel-heading">
+            <div><p className="eyebrow">Clipboard</p><h2>{t('clipboardKnowledge')}</h2></div>
+            <span>{clipboardRecords.length}</span>
+          </div>
+          {clipboardRecords.length ? (
+            <ul className="recent-list">
+              {clipboardRecords.map(file => (
+                <li key={file.id}>
+                  <button type="button" onClick={() => onOpen(file.id)}>
+                    <strong>{clipboardKnowledgeTitle(file)}</strong>
+                    <span>{isFavoriteClipboardRecord(file) ? '★ · ' : ''}{file.metadata.tags.join(' · ')}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="empty-copy">{t('clipboardKnowledgeEmpty')}</p>}
         </article>
         <Suspense fallback={<article className="hub-panel action-panel"><p>{t('deepSearch')}…</p></article>}>
           <DeepSearchPanel files={files} onOpen={onOpen} />
