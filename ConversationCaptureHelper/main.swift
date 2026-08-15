@@ -281,7 +281,6 @@ private final class ClipboardCaptureService: NSObject {
       try? FileManager.default.removeItem(at: url)
     }
   }
-
 }
 
 private extension ClipboardCaptureService {
