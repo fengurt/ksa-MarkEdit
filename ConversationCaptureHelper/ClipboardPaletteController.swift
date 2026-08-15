@@ -348,7 +348,7 @@ final class ClipboardPaletteHotKey {
   @discardableResult
   func register() -> Bool {
     guard hotKeyRef == nil,
-          let target = GetEventDispatcherTarget() else { return hotKeyRef != nil }
+          let target = GetApplicationEventTarget() else { return hotKeyRef != nil }
     let eventTypes = [
       EventTypeSpec(
         eventClass: OSType(kEventClassKeyboard),
@@ -380,6 +380,13 @@ final class ClipboardPaletteHotKey {
       0,
       &hotKeyRef
     )
-    return registrationStatus == noErr
+    guard registrationStatus == noErr else {
+      if let handlerRef {
+        RemoveEventHandler(handlerRef)
+        self.handlerRef = nil
+      }
+      return false
+    }
+    return true
   }
 }
