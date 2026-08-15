@@ -52,6 +52,12 @@
     "New Label…" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouvelle étiquette…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "新規ラベル…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建标签…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "新增標籤…" } }
     } },
+    "Keep Permanently" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver définitivement" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "永久保存" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "永久保留" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "永久保留" } }
+    } },
+    "Permanent" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Permanent" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "永久" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "永久" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "永久" } }
+    } },
     "Pin" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Épingler" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピン留め" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "置顶" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "置頂" } }
     } },
@@ -90,6 +96,9 @@
     } },
     "Unpin" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désépingler" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピン留めを解除" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消置顶" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消置頂" } }
+    } },
+    "Use Normal Retention" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser la conservation normale" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "通常の保存期間に戻す" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复普通保留期限" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "恢復一般保留期限" } }
     } },
     "Unknown application" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Application inconnue" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "不明なアプリ" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未知应用" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未知 App" } }

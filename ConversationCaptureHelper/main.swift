@@ -104,6 +104,7 @@ private final class ClipboardCaptureService: NSObject {
     guard let envelope = captureEnvelope(pasteboard) else { return }
     let app = NSWorkspace.shared.frontmostApplication
     if !captureNext, Self.passwordManagers.contains(app?.bundleIdentifier ?? "") { return }
+    let source = ClipboardSourceContextReader.read(pasteboard: pasteboard, application: app)
     let forced = captureNext
     captureNext = false
     rebuildMenu()
@@ -112,19 +113,22 @@ private final class ClipboardCaptureService: NSObject {
       version: 1,
       id: envelope.id,
       capturedAt: envelope.capturedAt,
-      sourceName: app?.localizedName,
-      sourceBundleID: app?.bundleIdentifier,
+      sourceName: source.applicationName,
+      sourceBundleID: source.bundleIdentifier,
       content: envelope.content,
       html: envelope.html,
       rtf: envelope.rtf,
       fileBookmarks: envelope.fileBookmarks
     )
-    if clipboardHistory.record(
+    if clipboardHistory.record(ClipboardHistoryCapture(
       content: enriched.content,
       sourceName: enriched.sourceName,
       sourceBundleID: enriched.sourceBundleID,
-      hasFiles: !enriched.fileBookmarks.isEmpty
-    ) {
+      sourceURL: source.sourceURL,
+      sessionName: source.sessionName,
+      hasFiles: !enriched.fileBookmarks.isEmpty,
+      hasRichText: enriched.html != nil || enriched.rtf != nil
+    )) {
       clipboardPalette?.reload()
     }
     guard shouldCapture(enriched.content) else { return }

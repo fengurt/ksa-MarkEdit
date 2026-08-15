@@ -5,6 +5,7 @@ import Carbon.HIToolbox
 private enum ClipboardPaletteFilter: Equatable {
   case recent
   case pinned
+  case permanent
   case tag(String)
 }
 
@@ -294,13 +295,18 @@ private extension ClipboardPaletteController {
         let matchesFilter = switch activeFilter {
         case .recent: true
         case .pinned: item.isPinned
+        case .permanent: item.isPermanent
         case let .tag(tagID): item.tagIDs.contains(tagID)
         }
         let tagText = store.tagNames(for: item).joined(separator: " ")
+        let sourceText = [item.sourceName, item.sessionName, item.sourceURL]
+          .compactMap { $0 }
+          .joined(separator: " ")
         return matchesFilter
           && (query.isEmpty
             || item.content.localizedStandardContains(query)
-            || tagText.localizedStandardContains(query))
+            || tagText.localizedStandardContains(query)
+            || sourceText.localizedStandardContains(query))
       }
       .sorted { lhs, rhs in
         if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
@@ -327,6 +333,12 @@ private extension ClipboardPaletteController {
         title: String(localized: "Pinned"),
         systemImage: "pin.fill",
         count: store.items.filter(\.isPinned).count
+      ),
+      ClipboardSidebarEntry(
+        filter: .permanent,
+        title: String(localized: "Permanent"),
+        systemImage: "archivebox.fill",
+        count: store.items.filter(\.isPermanent).count
       ),
     ]
     sidebarEntries.append(contentsOf: store.tags.map { tag in
@@ -441,9 +453,23 @@ private extension ClipboardPaletteController {
     applyFilter()
   }
 
+  func togglePermanent(itemID: String) {
+    guard store.togglePermanent(itemID: itemID) != nil else {
+      NSSound.beep()
+      return
+    }
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
   @objc func togglePinnedFromMenu() {
     guard let contextItemID else { return }
     togglePin(itemID: contextItemID)
+  }
+
+  @objc func togglePermanentFromMenu() {
+    guard let contextItemID else { return }
+    togglePermanent(itemID: contextItemID)
   }
 
   @objc func toggleTagFromMenu(_ sender: NSMenuItem) {
@@ -535,6 +561,15 @@ extension ClipboardPaletteController: NSMenuDelegate {
     pinItem.target = self
     pinItem.isEnabled = true
     menu.addItem(pinItem)
+
+    let permanentItem = NSMenuItem(
+      title: item.isPermanent ? String(localized: "Use Normal Retention") : String(localized: "Keep Permanently"),
+      action: #selector(togglePermanentFromMenu),
+      keyEquivalent: ""
+    )
+    permanentItem.target = self
+    permanentItem.isEnabled = true
+    menu.addItem(permanentItem)
     menu.addItem(.separator())
 
     for tag in store.tags {
@@ -665,9 +700,12 @@ private final class ClipboardHistoryCellView: NSTableCellView {
       systemSymbolName: item.category.systemImage,
       accessibilityDescription: item.category.localizedTitle
     )
-    let source = item.sourceName ?? String(localized: "Unknown application")
+    let source = item.sessionName ?? item.sourceName ?? String(localized: "Unknown application")
+    let sourceLocation = item.sourceURL.flatMap { URL(string: $0)?.host(percentEncoded: false) }
+    let sourceSummary = sourceLocation.map { " · \($0)" } ?? ""
+    let permanentSummary = item.isPermanent ? " · \(String(localized: "Permanent"))" : ""
     let tagSummary = tagNames.isEmpty ? "" : " · \(tagNames.joined(separator: ", "))"
-    metadataLabel.stringValue = "\(item.category.localizedTitle) · \(source) · \(relativeDate(item.capturedAt))\(tagSummary)"
+    metadataLabel.stringValue = "\(item.category.localizedTitle) · \(source)\(sourceSummary) · \(relativeDate(item.capturedAt))\(permanentSummary)\(tagSummary)"
     let pinLabel = item.isPinned ? String(localized: "Unpin") : String(localized: "Pin")
     pinButton.image = NSImage(
       systemSymbolName: item.isPinned ? "pin.fill" : "pin",

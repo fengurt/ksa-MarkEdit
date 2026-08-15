@@ -1,12 +1,10 @@
 import AppKit
+import ApplicationServices
 import CryptoKit
 import Security
 
 enum ClipboardContentCategory: String, Codable, CaseIterable {
-  case text
-  case link
-  case code
-  case file
+  case text, link, code, file
 
   var localizedTitle: String {
     switch self {
@@ -26,14 +24,49 @@ enum ClipboardContentCategory: String, Codable, CaseIterable {
     }
   }
 }
+
+struct ClipboardHistoryCapture {
+  let content: String
+  let sourceName: String?
+  let sourceBundleID: String?
+  let sourceURL: String?
+  let sessionName: String?
+  let hasFiles: Bool
+  let hasRichText: Bool
+}
+
+struct ClipboardSourceContext {
+  let applicationName: String?
+  let bundleIdentifier: String?
+  let sourceURL: String?
+  let sessionName: String?
+}
+
+@MainActor
+enum ClipboardSourceContextReader {
+  static func read(pasteboard: NSPasteboard, application: NSRunningApplication?) -> ClipboardSourceContext {
+    let metadata = pasteboardMetadata(pasteboard)
+    let accessibility = accessibilityMetadata(application)
+    return ClipboardSourceContext(
+      applicationName: application?.localizedName,
+      bundleIdentifier: application?.bundleIdentifier,
+      sourceURL: ClipboardHistoryStore.sanitizedSourceURL(metadata.url ?? accessibility.url),
+      sessionName: ClipboardHistoryStore.normalizedSessionName(metadata.title ?? accessibility.title)
+    )
+  }
+}
+
 struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
   let id: String
   let capturedAt: Date
   let sourceName: String?
   let sourceBundleID: String?
+  let sourceURL: String?
+  let sessionName: String?
   let content: String
   let category: ClipboardContentCategory
   var isPinned: Bool
+  var isPermanent: Bool
   var tagIDs: [String]
 
   init(
@@ -41,23 +74,30 @@ struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
     capturedAt: Date,
     sourceName: String?,
     sourceBundleID: String?,
+    sourceURL: String? = nil,
+    sessionName: String? = nil,
     content: String,
     category: ClipboardContentCategory,
     isPinned: Bool = false,
+    isPermanent: Bool = false,
     tagIDs: [String] = []
   ) {
     self.id = id
     self.capturedAt = capturedAt
     self.sourceName = sourceName
     self.sourceBundleID = sourceBundleID
+    self.sourceURL = sourceURL
+    self.sessionName = sessionName
     self.content = content
     self.category = category
     self.isPinned = isPinned
+    self.isPermanent = isPermanent
     self.tagIDs = tagIDs
   }
 
   private enum CodingKeys: String, CodingKey {
-    case id, capturedAt, sourceName, sourceBundleID, content, category, isPinned, tagIDs
+    case id, capturedAt, sourceName, sourceBundleID, sourceURL, sessionName
+    case content, category, isPinned, isPermanent, tagIDs
   }
 
   init(from decoder: Decoder) throws {
@@ -66,9 +106,12 @@ struct ClipboardHistoryItem: Codable, Equatable, Identifiable {
     capturedAt = try container.decode(Date.self, forKey: .capturedAt)
     sourceName = try container.decodeIfPresent(String.self, forKey: .sourceName)
     sourceBundleID = try container.decodeIfPresent(String.self, forKey: .sourceBundleID)
+    sourceURL = try container.decodeIfPresent(String.self, forKey: .sourceURL)
+    sessionName = try container.decodeIfPresent(String.self, forKey: .sessionName)
     content = try container.decode(String.self, forKey: .content)
     category = try container.decode(ClipboardContentCategory.self, forKey: .category)
     isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
+    isPermanent = try container.decodeIfPresent(Bool.self, forKey: .isPermanent) ?? false
     tagIDs = try container.decodeIfPresent([String].self, forKey: .tagIDs) ?? []
   }
 }
@@ -84,73 +127,114 @@ private struct ClipboardHistoryArchive: Codable {
   var tags: [ClipboardUserTag]
 }
 
+private struct ClipboardItemMetadata: Codable {
+  let id: String
+  let isPinned: Bool
+  let isPermanent: Bool
+  let tagIDs: [String]
+}
+
+private enum ClipboardHistoryJournalEvent: Codable {
+  case snapshot(ClipboardHistoryArchive)
+  case upsert(ClipboardHistoryItem)
+  case removeItems([String])
+  case replaceTags([ClipboardUserTag])
+  case updateItems([ClipboardItemMetadata])
+  case clearItems
+}
+
 @MainActor
 final class ClipboardHistoryStore {
-  private static let maximumRecentItems = 100
+  static let maximumRecentItems = 10_000
   private static let maximumPinnedItems = 100
   private static let maximumTags = 32
   private static let maximumTagNameLength = 40
-  private static let maximumItemBytes = 256 * 1024
-  private static let retention: TimeInterval = 7 * 24 * 60 * 60
+  private static let maximumItemBytes = 5 * 1024 * 1024
+  private static let maximumJournalRecordBytes = 64 * 1024 * 1024
   private static let keyService = "art.apuch.ksamint-markedit.clipboard-history"
   private static let keyAccount = "clipboard-history-v1"
 
-  private let overrideFileURL: URL?
+  private let overrideJournalURL: URL?
+  private let overrideLegacyURL: URL?
   private let overrideKey: SymmetricKey?
   private(set) var items = [ClipboardHistoryItem]()
   private(set) var tags = [ClipboardUserTag]()
+  private var itemPositions = [String: Int]()
+  private var recentItemCount = 0
 
-  init(fileURL: URL? = nil, key: SymmetricKey? = nil) {
-    overrideFileURL = fileURL
+  init(fileURL: URL? = nil, legacyFileURL: URL? = nil, key: SymmetricKey? = nil) {
+    overrideJournalURL = fileURL
+    overrideLegacyURL = legacyFileURL
     overrideKey = key
     load()
-    purgeExpired()
+    enforceCapacity()
   }
 
   @discardableResult
-  func record(
-    content: String,
-    sourceName: String?,
-    sourceBundleID: String?,
-    hasFiles: Bool
-  ) -> Bool {
-    let normalized = content
+  func record(_ capture: ClipboardHistoryCapture) -> Bool {
+    let normalized = capture.content
       .replacingOccurrences(of: "\r\n", with: "\n")
       .replacingOccurrences(of: "\r", with: "\n")
       .precomposedStringWithCompatibilityMapping
       .trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let data = normalized.data(using: .utf8),
-          !data.isEmpty,
+    guard let data = normalized.data(using: .utf8), !data.isEmpty,
           data.count <= Self.maximumItemBytes else { return false }
 
     let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-    let existing = items.first { $0.id == digest }
+    let existingIndex = itemPositions[digest]
+    let existing = existingIndex.map { items[$0] }
     let item = ClipboardHistoryItem(
       id: digest,
       capturedAt: Date(),
-      sourceName: sourceName,
-      sourceBundleID: sourceBundleID,
+      sourceName: capture.sourceName ?? existing?.sourceName,
+      sourceBundleID: capture.sourceBundleID ?? existing?.sourceBundleID,
+      sourceURL: Self.sanitizedSourceURL(capture.sourceURL) ?? existing?.sourceURL,
+      sessionName: Self.normalizedSessionName(capture.sessionName) ?? existing?.sessionName,
       content: normalized,
-      category: Self.category(for: normalized, hasFiles: hasFiles),
+      category: Self.category(for: normalized, hasFiles: capture.hasFiles),
       isPinned: existing?.isPinned ?? false,
+      isPermanent: (existing?.isPermanent ?? false)
+        || Self.shouldArchivePermanently(normalized, hasRichText: capture.hasRichText),
       tagIDs: existing?.tagIDs ?? []
     )
-    items.removeAll { $0.id == digest }
-    items.insert(item, at: 0)
-    trimRecentItems()
-    persist()
+
+    var candidate = items
+    if let existingIndex { candidate[existingIndex] = item } else { candidate.append(item) }
+    let projectedRecentCount = recentItemCount
+      - ((existing.map(Self.isOrdinary) ?? false) ? 1 : 0)
+      + (Self.isOrdinary(item) ? 1 : 0)
+    let removed = projectedRecentCount > Self.maximumRecentItems
+      ? Self.trimmedRecentItems(&candidate)
+      : []
+    var events: [ClipboardHistoryJournalEvent] = [.upsert(item)]
+    if !removed.isEmpty { events.append(.removeItems(removed)) }
+    guard append(events) else { return false }
+    items = candidate
+    rebuildItemIndex()
     return true
+  }
+
+  @discardableResult
+  func record(content: String, sourceName: String?, sourceBundleID: String?, hasFiles: Bool) -> Bool {
+    record(ClipboardHistoryCapture(
+      content: content,
+      sourceName: sourceName,
+      sourceBundleID: sourceBundleID,
+      sourceURL: nil,
+      sessionName: nil,
+      hasFiles: hasFiles,
+      hasRichText: false
+    ))
   }
 
   func createTag(named proposedName: String) -> ClipboardUserTag? {
     guard let name = normalizedTagName(proposedName) else { return nil }
-    if let existing = tags.first(where: { equivalentTagNames($0.name, name) }) {
-      return existing
-    }
+    if let existing = tags.first(where: { equivalentTagNames($0.name, name) }) { return existing }
     guard tags.count < Self.maximumTags else { return nil }
     let tag = ClipboardUserTag(id: UUID().uuidString.lowercased(), name: name)
-    tags.append(tag)
-    persist()
+    let candidate = tags + [tag]
+    guard append([.replaceTags(candidate)]) else { return nil }
+    tags = candidate
     return tag
   }
 
@@ -159,45 +243,62 @@ final class ClipboardHistoryStore {
     guard let name = normalizedTagName(proposedName),
           !tags.contains(where: { $0.id != id && equivalentTagNames($0.name, name) }),
           let index = tags.firstIndex(where: { $0.id == id }) else { return false }
-    tags[index].name = name
-    persist()
+    var candidate = tags
+    candidate[index].name = name
+    guard append([.replaceTags(candidate)]) else { return false }
+    tags = candidate
     return true
   }
 
   func deleteTag(id: String) {
     guard tags.contains(where: { $0.id == id }) else { return }
-    tags.removeAll { $0.id == id }
-    for index in items.indices {
-      items[index].tagIDs.removeAll { $0 == id }
-    }
-    persist()
+    let candidateTags = tags.filter { $0.id != id }
+    var candidateItems = items
+    for index in candidateItems.indices { candidateItems[index].tagIDs.removeAll { $0 == id } }
+    guard append([.replaceTags(candidateTags), .updateItems(candidateItems.map(Self.metadata))]) else { return }
+    tags = candidateTags
+    items = candidateItems
   }
 
   @discardableResult
   func togglePinned(itemID: String) -> Bool? {
     guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
-    if !items[index].isPinned,
-       items.filter(\.isPinned).count >= Self.maximumPinnedItems {
-      return nil
-    }
-    items[index].isPinned.toggle()
-    let result = items[index].isPinned
-    persist()
-    return result
+    if !items[index].isPinned, items.filter(\.isPinned).count >= Self.maximumPinnedItems { return nil }
+    var item = items[index]
+    item.isPinned.toggle()
+    guard append([.updateItems([Self.metadata(item)])]) else { return nil }
+    items[index] = item
+    rebuildItemIndex()
+    return item.isPinned
+  }
+
+  @discardableResult
+  func togglePermanent(itemID: String) -> Bool? {
+    guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+    var item = items[index]
+    item.isPermanent.toggle()
+    guard append([.updateItems([Self.metadata(item)])]) else { return nil }
+    items[index] = item
+    rebuildItemIndex()
+    return item.isPermanent
   }
 
   @discardableResult
   func toggleTag(_ tagID: String, for itemID: String) -> Bool? {
     guard tags.contains(where: { $0.id == tagID }),
           let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
-    if let tagIndex = items[index].tagIDs.firstIndex(of: tagID) {
-      items[index].tagIDs.remove(at: tagIndex)
-      persist()
-      return false
+    var item = items[index]
+    let result: Bool
+    if let tagIndex = item.tagIDs.firstIndex(of: tagID) {
+      item.tagIDs.remove(at: tagIndex)
+      result = false
+    } else {
+      item.tagIDs.append(tagID)
+      result = true
     }
-    items[index].tagIDs.append(tagID)
-    persist()
-    return true
+    guard append([.updateItems([Self.metadata(item)])]) else { return nil }
+    items[index] = item
+    return result
   }
 
   func tagNames(for item: ClipboardHistoryItem) -> [String] {
@@ -206,85 +307,247 @@ final class ClipboardHistoryStore {
   }
 
   func clear() {
+    guard append([.clearItems]) else { return }
     items.removeAll()
-    persist()
+    rebuildItemIndex()
   }
 
   static func category(for content: String, hasFiles: Bool) -> ClipboardContentCategory {
     if hasFiles { return .file }
-
     let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-    if let url = URL(string: trimmed),
-       let scheme = url.scheme?.lowercased(),
-       ["http", "https", "mailto"].contains(scheme),
-       !trimmed.contains(where: \.isWhitespace) {
-      return .link
-    }
-
-    let codeSignals = ["```", "func ", "class ", "struct ", "import ", "const ", "let ", "var ", "=>", "</", "#!/"]
-    let hasCodeSignal = codeSignals.contains { trimmed.contains($0) }
-    let codePunctuation = trimmed.filter { "{}[]();=<>".contains($0) }.count
-    if hasCodeSignal || (trimmed.contains("\n") && codePunctuation >= 4) {
-      return .code
-    }
+    if let url = URL(string: trimmed), let scheme = url.scheme?.lowercased(),
+       ["http", "https", "mailto"].contains(scheme), !trimmed.contains(where: \.isWhitespace) { return .link }
+    let signals = ["```", "func ", "class ", "struct ", "import ", "const ", "let ", "var ", "=>", "</", "#!/"]
+    let punctuation = trimmed.filter { "{}[]();=<>".contains($0) }.count
+    if signals.contains(where: trimmed.contains) || (trimmed.contains("\n") && punctuation >= 4) { return .code }
     return .text
+  }
+
+  static func shouldArchivePermanently(_ content: String, hasRichText: Bool) -> Bool {
+    let count = content.count
+    if count >= 4_000 || (hasRichText && count >= 1_500) { return true }
+    guard count >= 2_000 else { return false }
+    let patterns = [
+      #"(?m)^#{1,6}\s+\S"#,
+      #"(?m)^(?:[-*+] |\d+[.)] )\S"#,
+      #"(?m)^```"#,
+      #"(?m)^\|.+\|\s*$"#,
+      #"\n\s*\n"#,
+    ]
+    return patterns.reduce(into: 0) { count, pattern in
+      if content.range(of: pattern, options: .regularExpression) != nil { count += 1 }
+    } >= 2
+  }
+
+  static func sanitizedSourceURL(_ value: String?) -> String? {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), value.count <= 2_048,
+          let url = URL(string: value), let scheme = url.scheme?.lowercased(),
+          ["http", "https", "file"].contains(scheme) else { return nil }
+    return url.absoluteString
+  }
+
+  static func normalizedSessionName(_ value: String?) -> String? {
+    guard let value = value?.precomposedStringWithCompatibilityMapping
+      .trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return nil }
+    return String(value.prefix(240))
   }
 }
 
 private extension ClipboardHistoryStore {
-  func purgeExpired() {
-    let cutoff = Date().addingTimeInterval(-Self.retention)
-    let originalCount = items.count
-    items.removeAll { !$0.isPinned && $0.capturedAt < cutoff }
-    trimRecentItems()
-    if items.count != originalCount { persist() }
+  func enforceCapacity() {
+    trimLoadedItemsIfNeeded()
   }
 
   func load() {
-    guard let fileURL = try? historyFileURL(),
-          let encrypted = try? Data(contentsOf: fileURL),
-          let sealed = try? AES.GCM.SealedBox(combined: encrypted),
-          let plaintext = try? AES.GCM.open(sealed, using: historyKey())
-    else { return }
-    if let archive = try? JSONDecoder().decode(ClipboardHistoryArchive.self, from: plaintext) {
-      items = archive.items
-      tags = Array(archive.tags.prefix(Self.maximumTags))
-    } else if let legacyItems = try? JSONDecoder().decode([ClipboardHistoryItem].self, from: plaintext) {
-      items = legacyItems
-      tags = []
-    }
-    let validTagIDs = Set(tags.map(\.id))
-    for index in items.indices {
-      items[index].tagIDs = items[index].tagIDs.filter(validTagIDs.contains)
-    }
-    trimRecentItems()
-  }
-
-  func persist() {
     do {
-      let fileURL = try historyFileURL()
-      try FileManager.default.createDirectory(
-        at: fileURL.deletingLastPathComponent(),
-        withIntermediateDirectories: true
-      )
-      let archive = ClipboardHistoryArchive(version: 2, items: items, tags: tags)
-      let plaintext = try JSONEncoder().encode(archive)
-      let sealed = try AES.GCM.seal(plaintext, using: historyKey())
-      guard let combined = sealed.combined else { return }
-      try combined.write(to: fileURL, options: [.atomic, .completeFileProtectionUnlessOpen])
+      let journalURL = try historyJournalURL()
+      if FileManager.default.fileExists(atPath: journalURL.path), loadJournal(journalURL) {
+        sanitizeLoadedState()
+        return
+      }
+      if let archive = loadLegacyArchive() {
+        items = archive.items
+        tags = archive.tags
+        sanitizeLoadedState()
+        try rewriteJournal(with: .snapshot(ClipboardHistoryArchive(version: 3, items: items, tags: tags)))
+      }
     } catch {
       // Clipboard monitoring must never interrupt copying or the host app.
     }
   }
 
-  func historyFileURL() throws -> URL {
-    if let overrideFileURL { return overrideFileURL }
+  func loadJournal(_ url: URL) -> Bool {
+    guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+    defer { try? handle.close() }
+    var decodedAny = false
+    while let header = readExactly(4, from: handle) {
+      let length = Int(header[0]) | (Int(header[1]) << 8)
+        | (Int(header[2]) << 16) | (Int(header[3]) << 24)
+      guard length > 0, length <= Self.maximumJournalRecordBytes,
+            let record = readExactly(length, from: handle) else { break }
+      guard let sealed = try? AES.GCM.SealedBox(combined: record),
+            let plaintext = try? AES.GCM.open(sealed, using: historyKey()) else { break }
+      let events = (try? JSONDecoder().decode([ClipboardHistoryJournalEvent].self, from: plaintext))
+        ?? (try? [JSONDecoder().decode(ClipboardHistoryJournalEvent.self, from: plaintext)])
+      guard let events else { break }
+      events.forEach(apply)
+      decodedAny = true
+    }
+    return decodedAny
+  }
+
+  func readExactly(_ count: Int, from handle: FileHandle) -> Data? {
+    var result = Data()
+    result.reserveCapacity(count)
+    while result.count < count {
+      guard let chunk = try? handle.read(upToCount: count - result.count),
+            !chunk.isEmpty else { return nil }
+      result.append(chunk)
+    }
+    return result
+  }
+
+  func loadLegacyArchive() -> ClipboardHistoryArchive? {
+    let candidates: [URL]
+    if let overrideLegacyURL { candidates = [overrideLegacyURL] } else if let overrideJournalURL {
+      candidates = [overrideJournalURL]
+    } else {
+      candidates = (try? [legacyHistoryFileURL()]) ?? []
+    }
+    for url in candidates where FileManager.default.fileExists(atPath: url.path) {
+      guard let encrypted = try? Data(contentsOf: url),
+            let sealed = try? AES.GCM.SealedBox(combined: encrypted),
+            let plaintext = try? AES.GCM.open(sealed, using: historyKey()) else { continue }
+      if let archive = try? JSONDecoder().decode(ClipboardHistoryArchive.self, from: plaintext) { return archive }
+      if let legacyItems = try? JSONDecoder().decode([ClipboardHistoryItem].self, from: plaintext) {
+        return ClipboardHistoryArchive(version: 1, items: legacyItems, tags: [])
+      }
+    }
+    return nil
+  }
+
+  func append(_ events: [ClipboardHistoryJournalEvent]) -> Bool {
+    guard !events.isEmpty else { return true }
+    do {
+      let url = try historyJournalURL()
+      try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+      if !FileManager.default.fileExists(atPath: url.path) {
+        guard FileManager.default.createFile(atPath: url.path, contents: nil) else { return false }
+        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUnlessOpen], ofItemAtPath: url.path)
+      }
+      let handle = try FileHandle(forWritingTo: url)
+      defer { try? handle.close() }
+      try handle.seekToEnd()
+      let plaintext = try JSONEncoder().encode(events)
+      let sealed = try AES.GCM.seal(plaintext, using: historyKey())
+      guard let combined = sealed.combined, combined.count <= Self.maximumJournalRecordBytes else { return false }
+      var length = UInt32(combined.count).littleEndian
+      try withUnsafeBytes(of: &length) { try handle.write(contentsOf: $0) }
+      try handle.write(contentsOf: combined)
+      return true
+    } catch { return false }
+  }
+
+  func rewriteJournal(with event: ClipboardHistoryJournalEvent) throws {
+    let url = try historyJournalURL()
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let temporaryURL = url.deletingLastPathComponent().appending(path: ".history-v2-\(UUID().uuidString).tmp")
+    defer { try? FileManager.default.removeItem(at: temporaryURL) }
+    let plaintext = try JSONEncoder().encode([event])
+    let sealed = try AES.GCM.seal(plaintext, using: historyKey())
+    guard let combined = sealed.combined else { throw CocoaError(.fileWriteUnknown) }
+    var record = Data()
+    var length = UInt32(combined.count).littleEndian
+    withUnsafeBytes(of: &length) { record.append(contentsOf: $0) }
+    record.append(combined)
+    try record.write(to: temporaryURL, options: .completeFileProtectionUnlessOpen)
+    if FileManager.default.fileExists(atPath: url.path) {
+      _ = try FileManager.default.replaceItemAt(url, withItemAt: temporaryURL)
+    } else { try FileManager.default.moveItem(at: temporaryURL, to: url) }
+  }
+
+  func apply(_ event: ClipboardHistoryJournalEvent) {
+    switch event {
+    case let .snapshot(archive): items = archive.items; tags = archive.tags; rebuildItemIndex()
+    case let .upsert(item):
+      if let index = itemPositions[item.id] {
+        items[index] = item
+      } else {
+        itemPositions[item.id] = items.count
+        items.append(item)
+      }
+    case let .removeItems(ids):
+      let selected = Set(ids)
+      items.removeAll { selected.contains($0.id) }
+      rebuildItemIndex()
+    case let .replaceTags(newTags): tags = newTags
+    case let .updateItems(metadata):
+      let values = Dictionary(uniqueKeysWithValues: metadata.map { ($0.id, $0) })
+      for index in items.indices where values[items[index].id] != nil {
+        guard let value = values[items[index].id] else { continue }
+        items[index].isPinned = value.isPinned
+        items[index].isPermanent = value.isPermanent
+        items[index].tagIDs = value.tagIDs
+      }
+    case .clearItems: items.removeAll(); rebuildItemIndex()
+    }
+  }
+
+  func sanitizeLoadedState() {
+    tags = Array(tags.prefix(Self.maximumTags))
+    let validTagIDs = Set(tags.map(\.id))
+    for index in items.indices { items[index].tagIDs = items[index].tagIDs.filter(validTagIDs.contains) }
+    rebuildItemIndex()
+    trimLoadedItemsIfNeeded()
+  }
+
+  func trimLoadedItemsIfNeeded() {
+    var candidate = items
+    let removed = Self.trimmedRecentItems(&candidate)
+    if !removed.isEmpty, append([.removeItems(removed)]) {
+      items = candidate
+      rebuildItemIndex()
+    }
+  }
+
+  static func trimmedRecentItems(_ values: inout [ClipboardHistoryItem]) -> [String] {
+    let ordinary = values.filter(isOrdinary).sorted { $0.capturedAt > $1.capturedAt }
+    guard ordinary.count > maximumRecentItems else { return [] }
+    let removed = ordinary.dropFirst(maximumRecentItems).map(\.id)
+    let selected = Set(removed)
+    values.removeAll { selected.contains($0.id) }
+    return removed
+  }
+
+  static func isOrdinary(_ item: ClipboardHistoryItem) -> Bool {
+    !item.isPinned && !item.isPermanent
+  }
+
+  func rebuildItemIndex() {
+    itemPositions.removeAll(keepingCapacity: true)
+    for (index, item) in items.enumerated() { itemPositions[item.id] = index }
+    recentItemCount = items.filter(Self.isOrdinary).count
+  }
+
+  static func metadata(_ item: ClipboardHistoryItem) -> ClipboardItemMetadata {
+    ClipboardItemMetadata(id: item.id, isPinned: item.isPinned, isPermanent: item.isPermanent, tagIDs: item.tagIDs)
+  }
+
+  func historyJournalURL() throws -> URL {
+    if let overrideJournalURL { return overrideJournalURL }
+    return try historyDirectoryURL().appending(path: "history-v2.ksj")
+  }
+
+  func legacyHistoryFileURL() throws -> URL {
+    if let overrideLegacyURL { return overrideLegacyURL }
+    return try historyDirectoryURL().appending(path: "history-v1.ksc")
+  }
+
+  func historyDirectoryURL() throws -> URL {
     let baseURL = FileManager.default.containerURL(
       forSecurityApplicationGroupIdentifier: "group.art.apuch.ksamint-markedit"
     ) ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    return baseURL
-      .appending(path: "ClipboardHistory", directoryHint: .isDirectory)
-      .appending(path: "history-v1.ksc")
+    return baseURL.appending(path: "ClipboardHistory", directoryHint: .isDirectory)
   }
 
   func historyKey() throws -> SymmetricKey {
@@ -297,10 +560,7 @@ private extension ClipboardHistoryStore {
     ]
     var item: CFTypeRef?
     if SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-       let data = item as? Data,
-       data.count == 32 {
-      return SymmetricKey(data: data)
-    }
+       let data = item as? Data, data.count == 32 { return SymmetricKey(data: data) }
 
     let data = Data(SymmetricKey(size: .bits256).withUnsafeBytes(Array.init))
     var add = query
@@ -312,32 +572,71 @@ private extension ClipboardHistoryStore {
     if status == errSecDuplicateItem {
       var existing: CFTypeRef?
       if SecItemCopyMatching(query as CFDictionary, &existing) == errSecSuccess,
-         let existingData = existing as? Data,
-         existingData.count == 32 {
-        return SymmetricKey(data: existingData)
-      }
+         let existingData = existing as? Data, existingData.count == 32 { return SymmetricKey(data: existingData) }
     }
     throw CocoaError(.fileWriteNoPermission)
   }
 
-  func trimRecentItems() {
-    var recentCount = 0
-    items = items.filter { item in
-      if item.isPinned { return true }
-      recentCount += 1
-      return recentCount <= Self.maximumRecentItems
-    }
-  }
-
   func normalizedTagName(_ proposedName: String) -> String? {
-    let value = proposedName
-      .precomposedStringWithCompatibilityMapping
+    let value = proposedName.precomposedStringWithCompatibilityMapping
       .trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !value.isEmpty else { return nil }
-    return String(value.prefix(Self.maximumTagNameLength))
+    return value.isEmpty ? nil : String(value.prefix(Self.maximumTagNameLength))
   }
 
   func equivalentTagNames(_ lhs: String, _ rhs: String) -> Bool {
     lhs.compare(rhs, options: [.caseInsensitive, .diacriticInsensitive], locale: .current) == .orderedSame
+  }
+}
+
+private extension ClipboardSourceContextReader {
+  static func pasteboardMetadata(_ pasteboard: NSPasteboard) -> (url: String?, title: String?) {
+    let sourceTypes = [
+      NSPasteboard.PasteboardType("org.chromium.source-url"),
+      NSPasteboard.PasteboardType("public.url"),
+    ]
+    let titleTypes = [
+      NSPasteboard.PasteboardType("public.url-name"),
+      NSPasteboard.PasteboardType("org.chromium.source-title"),
+    ]
+    let directURL = sourceTypes.compactMap { pasteboard.string(forType: $0) }.first
+    let directTitle = titleTypes.compactMap { pasteboard.string(forType: $0) }.first
+    let archive = webArchiveMetadata(pasteboard)
+    return (directURL ?? archive.url, directTitle ?? archive.title)
+  }
+
+  static func webArchiveMetadata(_ pasteboard: NSPasteboard) -> (url: String?, title: String?) {
+    let types = [
+      NSPasteboard.PasteboardType("Apple Web Archive pasteboard type"),
+      NSPasteboard.PasteboardType("com.apple.webarchive"),
+    ]
+    for type in types {
+      guard let data = pasteboard.data(forType: type), data.count <= 2 * 1024 * 1024,
+            let object = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+            let archive = object as? [String: Any] else { continue }
+      let main = archive["WebMainResource"] as? [String: Any]
+      let url = main?["WebResourceURL"] as? String
+      let title = archive["WebTitle"] as? String ?? main?["WebResourceTitle"] as? String
+      if url != nil || title != nil { return (url, title) }
+    }
+    return (nil, nil)
+  }
+
+  static func accessibilityMetadata(_ application: NSRunningApplication?) -> (url: String?, title: String?) {
+    guard AXIsProcessTrusted(), let application else { return (nil, nil) }
+    let appElement = AXUIElementCreateApplication(application.processIdentifier)
+    var focusedValue: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedValue) == .success,
+          let focusedValue, CFGetTypeID(focusedValue) == AXUIElementGetTypeID() else { return (nil, nil) }
+    let window = unsafeBitCast(focusedValue, to: AXUIElement.self)
+    return (
+      attribute(kAXDocumentAttribute as CFString, from: window),
+      attribute(kAXTitleAttribute as CFString, from: window)
+    )
+  }
+
+  static func attribute(_ name: CFString, from element: AXUIElement) -> String? {
+    var value: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(element, name, &value) == .success else { return nil }
+    return value as? String
   }
 }
