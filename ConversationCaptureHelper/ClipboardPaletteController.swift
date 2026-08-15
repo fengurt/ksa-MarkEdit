@@ -2,6 +2,19 @@ import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
 
+private enum ClipboardPaletteFilter: Equatable {
+  case recent
+  case pinned
+  case tag(String)
+}
+
+private struct ClipboardSidebarEntry {
+  let filter: ClipboardPaletteFilter
+  let title: String
+  let systemImage: String
+  let count: Int
+}
+
 @MainActor
 final class ClipboardPaletteController: NSObject {
   typealias CommitHandler = (ClipboardHistoryItem, NSRunningApplication?) -> Void
@@ -10,28 +23,25 @@ final class ClipboardPaletteController: NSObject {
   private let onCommit: CommitHandler
   private let onDismiss: () -> Void
   private let panel = NSPanel(
-    contentRect: NSRect(x: 0, y: 0, width: 520, height: 390),
+    contentRect: NSRect(x: 0, y: 0, width: 680, height: 430),
     styleMask: [.titled, .fullSizeContentView],
     backing: .buffered,
     defer: false
   )
   private let searchField = NSSearchField()
-  private let categoryControl = NSSegmentedControl(
-    labels: [
-      String(localized: "Recent"),
-      String(localized: "Text"),
-      String(localized: "Links"),
-      String(localized: "Code"),
-      String(localized: "Files"),
-    ],
-    trackingMode: .selectOne,
-    target: nil,
-    action: nil
-  )
+  private let sidebarTable = NSTableView()
+  private let sidebarScrollView = NSScrollView()
+  private let addTagButton = NSButton()
+  private let renameTagButton = NSButton()
+  private let deleteTagButton = NSButton()
   private let tableView = NSTableView()
   private let scrollView = NSScrollView()
+  private let itemMenu = NSMenu()
   private let hintLabel = NSTextField(labelWithString: "")
+  private var sidebarEntries = [ClipboardSidebarEntry]()
   private var filteredItems = [ClipboardHistoryItem]()
+  private var activeFilter = ClipboardPaletteFilter.recent
+  private var contextItemID: String?
   private var previousApplication: NSRunningApplication?
   private var eventMonitor: Any?
 
@@ -58,6 +68,7 @@ final class ClipboardPaletteController: NSObject {
   }
 
   func reload() {
+    reloadSidebar(selecting: activeFilter)
     applyFilter()
   }
 
@@ -85,10 +96,26 @@ private extension ClipboardPaletteController {
     searchField.placeholderString = String(localized: "Search recent clipboard content")
     searchField.delegate = self
 
-    categoryControl.selectedSegment = 0
-    categoryControl.target = self
-    categoryControl.action = #selector(categoryChanged(_:))
-    categoryControl.segmentStyle = .rounded
+    let sidebarColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("ClipboardSidebar"))
+    sidebarColumn.resizingMask = .autoresizingMask
+    sidebarTable.addTableColumn(sidebarColumn)
+    sidebarTable.headerView = nil
+    sidebarTable.rowHeight = 30
+    sidebarTable.intercellSpacing = NSSize(width: 0, height: 2)
+    sidebarTable.dataSource = self
+    sidebarTable.delegate = self
+    sidebarTable.target = self
+    sidebarTable.doubleAction = #selector(renameSelectedTag)
+    sidebarTable.style = .sourceList
+    sidebarTable.setAccessibilityLabel(String(localized: "Clipboard labels"))
+
+    sidebarScrollView.documentView = sidebarTable
+    sidebarScrollView.hasVerticalScroller = true
+    sidebarScrollView.drawsBackground = false
+
+    configureTagButton(addTagButton, symbol: "plus", label: String(localized: "New Label"), action: #selector(addTagAction))
+    configureTagButton(renameTagButton, symbol: "pencil", label: String(localized: "Rename Label"), action: #selector(renameSelectedTag))
+    configureTagButton(deleteTagButton, symbol: "minus", label: String(localized: "Delete Label"), action: #selector(deleteSelectedTag))
 
     let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("ClipboardItem"))
     column.resizingMask = .autoresizingMask
@@ -101,6 +128,9 @@ private extension ClipboardPaletteController {
     tableView.target = self
     tableView.doubleAction = #selector(commitSelection)
     tableView.setAccessibilityLabel(String(localized: "Recent clipboard content"))
+    itemMenu.delegate = self
+    itemMenu.autoenablesItems = false
+    tableView.menu = itemMenu
 
     scrollView.documentView = tableView
     scrollView.hasVerticalScroller = true
@@ -115,7 +145,7 @@ private extension ClipboardPaletteController {
 
     let contentView = NSView()
     panel.contentView = contentView
-    [searchField, categoryControl, scrollView, hintLabel].forEach {
+    [searchField, sidebarScrollView, addTagButton, renameTagButton, deleteTagButton, scrollView, hintLabel].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       contentView.addSubview($0)
     }
@@ -124,12 +154,28 @@ private extension ClipboardPaletteController {
       searchField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
       searchField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-      categoryControl.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 10),
-      categoryControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      categoryControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+      sidebarScrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 10),
+      sidebarScrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
+      sidebarScrollView.widthAnchor.constraint(equalToConstant: 158),
+      sidebarScrollView.bottomAnchor.constraint(equalTo: addTagButton.topAnchor, constant: -6),
 
-      scrollView.topAnchor.constraint(equalTo: categoryControl.bottomAnchor, constant: 10),
-      scrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+      addTagButton.leadingAnchor.constraint(equalTo: sidebarScrollView.leadingAnchor, constant: 2),
+      addTagButton.bottomAnchor.constraint(equalTo: hintLabel.topAnchor, constant: -6),
+      addTagButton.widthAnchor.constraint(equalToConstant: 26),
+      addTagButton.heightAnchor.constraint(equalToConstant: 24),
+
+      renameTagButton.leadingAnchor.constraint(equalTo: addTagButton.trailingAnchor, constant: 4),
+      renameTagButton.centerYAnchor.constraint(equalTo: addTagButton.centerYAnchor),
+      renameTagButton.widthAnchor.constraint(equalToConstant: 26),
+      renameTagButton.heightAnchor.constraint(equalToConstant: 24),
+
+      deleteTagButton.leadingAnchor.constraint(equalTo: renameTagButton.trailingAnchor, constant: 4),
+      deleteTagButton.centerYAnchor.constraint(equalTo: addTagButton.centerYAnchor),
+      deleteTagButton.widthAnchor.constraint(equalToConstant: 26),
+      deleteTagButton.heightAnchor.constraint(equalToConstant: 24),
+
+      scrollView.topAnchor.constraint(equalTo: sidebarScrollView.topAnchor),
+      scrollView.leadingAnchor.constraint(equalTo: sidebarScrollView.trailingAnchor, constant: 10),
       scrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
       scrollView.bottomAnchor.constraint(equalTo: hintLabel.topAnchor, constant: -6),
 
@@ -138,6 +184,7 @@ private extension ClipboardPaletteController {
       hintLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
       hintLabel.heightAnchor.constraint(equalToConstant: 16),
     ])
+    reloadSidebar(selecting: .recent)
     applyFilter()
   }
 
@@ -146,7 +193,8 @@ private extension ClipboardPaletteController {
     let frontmost = NSWorkspace.shared.frontmostApplication
     previousApplication = frontmost?.bundleIdentifier == helperBundleID ? nil : frontmost
     searchField.stringValue = ""
-    categoryControl.selectedSegment = 0
+    activeFilter = .recent
+    reloadSidebar(selecting: activeFilter)
     updateHint()
     applyFilter()
     positionPanel()
@@ -158,6 +206,16 @@ private extension ClipboardPaletteController {
     )?.activate(options: [.activateAllWindows])
     panel.makeKey()
     panel.makeFirstResponder(searchField)
+  }
+
+  func configureTagButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
+    button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+    button.bezelStyle = .accessoryBarAction
+    button.imagePosition = .imageOnly
+    button.toolTip = label
+    button.setAccessibilityLabel(label)
+    button.target = self
+    button.action = action
   }
 
   func updateHint() {
@@ -227,29 +285,178 @@ private extension ClipboardPaletteController {
     onDismiss()
   }
 
-  @objc func categoryChanged(_ sender: NSSegmentedControl) {
-    applyFilter()
-  }
-
   func applyFilter() {
-    let category: ClipboardContentCategory? = switch categoryControl.selectedSegment {
-    case 1: .text
-    case 2: .link
-    case 3: .code
-    case 4: .file
-    default: nil
-    }
     let query = searchField.stringValue
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .precomposedStringWithCompatibilityMapping
-    filteredItems = store.items.filter { item in
-      (category == nil || item.category == category)
-        && (query.isEmpty || item.content.localizedStandardContains(query))
-    }
+    filteredItems = store.items
+      .filter { item in
+        let matchesFilter = switch activeFilter {
+        case .recent: true
+        case .pinned: item.isPinned
+        case let .tag(tagID): item.tagIDs.contains(tagID)
+        }
+        let tagText = store.tagNames(for: item).joined(separator: " ")
+        return matchesFilter
+          && (query.isEmpty
+            || item.content.localizedStandardContains(query)
+            || tagText.localizedStandardContains(query))
+      }
+      .sorted { lhs, rhs in
+        if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
+        return lhs.capturedAt > rhs.capturedAt
+      }
     tableView.reloadData()
     if !filteredItems.isEmpty {
       tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
     }
+    updateTagButtons()
+  }
+
+  func reloadSidebar(selecting filter: ClipboardPaletteFilter? = nil) {
+    let target = filter ?? activeFilter
+    sidebarEntries = [
+      ClipboardSidebarEntry(
+        filter: .recent,
+        title: String(localized: "Recent"),
+        systemImage: "clock",
+        count: store.items.count
+      ),
+      ClipboardSidebarEntry(
+        filter: .pinned,
+        title: String(localized: "Pinned"),
+        systemImage: "pin.fill",
+        count: store.items.filter(\.isPinned).count
+      ),
+    ]
+    sidebarEntries.append(contentsOf: store.tags.map { tag in
+      ClipboardSidebarEntry(
+        filter: .tag(tag.id),
+        title: tag.name,
+        systemImage: "tag",
+        count: store.items.filter { $0.tagIDs.contains(tag.id) }.count
+      )
+    })
+    sidebarTable.reloadData()
+    if let index = sidebarEntries.firstIndex(where: { $0.filter == target }) {
+      activeFilter = target
+      sidebarTable.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+    } else {
+      activeFilter = .recent
+      sidebarTable.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+    }
+    updateTagButtons()
+  }
+
+  func updateTagButtons() {
+    let canEdit = if case .tag = activeFilter { true } else { false }
+    renameTagButton.isEnabled = canEdit
+    deleteTagButton.isEnabled = canEdit
+  }
+
+  @objc func addTagAction() {
+    addTag(assigningTo: nil)
+  }
+
+  func addTag(assigningTo itemID: String?) {
+    guard let name = promptForTagName(
+      title: String(localized: "New Label"),
+      actionTitle: String(localized: "Create"),
+      initialValue: ""
+    ), let tag = store.createTag(named: name) else {
+      return
+    }
+    if let itemID,
+       store.items.first(where: { $0.id == itemID })?.tagIDs.contains(tag.id) == false {
+      _ = store.toggleTag(tag.id, for: itemID)
+    }
+    activeFilter = .tag(tag.id)
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
+  @objc func renameSelectedTag() {
+    guard case let .tag(tagID) = activeFilter,
+          let tag = store.tags.first(where: { $0.id == tagID }),
+          let name = promptForTagName(
+            title: String(localized: "Rename Label"),
+            actionTitle: String(localized: "Rename"),
+            initialValue: tag.name
+          ) else { return }
+    guard store.renameTag(id: tagID, to: name) else {
+      NSSound.beep()
+      return
+    }
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
+  @objc func deleteSelectedTag() {
+    guard case let .tag(tagID) = activeFilter,
+          let tag = store.tags.first(where: { $0.id == tagID }) else { return }
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Delete Label?")
+    alert.informativeText = String(
+      format: String(localized: "The label “%@” will be removed. Clipboard items will not be deleted."),
+      tag.name
+    )
+    alert.addButton(withTitle: String(localized: "Delete"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    guard runPaletteModal(alert) == .alertFirstButtonReturn else { return }
+    store.deleteTag(id: tagID)
+    activeFilter = .recent
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
+  func promptForTagName(title: String, actionTitle: String, initialValue: String) -> String? {
+    let input = NSTextField(string: initialValue)
+    input.placeholderString = String(localized: "Label name")
+    input.frame = NSRect(x: 0, y: 0, width: 280, height: 24)
+    let alert = NSAlert()
+    alert.messageText = title
+    alert.accessoryView = input
+    alert.addButton(withTitle: actionTitle)
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    alert.window.initialFirstResponder = input
+    guard runPaletteModal(alert) == .alertFirstButtonReturn else { return nil }
+    let value = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    return value.isEmpty ? nil : value
+  }
+
+  func runPaletteModal(_ alert: NSAlert) -> NSApplication.ModalResponse {
+    removeEventMonitor()
+    defer {
+      if panel.isVisible { installEventMonitor() }
+    }
+    return alert.runModal()
+  }
+
+  func togglePin(itemID: String) {
+    guard store.togglePinned(itemID: itemID) != nil else {
+      NSSound.beep()
+      return
+    }
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
+  @objc func togglePinnedFromMenu() {
+    guard let contextItemID else { return }
+    togglePin(itemID: contextItemID)
+  }
+
+  @objc func toggleTagFromMenu(_ sender: NSMenuItem) {
+    guard let contextItemID,
+          let tagID = sender.representedObject as? String else { return }
+    _ = store.toggleTag(tagID, for: contextItemID)
+    reloadSidebar(selecting: activeFilter)
+    applyFilter()
+  }
+
+  @objc func createTagFromMenu() {
+    guard let contextItemID else { return }
+    addTag(assigningTo: contextItemID)
   }
 
   var accessibilityTrusted: Bool {
@@ -272,17 +479,126 @@ extension ClipboardPaletteController: NSSearchFieldDelegate {
 
 extension ClipboardPaletteController: NSTableViewDataSource, NSTableViewDelegate {
   func numberOfRows(in tableView: NSTableView) -> Int {
-    filteredItems.count
+    tableView === sidebarTable ? sidebarEntries.count : filteredItems.count
   }
 
   func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    if tableView === sidebarTable {
+      guard sidebarEntries.indices.contains(row) else { return nil }
+      let identifier = NSUserInterfaceItemIdentifier("ClipboardSidebarCell")
+      let cell = (tableView.makeView(withIdentifier: identifier, owner: nil) as? ClipboardSidebarCellView)
+        ?? ClipboardSidebarCellView()
+      cell.identifier = identifier
+      cell.configure(with: sidebarEntries[row])
+      return cell
+    }
     guard filteredItems.indices.contains(row) else { return nil }
     let identifier = NSUserInterfaceItemIdentifier("ClipboardHistoryCell")
     let cell = (tableView.makeView(withIdentifier: identifier, owner: nil) as? ClipboardHistoryCellView)
       ?? ClipboardHistoryCellView()
     cell.identifier = identifier
-    cell.configure(with: filteredItems[row])
+    let item = filteredItems[row]
+    cell.configure(
+      with: item,
+      tagNames: store.tagNames(for: item),
+      onTogglePin: { [weak self] in self?.togglePin(itemID: item.id) }
+    )
     return cell
+  }
+
+  func tableViewSelectionDidChange(_ notification: Notification) {
+    guard notification.object as? NSTableView === sidebarTable,
+          sidebarEntries.indices.contains(sidebarTable.selectedRow) else { return }
+    activeFilter = sidebarEntries[sidebarTable.selectedRow].filter
+    applyFilter()
+  }
+}
+
+extension ClipboardPaletteController: NSMenuDelegate {
+  func menuNeedsUpdate(_ menu: NSMenu) {
+    guard menu === itemMenu else { return }
+    menu.removeAllItems()
+    let row = tableView.clickedRow >= 0 ? tableView.clickedRow : tableView.selectedRow
+    guard filteredItems.indices.contains(row) else {
+      contextItemID = nil
+      return
+    }
+    let item = filteredItems[row]
+    contextItemID = item.id
+
+    let pinItem = NSMenuItem(
+      title: item.isPinned ? String(localized: "Unpin") : String(localized: "Pin"),
+      action: #selector(togglePinnedFromMenu),
+      keyEquivalent: ""
+    )
+    pinItem.target = self
+    pinItem.isEnabled = true
+    menu.addItem(pinItem)
+    menu.addItem(.separator())
+
+    for tag in store.tags {
+      let tagItem = NSMenuItem(title: tag.name, action: #selector(toggleTagFromMenu(_:)), keyEquivalent: "")
+      tagItem.target = self
+      tagItem.representedObject = tag.id
+      tagItem.state = item.tagIDs.contains(tag.id) ? .on : .off
+      tagItem.isEnabled = true
+      menu.addItem(tagItem)
+    }
+    if !store.tags.isEmpty { menu.addItem(.separator()) }
+    let newTagItem = NSMenuItem(
+      title: String(localized: "New Label…"),
+      action: #selector(createTagFromMenu),
+      keyEquivalent: ""
+    )
+    newTagItem.target = self
+    newTagItem.isEnabled = true
+    menu.addItem(newTagItem)
+  }
+}
+
+@MainActor
+private final class ClipboardSidebarCellView: NSTableCellView {
+  private let iconView = NSImageView()
+  private let titleLabel = NSTextField(labelWithString: "")
+  private let countLabel = NSTextField(labelWithString: "")
+
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    iconView.contentTintColor = .secondaryLabelColor
+    titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
+    titleLabel.lineBreakMode = .byTruncatingTail
+    countLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+    countLabel.textColor = .tertiaryLabelColor
+    countLabel.alignment = .right
+    [iconView, titleLabel, countLabel].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      addSubview($0)
+    }
+    textField = titleLabel
+    NSLayoutConstraint.activate([
+      iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 7),
+      iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+      iconView.widthAnchor.constraint(equalToConstant: 15),
+      iconView.heightAnchor.constraint(equalToConstant: 15),
+      titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 7),
+      titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+      titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: countLabel.leadingAnchor, constant: -5),
+      countLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -7),
+      countLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+      countLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 18),
+    ])
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  func configure(with entry: ClipboardSidebarEntry) {
+    titleLabel.stringValue = entry.title
+    countLabel.stringValue = String(entry.count)
+    iconView.image = NSImage(systemSymbolName: entry.systemImage, accessibilityDescription: entry.title)
+    setAccessibilityLabel("\(entry.title), \(entry.count)")
   }
 }
 
@@ -291,6 +607,8 @@ private final class ClipboardHistoryCellView: NSTableCellView {
   private let iconView = NSImageView()
   private let contentLabel = NSTextField(labelWithString: "")
   private let metadataLabel = NSTextField(labelWithString: "")
+  private let pinButton = NSButton()
+  private var onTogglePin: (() -> Void)?
 
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
@@ -300,8 +618,12 @@ private final class ClipboardHistoryCellView: NSTableCellView {
     metadataLabel.font = .systemFont(ofSize: 10)
     metadataLabel.textColor = .tertiaryLabelColor
     metadataLabel.lineBreakMode = .byTruncatingTail
+    pinButton.bezelStyle = .inline
+    pinButton.imagePosition = .imageOnly
+    pinButton.target = self
+    pinButton.action = #selector(togglePin)
 
-    [iconView, contentLabel, metadataLabel].forEach {
+    [iconView, contentLabel, metadataLabel, pinButton].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
       addSubview($0)
     }
@@ -314,11 +636,16 @@ private final class ClipboardHistoryCellView: NSTableCellView {
 
       contentLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
       contentLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 10),
-      contentLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+      contentLabel.trailingAnchor.constraint(equalTo: pinButton.leadingAnchor, constant: -8),
 
       metadataLabel.topAnchor.constraint(equalTo: contentLabel.bottomAnchor, constant: 5),
       metadataLabel.leadingAnchor.constraint(equalTo: contentLabel.leadingAnchor),
       metadataLabel.trailingAnchor.constraint(equalTo: contentLabel.trailingAnchor),
+
+      pinButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+      pinButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+      pinButton.widthAnchor.constraint(equalToConstant: 24),
+      pinButton.heightAnchor.constraint(equalToConstant: 24),
     ])
   }
 
@@ -327,7 +654,8 @@ private final class ClipboardHistoryCellView: NSTableCellView {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func configure(with item: ClipboardHistoryItem) {
+  func configure(with item: ClipboardHistoryItem, tagNames: [String], onTogglePin: @escaping () -> Void) {
+    self.onTogglePin = onTogglePin
     let preview = item.content
       .replacingOccurrences(of: "\n", with: "  ")
       .replacingOccurrences(of: "\t", with: " ")
@@ -337,8 +665,20 @@ private final class ClipboardHistoryCellView: NSTableCellView {
       accessibilityDescription: item.category.localizedTitle
     )
     let source = item.sourceName ?? String(localized: "Unknown application")
-    metadataLabel.stringValue = "\(item.category.localizedTitle) · \(source) · \(relativeDate(item.capturedAt))"
+    let tagSummary = tagNames.isEmpty ? "" : " · \(tagNames.joined(separator: ", "))"
+    metadataLabel.stringValue = "\(item.category.localizedTitle) · \(source) · \(relativeDate(item.capturedAt))\(tagSummary)"
+    let pinLabel = item.isPinned ? String(localized: "Unpin") : String(localized: "Pin")
+    pinButton.image = NSImage(
+      systemSymbolName: item.isPinned ? "pin.fill" : "pin",
+      accessibilityDescription: pinLabel
+    )
+    pinButton.toolTip = pinLabel
+    pinButton.setAccessibilityLabel(pinLabel)
     setAccessibilityLabel("\(item.category.localizedTitle), \(contentLabel.stringValue)")
+  }
+
+  @objc private func togglePin() {
+    onTogglePin?()
   }
 
   private func relativeDate(_ date: Date) -> String {

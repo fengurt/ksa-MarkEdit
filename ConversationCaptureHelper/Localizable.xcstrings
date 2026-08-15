@@ -16,8 +16,23 @@
     "Clipboard History" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Historique du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボード履歴" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板历史" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "剪貼簿記錄" } }
     } },
+    "Clipboard labels" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étiquettes du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "クリップボードラベル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板标签" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "剪貼簿標籤" } }
+    } },
     "Code" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Code" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "コード" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "代码" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "程式碼" } }
+    } },
+    "Create" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "作成" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "建立" } }
+    } },
+    "Delete" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "刪除" } }
+    } },
+    "Delete Label" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer l’étiquette" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベルを削除" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除标签" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "刪除標籤" } }
+    } },
+    "Delete Label?" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer l’étiquette ?" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベルを削除しますか？" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除标签？" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "刪除標籤？" } }
     } },
     "Enable Direct Paste…" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer le collage direct…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "直接ペーストを有効にする…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用直接粘贴…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "啟用直接貼上…" } }
@@ -28,11 +43,32 @@
     "Links" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liens" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "リンク" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "链接" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "連結" } }
     } },
+    "Label name" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nom de l’étiquette" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベル名" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签名称" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "標籤名稱" } }
+    } },
+    "New Label" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouvelle étiquette" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "新規ラベル" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建标签" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "新增標籤" } }
+    } },
+    "New Label…" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouvelle étiquette…" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "新規ラベル…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建标签…" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "新增標籤…" } }
+    } },
+    "Pin" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Épingler" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピン留め" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "置顶" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "置頂" } }
+    } },
+    "Pinned" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Épinglé" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピン留め" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已置顶" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "已置頂" } }
+    } },
     "Recent" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Récent" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }
     } },
     "Recent clipboard content" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contenu récent du presse-papiers" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近のクリップボード内容" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近剪贴内容" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近剪貼內容" } }
+    } },
+    "Rename" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Renommer" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "名前を変更" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重命名" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重新命名" } }
+    } },
+    "Rename Label" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Renommer l’étiquette" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベル名を変更" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重命名标签" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重新命名標籤" } }
     } },
     "Search recent clipboard content" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher dans le presse-papiers récent" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近のクリップボードを検索" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索最近剪贴内容" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋最近剪貼內容" } }
@@ -48,6 +84,12 @@
     } },
     "This removes the encrypted recent clipboard list from this Mac." : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime de ce Mac la liste chiffrée du presse-papiers récent." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "このMacから暗号化された最近のクリップボード一覧を削除します。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从本机移除加密的最近剪贴板列表。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "這會從本機移除加密的最近剪貼簿清單。" } }
+    } },
+    "The label “%@” will be removed. Clipboard items will not be deleted." : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’étiquette « %@ » sera supprimée. Les éléments du presse-papiers ne seront pas supprimés." } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベル「%@」を削除します。クリップボード項目は削除されません。" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签“%@”将被移除，剪贴板内容不会被删除。" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "標籤「%@」將被移除，剪貼簿內容不會被刪除。" } }
+    } },
+    "Unpin" : { "localizations" : {
+      "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désépingler" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピン留めを解除" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消置顶" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消置頂" } }
     } },
     "Unknown application" : { "localizations" : {
       "fr" : { "stringUnit" : { "state" : "translated", "value" : "Application inconnue" } }, "ja" : { "stringUnit" : { "state" : "translated", "value" : "不明なアプリ" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未知应用" } }, "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未知 App" } }
