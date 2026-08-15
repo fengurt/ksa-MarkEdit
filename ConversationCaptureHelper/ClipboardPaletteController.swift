@@ -69,6 +69,7 @@ private extension ClipboardPaletteController {
     panel.titlebarAppearsTransparent = true
     panel.isMovableByWindowBackground = true
     panel.isReleasedWhenClosed = false
+    panel.hidesOnDeactivate = false
     panel.level = .floating
     panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     panel.backgroundColor = .windowBackgroundColor
