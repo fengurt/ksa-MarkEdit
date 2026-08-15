@@ -16,6 +16,7 @@ private enum ClipboardHistoryTestError: Error {
 
 @main
 @MainActor
+// swiftlint:disable:next convenience_type
 private struct ClipboardHistoryStoreTestMain {
   static func main() throws {
     let root = FileManager.default.temporaryDirectory

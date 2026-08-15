@@ -500,9 +500,10 @@ extension ClipboardPaletteController: NSTableViewDataSource, NSTableViewDelegate
     let item = filteredItems[row]
     cell.configure(
       with: item,
-      tagNames: store.tagNames(for: item),
-      onTogglePin: { [weak self] in self?.togglePin(itemID: item.id) }
-    )
+      tagNames: store.tagNames(for: item)
+    ) { [weak self] in
+      self?.togglePin(itemID: item.id)
+    }
     return cell
   }
 
