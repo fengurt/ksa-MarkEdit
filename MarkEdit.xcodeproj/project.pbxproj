@@ -139,6 +139,8 @@
 		AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */; };
 		B0E02F682D8F77A50060DEA5 /* MarkEdit.sdef in Resources */ = {isa = PBXBuildFile; fileRef = B0E02F672D8F77A50060DEA5 /* MarkEdit.sdef */; };
 		B5086474EC0968B8E2FC20C4 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA5D42A42431B42A426528D /* main.swift */; };
+		DC1000013000000000000001 /* ClipboardHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000023000000000000001 /* ClipboardHistory.swift */; };
+		DC1000033000000000000001 /* ClipboardPaletteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000043000000000000001 /* ClipboardPaletteController.swift */; };
 		CC000002300000000000001A /* EditorDocument+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002300000000000001B /* EditorDocument+ClosedTab.swift */; };
 		CC000003300000000000001A /* AppDelegate+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000003300000000000001B /* AppDelegate+ClosedTab.swift */; };
 		CC000004300000000000001A /* EditorSelectionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004300000000000001B /* EditorSelectionHistory.swift */; };
@@ -359,6 +361,8 @@
 		CC000006300000000000001B /* EditorClosedTabHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorClosedTabHistory.swift; sourceTree = "<group>"; };
 		D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionViewController.swift; sourceTree = "<group>"; };
 		DCA5D42A42431B42A426528D /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DC1000023000000000000001 /* ClipboardHistory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardHistory.swift; sourceTree = "<group>"; };
+		DC1000043000000000000001 /* ClipboardPaletteController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardPaletteController.swift; sourceTree = "<group>"; };
 		EE100007EEEE000000000007 /* ExtensionInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionInstaller.swift; sourceTree = "<group>"; };
 		EE100009EEEE000000000009 /* ExtensionUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionUpdater.swift; sourceTree = "<group>"; };
 		EE10000BEEEE00000000000B /* ExtensionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsModel.swift; sourceTree = "<group>"; };
@@ -426,6 +430,8 @@
 			isa = PBXGroup;
 			children = (
 				DCA5D42A42431B42A426528D /* main.swift */,
+				DC1000023000000000000001 /* ClipboardHistory.swift */,
+				DC1000043000000000000001 /* ClipboardPaletteController.swift */,
 				B8782CD1AC62B06DEFEB2EF8 /* Info.plist */,
 				200052792AFC3629E3243183 /* Info.entitlements */,
 				352C0D29372D6300A5A0F153 /* Localizable.xcstrings */,
@@ -1110,6 +1116,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5086474EC0968B8E2FC20C4 /* main.swift in Sources */,
+				DC1000013000000000000001 /* ClipboardHistory.swift in Sources */,
+				DC1000033000000000000001 /* ClipboardPaletteController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

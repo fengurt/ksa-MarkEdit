@@ -123,6 +123,10 @@ struct GeneralSettingsView: View {
           }
 
           HStack {
+            Button("Show Clipboard History") {
+              ConversationCaptureCoordinator.shared.showClipboardPalette()
+            }
+            .disabled(captureServiceState != .enabled)
             Button("Open Capture History") {
               ConversationCaptureCoordinator.shared.openCaptureHistory()
             }
@@ -132,10 +136,20 @@ struct GeneralSettingsView: View {
           }
 
           Text(
-            "High-confidence Claude and ChatGPT transcripts are saved locally to Conversations. Other text stays encrypted for 30 days until reviewed. Clipboard capture does not request Accessibility, Screen Recording, or keyboard access."
+            "Press Control-Shift-V anywhere to open the encrypted recent clipboard list. Use categories, the arrow keys, and Return. Monitoring needs no Accessibility permission; direct paste is optional and requests it separately."
           )
           .formDescription()
           .frame(width: 360, alignment: .leading)
+
+          Text(
+            "High-confidence Claude and ChatGPT transcripts are saved locally to Conversations. Other long text stays encrypted for 30 days until reviewed."
+          )
+          .formDescription()
+          .frame(width: 360, alignment: .leading)
+
+          Button("Open Accessibility Settings…") {
+            ConversationCaptureCoordinator.shared.openAccessibilitySettings()
+          }
         }
         .formLabel(alignment: .top, String(localized: "Conversation Inbox"))
 

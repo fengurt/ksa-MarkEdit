@@ -326,6 +326,18 @@ extension ConversationCaptureCoordinator {
     }
   }
 
+  func showClipboardPalette() {
+    guard serviceState == .enabled else { return }
+    DistributedNotificationCenter.default().post(name: .showClipboardPalette, object: nil)
+  }
+
+  func openAccessibilitySettings() {
+    guard let settings = URL(
+      string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+    ) else { return }
+    NSWorkspace.shared.open(settings)
+  }
+
   func openPermissionSettings() {
     guard let settings = URL(
       string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
@@ -584,5 +596,8 @@ private extension Notification.Name {
   )
   static let captureSettingsChanged = Notification.Name(
     "art.apuch.ksamint.capture-settings-changed"
+  )
+  static let showClipboardPalette = Notification.Name(
+    "art.apuch.ksamint.show-clipboard-palette"
   )
 }

@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 import CryptoKit
 import Security
 
@@ -42,6 +43,10 @@ private final class ClipboardCaptureService: NSObject {
   private var captureNext = false
   private var paused = false
   private var lastSavedURL: URL?
+  private let clipboardHistory = ClipboardHistoryStore()
+  private var clipboardPalette: ClipboardPaletteController?
+  private var paletteHotKey: ClipboardPaletteHotKey?
+  private var paletteShortcutAvailable = false
 
   func start() {
     DistributedNotificationCenter.default().addObserver(
@@ -50,6 +55,15 @@ private final class ClipboardCaptureService: NSObject {
       name: .captureSettingsChanged,
       object: nil
     )
+    DistributedNotificationCenter.default().addObserver(
+      self,
+      selector: #selector(showClipboardPalette),
+      name: .showClipboardPalette,
+      object: nil
+    )
+    let hotKey = ClipboardPaletteHotKey { [weak self] in self?.toggleClipboardPalette() }
+    paletteShortcutAvailable = hotKey.register()
+    paletteHotKey = hotKey
     installStatusItem()
     purgeExpired()
     schedule(after: 0.75)
@@ -80,7 +94,7 @@ private final class ClipboardCaptureService: NSObject {
     lastChangeCount = pasteboard.changeCount
     idlePolls = 0
     defer { schedule(after: 0.75) }
-    guard let envelope = captureEnvelope(pasteboard), shouldCapture(envelope.content) else { return }
+    guard let envelope = captureEnvelope(pasteboard) else { return }
     let app = NSWorkspace.shared.frontmostApplication
     if !captureNext, Self.passwordManagers.contains(app?.bundleIdentifier ?? "") { return }
     let forced = captureNext
@@ -98,6 +112,15 @@ private final class ClipboardCaptureService: NSObject {
       rtf: envelope.rtf,
       fileBookmarks: envelope.fileBookmarks
     )
+    if clipboardHistory.record(
+      content: enriched.content,
+      sourceName: enriched.sourceName,
+      sourceBundleID: enriched.sourceBundleID,
+      hasFiles: !enriched.fileBookmarks.isEmpty
+    ) {
+      clipboardPalette?.reload()
+    }
+    guard shouldCapture(enriched.content) else { return }
     if forced || highConfidence(enriched.content) {
       if !saveConversation(enriched) { savePending(enriched) }
     } else {
@@ -261,6 +284,41 @@ private final class ClipboardCaptureService: NSObject {
 }
 
 private extension ClipboardCaptureService {
+  func commitClipboardItem(
+    _ item: ClipboardHistoryItem,
+    to application: NSRunningApplication?
+  ) {
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    pasteboard.setString(item.content, forType: .string)
+    lastChangeCount = pasteboard.changeCount
+
+    guard let application else { return }
+    application.activate(options: [.activateAllWindows])
+    guard AXIsProcessTrusted() else {
+      NSSound.beep()
+      return
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+      let source = CGEventSource(stateID: .hidSystemState)
+      let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
+      keyDown?.flags = .maskCommand
+      let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+      keyUp?.flags = .maskCommand
+      keyDown?.post(tap: .cghidEventTap)
+      keyUp?.post(tap: .cghidEventTap)
+    }
+  }
+
+  func toggleClipboardPalette() {
+    if clipboardPalette == nil {
+      clipboardPalette = ClipboardPaletteController(store: clipboardHistory) { [weak self] item, application in
+        self?.commitClipboardItem(item, to: application)
+      }
+    }
+    clipboardPalette?.toggle()
+  }
+
   private func installStatusItem() {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     item.button?.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: String(localized: "Conversation Inbox"))
@@ -277,13 +335,28 @@ private extension ClipboardCaptureService {
     )
     status.isEnabled = false
     menu.addItem(status)
+    let paletteItem = menu.addItem(
+      withTitle: String(localized: "Show Clipboard History"),
+      action: #selector(showClipboardPalette),
+      keyEquivalent: ""
+    )
+    paletteItem.target = self
+    paletteItem.keyEquivalentModifierMask = [.control, .shift]
+    paletteItem.keyEquivalent = "v"
+    if !paletteShortcutAvailable {
+      paletteItem.toolTip = String(localized: "The global shortcut is already used by another app")
+    }
     menu.addItem(withTitle: paused ? String(localized: "Resume Capture") : String(localized: "Pause Capture"), action: #selector(togglePause), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Capture Next Copy"), action: #selector(captureNextCopy), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Open Conversation Inbox"), action: #selector(openInbox), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Open Capture History"), action: #selector(openHistory), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Search Captures"), action: #selector(searchHistory), keyEquivalent: "").target = self
     if lastSavedURL != nil { menu.addItem(withTitle: String(localized: "Undo Last Capture"), action: #selector(undoLast), keyEquivalent: "").target = self }
+    menu.addItem(withTitle: String(localized: "Clear Clipboard History…"), action: #selector(clearClipboardHistory), keyEquivalent: "").target = self
     menu.addItem(.separator())
+    if !AXIsProcessTrusted() {
+      menu.addItem(withTitle: String(localized: "Enable Direct Paste…"), action: #selector(requestAccessibilityPermission), keyEquivalent: "").target = self
+    }
     menu.addItem(withTitle: String(localized: "Permission Settings…"), action: #selector(openSettings), keyEquivalent: "").target = self
     menu.addItem(withTitle: String(localized: "Turn Off Conversation Capture"), action: #selector(turnOff), keyEquivalent: "").target = self
     statusItem?.menu = menu
@@ -291,6 +364,7 @@ private extension ClipboardCaptureService {
 
   @objc private func togglePause() { paused.toggle(); rebuildMenu() }
   @objc private func captureNextCopy() { captureNext = true; rebuildMenu() }
+  @objc private func showClipboardPalette() { toggleClipboardPalette() }
   @objc private func openInbox() {
     openMainApp(route: "conversation-inbox")
   }
@@ -308,6 +382,23 @@ private extension ClipboardCaptureService {
     _ = try? FileManager.default.trashItem(at: lastSavedURL, resultingItemURL: nil)
     self.lastSavedURL = nil
     rebuildMenu()
+  }
+  @objc private func clearClipboardHistory() {
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Clear clipboard history?")
+    alert.informativeText = String(localized: "This removes the encrypted recent clipboard list from this Mac.")
+    alert.addButton(withTitle: String(localized: "Clear"))
+    alert.addButton(withTitle: String(localized: "Cancel"))
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    clipboardHistory.clear()
+    clipboardPalette?.reload()
+  }
+  @objc private func requestAccessibilityPermission() {
+    let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+    _ = AXIsProcessTrustedWithOptions(options)
+    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+      NSWorkspace.shared.open(url)
+    }
   }
   @objc private func turnOff() {
     SharedCaptureSettings.enabled = false
@@ -374,4 +465,5 @@ private struct CaptureEnvelopeV1: Codable {
 
 private extension Notification.Name {
   static let captureSettingsChanged = Notification.Name("art.apuch.ksamint.capture-settings-changed")
+  static let showClipboardPalette = Notification.Name("art.apuch.ksamint.show-clipboard-palette")
 }
