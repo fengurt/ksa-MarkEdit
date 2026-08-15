@@ -95,8 +95,11 @@ final class ConversationCaptureCoordinator: NSObject {
     if updatePreference {
       AppPreferences.General.conversationCaptureEnabled = enabled
     }
+    // Keep the helper's shared preference in sync in both directions. Without
+    // this, disabling capture leaves an already-running helper polling the
+    // pasteboard with a stale `true` value.
+    synchronizeHelperConfiguration()
     if enabled {
-      synchronizeHelperConfiguration()
       _ = registerLoginAgent()
     } else {
       timer?.invalidate()
@@ -280,6 +283,12 @@ final class ConversationCaptureCoordinator: NSObject {
 extension ConversationCaptureCoordinator {
   var serviceState: ConversationCaptureServiceState {
     guard AppPreferences.General.conversationCaptureEnabled else { return .disabled }
+    // Developer ID/App Store builds use SMAppService. Local ad-hoc `.dev`
+    // builds cannot register a login item, but can safely run the embedded
+    // helper for the lifetime of the development session.
+    if isDevelopmentBuild {
+      return isDevelopmentHelperRunning ? .enabled : .notRegistered
+    }
     guard #available(macOS 13, *) else { return .unavailable }
     switch SMAppService.loginItem(identifier: captureHelperIdentifier).status {
     case .enabled:
@@ -327,8 +336,14 @@ extension ConversationCaptureCoordinator {
   }
 
   func showClipboardPalette() {
-    guard serviceState == .enabled else { return }
-    DistributedNotificationCenter.default().post(name: .showClipboardPalette, object: nil)
+    if serviceState == .enabled {
+      DistributedNotificationCenter.default().post(name: .showClipboardPalette, object: nil)
+      return
+    }
+    guard isDevelopmentBuild, launchDevelopmentHelper() else { return }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      DistributedNotificationCenter.default().post(name: .showClipboardPalette, object: nil)
+    }
   }
 
   func openAccessibilitySettings() {
@@ -491,6 +506,9 @@ extension ConversationCaptureCoordinator {
 
   @discardableResult
   private func registerLoginAgent() -> Bool {
+    if isDevelopmentBuild {
+      return launchDevelopmentHelper()
+    }
     guard #available(macOS 13, *) else { return false }
     let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     do {
@@ -510,6 +528,14 @@ extension ConversationCaptureCoordinator {
   }
 
   private func unregisterLoginAgent() {
+    if isDevelopmentBuild {
+      for application in NSRunningApplication.runningApplications(
+        withBundleIdentifier: captureHelperIdentifier
+      ) {
+        application.terminate()
+      }
+      return
+    }
     guard #available(macOS 13, *) else { return }
     let service = SMAppService.loginItem(identifier: captureHelperIdentifier)
     try? service.unregister()
@@ -520,6 +546,28 @@ extension ConversationCaptureCoordinator {
   private var captureHelperIdentifier: String {
     let appIdentifier = Bundle.main.bundleIdentifier ?? "art.apuch.ksamint.markedit"
     return "\(appIdentifier).conversation-capture-helper"
+  }
+
+  private var isDevelopmentBuild: Bool {
+    Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
+  }
+
+  private var isDevelopmentHelperRunning: Bool {
+    !NSRunningApplication.runningApplications(
+      withBundleIdentifier: captureHelperIdentifier
+    ).isEmpty
+  }
+
+  @discardableResult
+  private func launchDevelopmentHelper() -> Bool {
+    if isDevelopmentHelperRunning { return true }
+    let helperURL = Bundle.main.bundleURL
+      .appending(
+        path: "Contents/Library/LoginItems/ConversationCaptureHelper.app",
+        directoryHint: .isDirectory
+      )
+    guard FileManager.default.fileExists(atPath: helperURL.path) else { return false }
+    return NSWorkspace.shared.open(helperURL)
   }
 
   func synchronizeHelperConfiguration() {
