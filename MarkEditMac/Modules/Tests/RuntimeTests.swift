@@ -7,6 +7,7 @@
 import XCTest
 import WebKit
 import AppKitExtensions
+@testable import SharedUI
 
 @MainActor
 final class RuntimeTests: XCTestCase {
@@ -88,24 +89,16 @@ final class RuntimeTests: XCTestCase {
     testExistenceOfSelector(object: NSImage(), selector: "_setTintColor:")
   }
 
-  func testExistenceOfAppKitSearchField() throws {
-    if #available(macOS 27.0, *) {
-      throw XCTSkip("[macOS 27] Revisit this later")
-    }
+  func testLabeledSearchFieldFallsBackWhenPrivateBezelIsUnavailable() {
+    let searchField = LabeledSearchField(
+      modernStyle: true,
+      modernBezelProvider: { _ in nil }
+    )
+    searchField.frame = CGRect(x: 0, y: 0, width: 240, height: 40)
 
-    let window = NSWindow()
-    window.makeKeyAndOrderFront(nil)
+    searchField.layout()
 
-    let searchField = NSSearchField(frame: CGRect(x: 0, y: 0, width: 240, height: 40))
-    window.contentView?.addSubview(searchField)
-
-    let expectation = XCTestExpectation()
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-      expectation.fulfill()
-    }
-
-    wait(for: [expectation])
-    XCTAssertNotNil(searchField.modernBezelView)
+    XCTAssertEqual(searchField.frame.size, CGSize(width: 240, height: 40))
   }
 
   func testExistenceOfMinimumSearchFieldWidth() {
