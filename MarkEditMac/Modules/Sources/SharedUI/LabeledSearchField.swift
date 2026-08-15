@@ -74,14 +74,11 @@ public final class LabeledSearchField: NSSearchField {
     }
 
     if modernStyle {
-      // To completely remove the unnecessary capsule-style border
+      // This private AppKit view is absent during some early/zero-width
+      // layouts. Styling is optional, so keep the native interior instead of
+      // turning a transient implementation detail into a launch failure.
       if let view = modernBezelProvider(self) {
         renderCustomIcons(modernBezel: view)
-      } else if #unavailable(macOS 27.0) {
-        // [macOS 27] Revisit this later
-        #if DEBUG
-          assertionFailure("Missing AppKitSearchField in NSSearchField")
-        #endif
       }
     }
   }
