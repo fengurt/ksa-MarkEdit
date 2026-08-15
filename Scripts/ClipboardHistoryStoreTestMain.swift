@@ -14,9 +14,9 @@ private enum ClipboardHistoryTestError: Error {
   case failed(String)
 }
 
+// swiftlint:disable convenience_type
 @main
 @MainActor
-// swiftlint:disable:next convenience_type
 private struct ClipboardHistoryStoreTestMain {
   static func main() throws {
     let root = FileManager.default.temporaryDirectory
@@ -84,3 +84,4 @@ private struct ClipboardHistoryStoreTestMain {
     return value
   }
 }
+// swiftlint:enable convenience_type
