@@ -153,7 +153,9 @@ private extension ClipboardPaletteController {
     installEventMonitor()
     panel.makeKeyAndOrderFront(nil)
     panel.orderFrontRegardless()
-    NSRunningApplication.current.activate(options: [.activateAllWindows])
+    NSRunningApplication(
+      processIdentifier: ProcessInfo.processInfo.processIdentifier
+    )?.activate(options: [.activateAllWindows])
     panel.makeKey()
     panel.makeFirstResponder(searchField)
   }
