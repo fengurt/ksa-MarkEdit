@@ -9,6 +9,7 @@ import AppKitExtensions
 
 public final class LabeledSearchField: NSSearchField {
   private let modernStyle: Bool
+  private let modernBezelProvider: (NSSearchField) -> NSView?
   private let bezelView = BezelView(cornerRadius: Constants.bezelCornerRadius)
 
   // To render custom icons in modern style due to the unwanted bezel added by Apple
@@ -27,8 +28,16 @@ public final class LabeledSearchField: NSSearchField {
     return label
   }()
 
-  public init(modernStyle: Bool) {
+  public convenience init(modernStyle: Bool) {
+    self.init(modernStyle: modernStyle) { $0.modernBezelView }
+  }
+
+  init(
+    modernStyle: Bool,
+    modernBezelProvider: @escaping (NSSearchField) -> NSView?
+  ) {
     self.modernStyle = modernStyle
+    self.modernBezelProvider = modernBezelProvider
     super.init(frame: .zero)
 
     usesSingleLineMode = false
@@ -65,14 +74,11 @@ public final class LabeledSearchField: NSSearchField {
     }
 
     if modernStyle {
-      // To completely remove the unnecessary capsule-style border
-      if let view = modernBezelView {
+      // This private AppKit view is absent during some early/zero-width
+      // layouts. Styling is optional, so keep the native interior instead of
+      // turning a transient implementation detail into a launch failure.
+      if let view = modernBezelProvider(self) {
         renderCustomIcons(modernBezel: view)
-      } else if #unavailable(macOS 27.0) {
-        // [macOS 27] Revisit this later
-        #if DEBUG
-          assertionFailure("Missing AppKitSearchField in NSSearchField")
-        #endif
       }
     }
   }
