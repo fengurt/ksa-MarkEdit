@@ -164,20 +164,20 @@ struct ClipboardUserTag: Codable, Equatable, Identifiable, Sendable {
   var name: String
 }
 
-private struct ClipboardHistoryArchive: Codable {
+struct ClipboardHistoryArchive: Codable {
   let version: Int
   var items: [ClipboardHistoryItem]
   var tags: [ClipboardUserTag]
 }
 
-private struct ClipboardItemMetadata: Codable {
+struct ClipboardItemMetadata: Codable {
   let id: String
   let isPinned: Bool
   let isPermanent: Bool
   let tagIDs: [String]
 }
 
-private enum ClipboardHistoryJournalEvent: Codable {
+enum ClipboardHistoryJournalEvent: Codable {
   case snapshot(ClipboardHistoryArchive)
   case upsert(ClipboardHistoryItem)
   case removeItems([String])
@@ -367,7 +367,9 @@ final class ClipboardHistoryStore {
   }
 
   func clear() {
-    let preserved = items.filter { $0.isPinned || $0.isPermanent }
+    // Keep the classification itself as a retention signal. Older journals
+    // may contain labels from before labeling also set `isPermanent`.
+    let preserved = items.filter { $0.isPinned || $0.isPermanent || !$0.tagIDs.isEmpty }
     do {
       try rewriteJournal(items: preserved, tags: tags)
       items = preserved
@@ -653,7 +655,12 @@ private extension ClipboardHistoryStore {
   func sanitizeLoadedState() {
     tags = Array(tags.prefix(Self.maximumTags))
     let validTagIDs = Set(tags.map(\.id))
-    for index in items.indices { items[index].tagIDs = items[index].tagIDs.filter(validTagIDs.contains) }
+    for index in items.indices {
+      items[index].tagIDs = items[index].tagIDs.filter(validTagIDs.contains)
+      if items[index].isPinned || !items[index].tagIDs.isEmpty {
+        items[index].isPermanent = true
+      }
+    }
     rebuildItemIndex()
     trimLoadedItemsIfNeeded()
   }

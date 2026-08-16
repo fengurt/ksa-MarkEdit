@@ -148,6 +148,36 @@ private struct ClipboardHistoryStoreTestMain {
     try expect(FileManager.default.fileExists(atPath: legacyURL.path), "keeps the legacy encrypted backup")
     try expect(FileManager.default.fileExists(atPath: migratedJournalURL.path), "creates the append-only journal")
 
+    let staleTaggedURL = root.appending(path: "stale-tagged.ksj")
+    let staleTag = ClipboardUserTag(id: "legacy-tag", name: "Legacy label")
+    let staleTaggedItem = ClipboardHistoryItem(
+      id: "stale-tagged",
+      capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+      sourceName: "Legacy",
+      sourceBundleID: nil,
+      content: "labeled before labels implied permanent retention",
+      category: .text,
+      isPinned: false,
+      isPermanent: false,
+      tagIDs: [staleTag.id]
+    )
+    try writeJournal(
+      [.snapshot(ClipboardHistoryArchive(version: 2, items: [staleTaggedItem], tags: [staleTag]))],
+      to: staleTaggedURL,
+      key: key
+    )
+    let normalizedStaleTagged = ClipboardHistoryStore(fileURL: staleTaggedURL, key: key)
+    try expect(
+      normalizedStaleTagged.items.first?.isPermanent == true,
+      "upgrades previously labeled records to permanent retention"
+    )
+    normalizedStaleTagged.clear()
+    let restoredStaleTagged = ClipboardHistoryStore(fileURL: staleTaggedURL, key: key)
+    try expect(
+      restoredStaleTagged.items.map(\.id) == [staleTaggedItem.id],
+      "keeps previously labeled records when clearing ordinary history"
+    )
+
     var truncated = try Data(contentsOf: migratedJournalURL)
     truncated.append(contentsOf: [0x12, 0x34])
     try truncated.write(to: migratedJournalURL)
@@ -224,6 +254,20 @@ private struct ClipboardHistoryStoreTestMain {
       options: [.skipsHiddenFiles]
     ) else { return [] }
     return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "md" }
+  }
+
+  private static func writeJournal(
+    _ events: [ClipboardHistoryJournalEvent],
+    to url: URL,
+    key: SymmetricKey
+  ) throws {
+    let plaintext = try JSONEncoder().encode(events)
+    let sealed = try AES.GCM.seal(plaintext, using: key)
+    let combined = try unwrap(sealed.combined, "creates an encrypted journal record")
+    var length = UInt32(combined.count).littleEndian
+    var data = withUnsafeBytes(of: &length) { Data($0) }
+    data.append(combined)
+    try data.write(to: url)
   }
 }
 // swiftlint:enable convenience_type
