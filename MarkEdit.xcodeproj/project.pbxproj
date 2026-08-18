@@ -14,6 +14,7 @@
 		3EA22E606448F0FE568FB44F /* ConversationCaptureQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */; };
 		44364087E6BCA571BA044F80 /* QuickActionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */; };
 		4DB5EF152800022D143EECC4 /* KMDIOSCore in Frameworks */ = {isa = PBXBuildFile; productRef = 597A0C660DD6D616C55457F0 /* KMDIOSCore */; };
+		52776152589ABE62F8902A79 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 23E17F325BB242E5723D8280 /* PrivacyInfo.xcprivacy */; };
 		5709314624EA8D9D2E63ED53 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3529454C584E473453F7A64C /* Foundation.framework */; };
 		661F95743B36C0F38ED812EE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 352C0D29372D6300A5A0F153 /* Localizable.xcstrings */; };
 		6AA1D7E79DB1F060FA87DC5A /* ConversationCaptureHelper.app in Embed Login Items */ = {isa = PBXBuildFile; fileRef = 961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -254,6 +255,7 @@
 		18CFE54623C7AFDE4FF5C010 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1CA1F4F9813A774B762E12D8 /* KMDShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KMDShareExtension.entitlements; sourceTree = "<group>"; };
 		200052792AFC3629E3243183 /* Info.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
+		23E17F325BB242E5723D8280 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuickActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2FEEAF000AB14EFB04101342 /* KMDIOS.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KMDIOS.entitlements; sourceTree = "<group>"; };
 		339AE66BD26EABE59B330DB4 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -502,6 +504,7 @@
 				2FEEAF000AB14EFB04101342 /* KMDIOS.entitlements */,
 				18CFE54623C7AFDE4FF5C010 /* Localizable.xcstrings */,
 				53F98AB3EF85028D10FD378C /* Assets.xcassets */,
+				23E17F325BB242E5723D8280 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Resources;
 			path = Resources;
@@ -1183,6 +1186,7 @@
 				88E3163F48204AFBDAA53A66 /* Assets.xcassets in Resources */,
 				86104BB19A28809E7CC781C1 /* index.html in Resources */,
 				7A0712C8613E5704F79F5C61 /* chunks in Resources */,
+				52776152589ABE62F8902A79 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1545,7 +1549,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios;
 				PRODUCT_MODULE_NAME = KMDIOS;
 				PRODUCT_NAME = kmd;
@@ -1570,7 +1574,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarkEditIOS/ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios.share;
 				PRODUCT_MODULE_NAME = KMDShareExtension;
 				PRODUCT_NAME = KMDShareExtension;
@@ -2031,7 +2035,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios;
 				PRODUCT_MODULE_NAME = KMDIOS;
 				PRODUCT_NAME = kmd;
@@ -2077,7 +2081,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarkEditIOS/ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios.share;
 				PRODUCT_MODULE_NAME = KMDShareExtension;
 				PRODUCT_NAME = KMDShareExtension;

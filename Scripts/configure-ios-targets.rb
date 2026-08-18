@@ -73,7 +73,7 @@ def configure_target(target, bundle_id:, plist:, entitlements:, product_name:, m
     settings['GENERATE_INFOPLIST_FILE'] = 'NO'
     settings['INFOPLIST_FILE'] = plist
     settings['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
-    settings['MARKETING_VERSION'] = '0.1.0'
+    settings['MARKETING_VERSION'] = '1.0.0'
     settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id
     settings['PRODUCT_MODULE_NAME'] = module_name
     settings['PRODUCT_NAME'] = product_name
@@ -101,9 +101,15 @@ unless app
 
   resources_group = app_group.new_group('Resources', 'Resources')
   %w[Info.plist KMDIOS.entitlements].each { |name| source_reference(resources_group, name) }
-  %w[Localizable.xcstrings Assets.xcassets].each do |name|
+  %w[Localizable.xcstrings Assets.xcassets PrivacyInfo.xcprivacy].each do |name|
     add_build_file(app.resources_build_phase, source_reference(resources_group, name))
   end
+end
+
+resources_group = project.main_group.find_subpath('MarkEditIOS/Resources', false)
+if resources_group
+  privacy_manifest = source_reference(resources_group, 'PrivacyInfo.xcprivacy')
+  add_build_file(app.resources_build_phase, privacy_manifest)
 end
 
 share = project.targets.find { |target| target.name == 'KMDShareExtension' }
