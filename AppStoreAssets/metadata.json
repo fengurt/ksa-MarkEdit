@@ -19,16 +19,16 @@
       "description": "Write Markdown without giving up speed, ownership, or focus. kmd is a lightweight local-first editor for iPhone and iPad.\n\n• Edit plain Markdown files with a fast CodeMirror-based editor\n• Preview headings, paragraphs, lists, quotes, code, and inline formatting\n• Navigate a live document outline with word counts and section ratios\n• Create a blank note immediately or open files from the Files app\n• Share text into the local inbox and keep working offline\n• Restore your current draft automatically\n\nYour documents remain ordinary Markdown files. kmd does not require an account and does not include advertising or analytics.",
       "keywords": "markdown,notes,editor,writing,outline,preview,offline,text,knowledge,local",
       "promotionalText": "Fast, local-first Markdown editing with live preview and a structural outline.",
-      "privacyPolicyUrl": "https://notes.apuch.cn/privacy/",
-      "supportUrl": "https://notes.apuch.cn/support/"
+      "privacyPolicyUrl": "https://github.com/fengurt/ksa-MarkEdit/blob/codex/ios-foundation/PRIVACY.md",
+      "supportUrl": "https://github.com/fengurt/ksa-MarkEdit/blob/codex/ios-foundation/SUPPORT.md"
     },
     "zh-Hans": {
       "subtitle": "本地优先的 Markdown 笔记",
       "description": "使用 kmd 在 iPhone 和 iPad 上快速编辑 Markdown，同时保留文件所有权与专注体验。\n\n• 使用高性能编辑器处理纯 Markdown 文件\n• 实时预览标题、段落、列表、引用、代码与行内格式\n• 在文档大纲中查看章节、字数和内容占比\n• 启动后立即新建空白笔记，或从“文件”打开文档\n• 将其他 App 的文本分享到本地收件箱\n• 自动恢复当前草稿，完整支持离线使用\n\n文档始终保持为普通 Markdown 文件。kmd 无需账户，不含广告或分析追踪。",
       "keywords": "Markdown,笔记,编辑器,写作,大纲,预览,离线,文本,知识库,本地",
       "promotionalText": "快速、本地优先的 Markdown 编辑，带实时预览与结构化大纲。",
-      "privacyPolicyUrl": "https://notes.apuch.cn/privacy/",
-      "supportUrl": "https://notes.apuch.cn/support/"
+      "privacyPolicyUrl": "https://github.com/fengurt/ksa-MarkEdit/blob/codex/ios-foundation/PRIVACY.md",
+      "supportUrl": "https://github.com/fengurt/ksa-MarkEdit/blob/codex/ios-foundation/SUPPORT.md"
     }
   }
 }
