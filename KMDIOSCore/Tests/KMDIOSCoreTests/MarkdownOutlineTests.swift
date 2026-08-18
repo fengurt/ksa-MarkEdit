@@ -56,7 +56,8 @@ final class MarkdownOutlineTests: XCTestCase {
     )
 
     try await repository.save(snapshot)
-    XCTAssertEqual(try await repository.load(), snapshot)
+    let restored = try await repository.load()
+    XCTAssertEqual(restored, snapshot)
   }
 
   func testSharedInboxIsChronologicalAndLossless() async throws {
@@ -76,6 +77,14 @@ final class MarkdownOutlineTests: XCTestCase {
 
     try await repository.append(later)
     try await repository.append(earlier)
-    XCTAssertEqual(try await repository.pending(), [earlier, later])
+    let pending = try await repository.pending()
+    XCTAssertEqual(pending, [earlier, later])
+
+    try await repository.archive(id: earlier.id)
+    let afterArchive = try await repository.pending()
+    XCTAssertEqual(afterArchive, [later])
+    XCTAssertTrue(FileManager.default.fileExists(
+      atPath: root.appending(path: "Archive/\(earlier.id.uuidString).json").path
+    ))
   }
 }
