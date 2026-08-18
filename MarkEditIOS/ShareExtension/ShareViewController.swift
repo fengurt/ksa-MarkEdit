@@ -93,7 +93,7 @@ final class ShareViewController: UIViewController {
 
   private func loadData(from provider: NSItemProvider, type: UTType) async -> Data? {
     await withCheckedContinuation { continuation in
-      provider.loadDataRepresentation(for: type) { data, _ in
+      _ = provider.loadDataRepresentation(for: type) { data, _ in
         continuation.resume(returning: data)
       }
     }
