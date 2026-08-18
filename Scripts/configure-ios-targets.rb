@@ -110,6 +110,7 @@ share = project.targets.find { |target| target.name == 'KMDShareExtension' }
 unless share
   share = project.new_target(:app_extension, 'KMDShareExtension', :ios, '18.0')
   share_group = project.main_group.find_subpath('MarkEditIOS/ShareExtension', true)
+  share_group.path = 'ShareExtension'
   source = source_reference(share_group, 'ShareViewController.swift')
   source_reference(share_group, 'Info.plist')
   source_reference(share_group, 'KMDShareExtension.entitlements')
@@ -120,6 +121,9 @@ unless share
   embed_phase.dst_subfolder_spec = '13'
   add_build_file(embed_phase, share.product_reference, attributes: %w[CodeSignOnCopy RemoveHeadersOnCopy])
 end
+
+share_group = project.main_group.find_subpath('MarkEditIOS/ShareExtension', false)
+share_group.path = 'ShareExtension' if share_group
 
 add_package_product(project, app, 'MarkEditKit')
 add_package_product(project, app, 'KMDIOSCore')
@@ -157,4 +161,3 @@ unless File.exist?(scheme_path)
   scheme.configure_with_targets(app, nil, launch_target: true)
   scheme.save_as(project_path, 'MarkEditIOS', true)
 end
-

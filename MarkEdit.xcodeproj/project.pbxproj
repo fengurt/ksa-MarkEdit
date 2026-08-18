@@ -961,6 +961,7 @@
 				1CA1F4F9813A774B762E12D8 /* KMDShareExtension.entitlements */,
 			);
 			name = ShareExtension;
+			path = ShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
