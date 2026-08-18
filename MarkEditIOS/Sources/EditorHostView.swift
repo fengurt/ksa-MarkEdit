@@ -40,7 +40,6 @@ final class EditorHostController: UIViewController {
   private var bridge: WebModuleBridge!
   private var hasLoaded = false
   private var pendingDocumentText: String?
-  private var positionObserver: NSObjectProtocol?
 
   init(session: DocumentSession) {
     self.session = session
@@ -50,10 +49,6 @@ final class EditorHostController: UIViewController {
   @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
-  }
-
-  deinit {
-    if let positionObserver { NotificationCenter.default.removeObserver(positionObserver) }
   }
 
   override func loadView() {
@@ -91,16 +86,12 @@ final class EditorHostController: UIViewController {
       .replacingOccurrences(of: "\"{{USER_SETTINGS}}\"", with: "{}")
     webView.loadHTMLString(html, baseURL: URL(string: "http://localhost/")!)
 
-    positionObserver = NotificationCenter.default.addObserver(
-      forName: .kmdGotoEditorPosition,
-      object: nil,
-      queue: .main
-    ) { [weak self] notification in
-      guard let position = notification.userInfo?["position"] as? Int else { return }
-      Task { @MainActor in
-        self?.bridge.selection.gotoPosition(position: position)
-      }
-    }
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(gotoEditorPosition(_:)),
+      name: .kmdGotoEditorPosition,
+      object: nil
+    )
   }
 
   func replaceDocument(with text: String) {
@@ -115,6 +106,11 @@ final class EditorHostController: UIViewController {
         documentChanged: true
       )
     }
+  }
+
+  @objc private func gotoEditorPosition(_ notification: Notification) {
+    guard let position = notification.userInfo?["position"] as? Int else { return }
+    bridge.selection.gotoPosition(position: position)
   }
 
   private static var editorConfig: EditorConfig {

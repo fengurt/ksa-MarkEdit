@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SharedInboxEnvelope: Codable, Equatable, Sendable {
+public struct SharedInboxEnvelope: Codable, Equatable, Identifiable, Sendable {
   public enum Kind: String, Codable, Sendable {
     case text
     case markdown

@@ -143,6 +143,9 @@ configure_target(
   module_name: 'KMDIOS',
   skip_install: false
 )
+app.build_configurations.each do |configuration|
+  configuration.build_settings.delete('ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME')
+end
 configure_target(
   share,
   bundle_id: 'art.apuch.kmd.ios.share',
