@@ -250,7 +250,7 @@ public final class EditorModuleAPI: NativeModuleAPI {
     return try? JSONSerialization.data(withJSONObject: json).toString()
   #else
     Logger.assertFail("Missing implementation, consider using web api directly")
-    return []
+    return nil
   #endif
   }
 
