@@ -7,43 +7,22 @@ struct ContentView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var importsDocument = false
   @State private var selectedPane: CompactPane = .editor
+  @State private var showsCompactOutline = false
 
   var body: some View {
-    NavigationSplitView {
-      OutlineSidebar()
-        .navigationTitle("Outline")
-    } detail: {
-      VStack(spacing: 0) {
-        if horizontalSizeClass == .compact, session.showsPreview {
-          Picker("View", selection: $selectedPane) {
-            Text("Editor").tag(CompactPane.editor)
-            Text("Preview").tag(CompactPane.preview)
-          }
-          .pickerStyle(.segmented)
-          .padding(.horizontal)
-          .padding(.vertical, 8)
+    Group {
+      if horizontalSizeClass == .compact {
+        NavigationStack {
+          documentView
         }
-
-        if horizontalSizeClass == .compact {
-          if selectedPane == .editor || !session.showsPreview {
-            EditorHostView(session: session)
-          } else {
-            MarkdownPreview(text: session.text)
-          }
-        } else {
-          HStack(spacing: 0) {
-            EditorHostView(session: session)
-            if session.showsPreview {
-              Divider()
-              MarkdownPreview(text: session.text)
-                .frame(minWidth: 280, idealWidth: 390)
-            }
-          }
+      } else {
+        NavigationSplitView {
+          OutlineSidebar()
+            .navigationTitle("Outline")
+        } detail: {
+          documentView
         }
       }
-      .navigationTitle(session.displayName)
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar { toolbarContent }
     }
     .fileImporter(
       isPresented: $importsDocument,
@@ -75,14 +54,63 @@ struct ContentView: View {
       SharedInboxView()
         .environmentObject(session)
     }
+    .sheet(isPresented: $showsCompactOutline) {
+      NavigationStack {
+        OutlineSidebar()
+          .navigationTitle("Outline")
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { showsCompactOutline = false }
+            }
+          }
+      }
+      .environmentObject(session)
+    }
     .alert(item: $session.presentedError) { error in
       Alert(title: Text("Unable to complete the action"), message: Text(error.message))
     }
   }
 
+  private var documentView: some View {
+    VStack(spacing: 0) {
+      if horizontalSizeClass == .compact, session.showsPreview {
+        Picker("View", selection: $selectedPane) {
+          Text("Editor").tag(CompactPane.editor)
+          Text("Preview").tag(CompactPane.preview)
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+      }
+
+      if horizontalSizeClass == .compact {
+        if selectedPane == .editor || !session.showsPreview {
+          EditorHostView(session: session)
+        } else {
+          MarkdownPreview(text: session.text)
+        }
+      } else {
+        HStack(spacing: 0) {
+          EditorHostView(session: session)
+          if session.showsPreview {
+            Divider()
+            MarkdownPreview(text: session.text)
+              .frame(minWidth: 280, idealWidth: 390)
+          }
+        }
+      }
+    }
+    .navigationTitle(session.displayName)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar { toolbarContent }
+  }
+
   @ToolbarContentBuilder
   private var toolbarContent: some ToolbarContent {
     ToolbarItemGroup(placement: .topBarLeading) {
+      if horizontalSizeClass == .compact {
+        Button("Outline", systemImage: "list.bullet.indent") { showsCompactOutline = true }
+      }
       Button("New", systemImage: "square.and.pencil") { session.newDocument() }
       Button("Open", systemImage: "folder") { importsDocument = true }
     }
