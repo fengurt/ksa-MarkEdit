@@ -5,7 +5,7 @@ import UIKit
 import WebKit
 
 struct EditorHostView: UIViewControllerRepresentable {
-  let session: DocumentSession
+  @ObservedObject var session: DocumentSession
 
   func makeCoordinator() -> Coordinator {
     Coordinator(generation: session.editorGeneration)
