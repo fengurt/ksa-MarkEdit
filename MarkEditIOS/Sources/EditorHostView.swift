@@ -82,7 +82,7 @@ final class EditorHostController: UIViewController {
     bridge = WebModuleBridge(webView: webView)
     view = webView
 
-    let html = Self.editorConfig.toHtml
+    let html = Self.editorConfig(text: session?.text ?? "").toHtml
       .replacingOccurrences(of: "\"{{USER_SETTINGS}}\"", with: "{}")
     webView.loadHTMLString(html, baseURL: URL(string: "http://localhost/")!)
 
@@ -113,9 +113,9 @@ final class EditorHostController: UIViewController {
     bridge.selection.gotoPosition(position: position)
   }
 
-  private static var editorConfig: EditorConfig {
+  private static func editorConfig(text: String) -> EditorConfig {
     EditorConfig(
-      text: "",
+      text: text,
       theme: "github-light",
       fontFace: WebFontFace(
         family: "ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -298,7 +298,16 @@ private final class EditorChunkLoader: NSObject, WKURLSchemeHandler {
       task.didFailWithError(URLError(.fileDoesNotExist))
       return
     }
-    let response = URLResponse(
+    let response = HTTPURLResponse(
+      url: url,
+      statusCode: 200,
+      httpVersion: "HTTP/1.1",
+      headerFields: [
+        "Access-Control-Allow-Origin": "*",
+        "Content-Length": String(data.count),
+        "Content-Type": mime,
+      ]
+    ) ?? URLResponse(
       url: url,
       mimeType: mime,
       expectedContentLength: data.count,

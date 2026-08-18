@@ -84,14 +84,22 @@ struct ContentView: View {
       }
 
       if horizontalSizeClass == .compact {
-        if selectedPane == .editor || !session.showsPreview {
+        if !session.hasRestored {
+          ProgressView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if selectedPane == .editor || !session.showsPreview {
           EditorHostView(session: session)
         } else {
           MarkdownPreview(text: session.text)
         }
       } else {
         HStack(spacing: 0) {
-          EditorHostView(session: session)
+          if session.hasRestored {
+            EditorHostView(session: session)
+          } else {
+            ProgressView()
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
           if session.showsPreview {
             Divider()
             MarkdownPreview(text: session.text)

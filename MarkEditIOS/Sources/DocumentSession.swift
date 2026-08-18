@@ -12,6 +12,7 @@ final class DocumentSession: ObservableObject {
   @Published private(set) var isDirty = false
   @Published private(set) var outline = MarkdownOutlineParser.parse("")
   @Published private(set) var pendingShares: [SharedInboxEnvelope] = []
+  @Published private(set) var hasRestored = false
   @Published var showsPreview = true
   @Published var showsInbox = false
   @Published var presentedError: PresentedError?
@@ -30,6 +31,7 @@ final class DocumentSession: ObservableObject {
   }
 
   func restoreDraftAndInbox() async {
+    defer { hasRestored = true }
     do {
       if let draft = try await draftRepository.load(), text.isEmpty {
         text = draft.text
