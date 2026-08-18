@@ -67,6 +67,7 @@ def configure_target(target, bundle_id:, plist:, entitlements:, product_name:, m
     settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon' unless target.symbol_type == :app_extension
     settings['CLANG_ENABLE_MODULES'] = 'YES'
     settings['CODE_SIGN_ENTITLEMENTS'] = entitlements
+    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Development'
     settings['CODE_SIGN_STYLE'] = 'Automatic'
     settings['CURRENT_PROJECT_VERSION'] = '1'
     settings['DEVELOPMENT_TEAM'] = 'A64LJ32AZT'
