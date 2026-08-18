@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "kmd",
+    "name": "kmd: Markdown Notes",
     "bundleId": "art.apuch.kmd.ios",
     "sku": "kmd-ios-2026",
     "primaryLocale": "en-US",
