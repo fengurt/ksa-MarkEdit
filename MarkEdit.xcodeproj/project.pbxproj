@@ -7,13 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A571210597AD4C5679E188B /* EditorHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67658171776005B8110C636 /* EditorHostView.swift */; };
+		14960BD2C622E4E9741308D2 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 18CFE54623C7AFDE4FF5C010 /* Localizable.xcstrings */; };
+		32D7753010A1F241CF812C77 /* MarkEditKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4F42816A9218551BAA0A6C7A /* MarkEditKit */; };
+		375DCA115A9B0626594FF4DB /* DocumentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC89922978A55A43D9E57AE /* DocumentSession.swift */; };
 		3EA22E606448F0FE568FB44F /* ConversationCaptureQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */; };
 		44364087E6BCA571BA044F80 /* QuickActionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */; };
+		4DB5EF152800022D143EECC4 /* KMDIOSCore in Frameworks */ = {isa = PBXBuildFile; productRef = 597A0C660DD6D616C55457F0 /* KMDIOSCore */; };
+		5709314624EA8D9D2E63ED53 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3529454C584E473453F7A64C /* Foundation.framework */; };
 		661F95743B36C0F38ED812EE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 352C0D29372D6300A5A0F153 /* Localizable.xcstrings */; };
 		6AA1D7E79DB1F060FA87DC5A /* ConversationCaptureHelper.app in Embed Login Items */ = {isa = PBXBuildFile; fileRef = 961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		76FBD0D6F8B8D5C2FB43762A /* KMDIOSCore in Frameworks */ = {isa = PBXBuildFile; productRef = B95F229306381C74C6B14AC2 /* KMDIOSCore */; };
+		7A0712C8613E5704F79F5C61 /* chunks in Resources */ = {isa = PBXBuildFile; fileRef = 87ACA65B2C858AF4008E24BA /* chunks */; };
 		7C53EC8A4F5A20EF7338851A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BBFEBC2ADC29DE511CE74941 /* Localizable.xcstrings */; };
 		826BEBFDED71A42A9E90D357 /* QuickActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */; };
 		84FB00F02C6C4AED00850E94 /* AppWritingTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */; };
+		86104BB19A28809E7CC781C1 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 870A51C8294752530095C7EB /* index.html */; };
 		8701D0A42CC12321006AF8C2 /* FileVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 8701D0A32CC12321006AF8C2 /* FileVersion */; };
 		87067E2729755D5C0052E795 /* EditorStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87067E2629755D5C0052E795 /* EditorStatusView.swift */; };
 		87091B9A2A963C6B00F5EF0D /* EditorTextInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87091B992A963C6B00F5EF0D /* EditorTextInput.swift */; };
@@ -117,6 +126,9 @@
 		87F2B5F429ACF56E0027103E /* EditorViewController+Completion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F2B5F329ACF56E0027103E /* EditorViewController+Completion.swift */; };
 		87F2B61429AF2F3A0027103E /* NSSpellChecker+Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F2B61329AF2F3A0027103E /* NSSpellChecker+Extras.swift */; };
 		87FAFFD72BE0B6A300FA509D /* AppDelegate+FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FAFFD62BE0B6A300FA509D /* AppDelegate+FileSystem.swift */; };
+		88E3163F48204AFBDAA53A66 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 53F98AB3EF85028D10FD378C /* Assets.xcassets */; };
+		9842AABD8D7FE9AE6113F6A1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3529454C584E473453F7A64C /* Foundation.framework */; };
+		9A8E00933BDA1AF8D4B16C21 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6B5D5735DD02FD814F153 /* ShareViewController.swift */; };
 		A1EEAD3FEA142D4271B06B70 /* ConversationCaptureDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17373C04C5108A6F2F7D4A61 /* ConversationCaptureDocument.swift */; };
 		AA0000100000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000090000000000000001 /* InfoPlist.strings */; };
 		AB1100013000000000000001 /* WorkspaceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1100023000000000000001 /* WorkspaceSession.swift */; };
@@ -139,14 +151,16 @@
 		AB3000023000000000000001 /* ConversationCaptureCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */; };
 		B0E02F682D8F77A50060DEA5 /* MarkEdit.sdef in Resources */ = {isa = PBXBuildFile; fileRef = B0E02F672D8F77A50060DEA5 /* MarkEdit.sdef */; };
 		B5086474EC0968B8E2FC20C4 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA5D42A42431B42A426528D /* main.swift */; };
-		DC1000013000000000000001 /* ClipboardHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000023000000000000001 /* ClipboardHistory.swift */; };
-		DC1000033000000000000001 /* ClipboardPaletteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000043000000000000001 /* ClipboardPaletteController.swift */; };
-		DC1000053000000000000001 /* ClipboardCaptureDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000063000000000000001 /* ClipboardCaptureDecoder.swift */; };
 		CC000002300000000000001A /* EditorDocument+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002300000000000001B /* EditorDocument+ClosedTab.swift */; };
 		CC000003300000000000001A /* AppDelegate+ClosedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000003300000000000001B /* AppDelegate+ClosedTab.swift */; };
 		CC000004300000000000001A /* EditorSelectionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004300000000000001B /* EditorSelectionHistory.swift */; };
 		CC000006300000000000001A /* EditorClosedTabHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000006300000000000001B /* EditorClosedTabHistory.swift */; };
 		CC000020300000000000FD01 /* FileDrop in Frameworks */ = {isa = PBXBuildFile; productRef = CC000020300000000000FD02 /* FileDrop */; };
+		DC1000013000000000000001 /* ClipboardHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000023000000000000001 /* ClipboardHistory.swift */; };
+		DC1000033000000000000001 /* ClipboardPaletteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000043000000000000001 /* ClipboardPaletteController.swift */; };
+		DC1000053000000000000001 /* ClipboardCaptureDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1000063000000000000001 /* ClipboardCaptureDecoder.swift */; };
+		E235176613D000C5481C6368 /* KMDIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C946CC16BE68D04D0978B111 /* KMDIOSApp.swift */; };
+		E2723F82FD67D8DF554CF403 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F82597C3DB35E4D3C60797 /* ContentView.swift */; };
 		EE100008EEEE000000000008 /* ExtensionInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100007EEEE000000000007 /* ExtensionInstaller.swift */; };
 		EE10000AEEEE00000000000A /* ExtensionUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100009EEEE000000000009 /* ExtensionUpdater.swift */; };
 		EE10000CEEEE00000000000C /* ExtensionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE10000BEEEE00000000000B /* ExtensionsModel.swift */; };
@@ -154,10 +168,18 @@
 		EE100012EEEE000000000012 /* ExtensionsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100011EEEE000000000011 /* ExtensionsRowView.swift */; };
 		EE100014EEEE000000000014 /* ExtensionsOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE100013EEEE000000000013 /* ExtensionsOverlays.swift */; };
 		EE200001EEEE000000000001 /* ExtensionCore in Frameworks */ = {isa = PBXBuildFile; productRef = EE200002EEEE000000000002 /* ExtensionCore */; };
+		F80EE3331C76D3601912321C /* KMDShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F1E1D9AABC7386409E556247 /* KMDShareExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8811E9130C2FE922A26C468 /* QuickActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		715574B8B743A3CBFE90B89F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 870A519A294700DE0095C7EB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 365628E3507497AAAC1ADBE5;
+			remoteInfo = KMDShareExtension;
+		};
 		87152B9F2EC599CA00B39F06 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 870A519A294700DE0095C7EB /* Project object */;
@@ -200,6 +222,17 @@
 			name = "Embed Login Items";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8334932CFDED9C126340512A /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F80EE3331C76D3601912321C /* KMDShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		872924112951525C007156B1 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -216,15 +249,24 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0CC89922978A55A43D9E57AE /* DocumentSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DocumentSession.swift; sourceTree = "<group>"; };
 		17373C04C5108A6F2F7D4A61 /* ConversationCaptureDocument.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConversationCaptureDocument.swift; sourceTree = "<group>"; };
+		18CFE54623C7AFDE4FF5C010 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		1CA1F4F9813A774B762E12D8 /* KMDShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KMDShareExtension.entitlements; sourceTree = "<group>"; };
 		200052792AFC3629E3243183 /* Info.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
 		26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuickActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2FEEAF000AB14EFB04101342 /* KMDIOS.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KMDIOS.entitlements; sourceTree = "<group>"; };
+		339AE66BD26EABE59B330DB4 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3529454C584E473453F7A64C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		352C0D29372D6300A5A0F153 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		53F98AB3EF85028D10FD378C /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		60AFFFE65C6B4E8534156DC1 /* KMDIOSCore */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper; path = KMDIOSCore; sourceTree = "<group>"; };
+		70EC9C96279224F194A6AF78 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		84FB00EF2C6C4AED00850E94 /* AppWritingTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWritingTools.swift; sourceTree = "<group>"; };
 		87067E2629755D5C0052E795 /* EditorStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStatusView.swift; sourceTree = "<group>"; };
 		87091B992A963C6B00F5EF0D /* EditorTextInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTextInput.swift; sourceTree = "<group>"; };
 		8709C69D29B4412F009EABB5 /* AssistantSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantSettingsView.swift; sourceTree = "<group>"; };
-		870A51A2294700DE0095C7EB /* kmd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "kmd.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		870A51A2294700DE0095C7EB /* kmd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kmd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		870A51A9294700E00095C7EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		870A51AC294700E00095C7EB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		870A51AE294700E00095C7EB /* Info.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Info.entitlements; sourceTree = "<group>"; };
@@ -331,6 +373,7 @@
 		961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ConversationCaptureHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D8CE408836D49A060148D33 /* ConversationCaptureQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConversationCaptureQueue.swift; sourceTree = "<group>"; };
 		A395AA8788DF4B03A555DEB5 /* QuickActionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionCoordinator.swift; sourceTree = "<group>"; };
+		A67658171776005B8110C636 /* EditorHostView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditorHostView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000020000000000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		AA0000030000000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -354,26 +397,41 @@
 		AB3000013000000000000001 /* ConversationCaptureCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationCaptureCoordinator.swift; sourceTree = "<group>"; };
 		AB3000033000000000000001 /* art.apuch.ksamint-markedit.conversation-capture.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "art.apuch.ksamint-markedit.conversation-capture.plist"; sourceTree = "<group>"; };
 		B0E02F672D8F77A50060DEA5 /* MarkEdit.sdef */ = {isa = PBXFileReference; lastKnownFileType = text; path = MarkEdit.sdef; sourceTree = "<group>"; };
+		B5D6B5D5735DD02FD814F153 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		B8782CD1AC62B06DEFEB2EF8 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BBFEBC2ADC29DE511CE74941 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		C81ED2D5FF807CD80B634D00 /* MarkEditIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarkEditIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C946CC16BE68D04D0978B111 /* KMDIOSApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KMDIOSApp.swift; sourceTree = "<group>"; };
 		CC000002300000000000001B /* EditorDocument+ClosedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorDocument+ClosedTab.swift"; sourceTree = "<group>"; };
 		CC000003300000000000001B /* AppDelegate+ClosedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ClosedTab.swift"; sourceTree = "<group>"; };
 		CC000004300000000000001B /* EditorSelectionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSelectionHistory.swift; sourceTree = "<group>"; };
 		CC000006300000000000001B /* EditorClosedTabHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorClosedTabHistory.swift; sourceTree = "<group>"; };
 		D00E073352B68D84BB2AB97F /* QuickActionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionViewController.swift; sourceTree = "<group>"; };
-		DCA5D42A42431B42A426528D /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		DC1000023000000000000001 /* ClipboardHistory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardHistory.swift; sourceTree = "<group>"; };
 		DC1000043000000000000001 /* ClipboardPaletteController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardPaletteController.swift; sourceTree = "<group>"; };
 		DC1000063000000000000001 /* ClipboardCaptureDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardCaptureDecoder.swift; sourceTree = "<group>"; };
+		DCA5D42A42431B42A426528D /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		EE100007EEEE000000000007 /* ExtensionInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionInstaller.swift; sourceTree = "<group>"; };
 		EE100009EEEE000000000009 /* ExtensionUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionUpdater.swift; sourceTree = "<group>"; };
 		EE10000BEEEE00000000000B /* ExtensionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsModel.swift; sourceTree = "<group>"; };
 		EE10000DEEEE00000000000D /* ExtensionsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsWindowController.swift; sourceTree = "<group>"; };
 		EE100011EEEE000000000011 /* ExtensionsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsRowView.swift; sourceTree = "<group>"; };
 		EE100013EEEE000000000013 /* ExtensionsOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsOverlays.swift; sourceTree = "<group>"; };
+		F1E1D9AABC7386409E556247 /* KMDShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KMDShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2F82597C3DB35E4D3C60797 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		06E57E3F3C4B00C91575C907 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5709314624EA8D9D2E63ED53 /* Foundation.framework in Frameworks */,
+				32D7753010A1F241CF812C77 /* MarkEditKit in Frameworks */,
+				4DB5EF152800022D143EECC4 /* KMDIOSCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5CD69931339CD2A846A127EF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -418,6 +476,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		872A89D0461CFD53D4AD909B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9842AABD8D7FE9AE6113F6A1 /* Foundation.framework in Frameworks */,
+				76FBD0D6F8B8D5C2FB43762A /* KMDIOSCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A9DABF6DE8065D20BEA88225 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -428,6 +495,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0A761ACEDF34BA314DDCB34B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				339AE66BD26EABE59B330DB4 /* Info.plist */,
+				2FEEAF000AB14EFB04101342 /* KMDIOS.entitlements */,
+				18CFE54623C7AFDE4FF5C010 /* Localizable.xcstrings */,
+				53F98AB3EF85028D10FD378C /* Assets.xcassets */,
+			);
+			name = Resources;
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		1B856C1F3B2635AE498B508E /* ConversationCaptureHelper */ = {
 			isa = PBXGroup;
 			children = (
@@ -441,6 +520,14 @@
 			);
 			name = ConversationCaptureHelper;
 			path = ConversationCaptureHelper;
+			sourceTree = "<group>";
+		};
+		56938849CAC75CCB3631135F /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				3529454C584E473453F7A64C /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 		870A5199294700DE0095C7EB = {
@@ -458,6 +545,8 @@
 				8743B26229593B2000F83DAE /* Build.xcconfig */,
 				1B856C1F3B2635AE498B508E /* ConversationCaptureHelper */,
 				9F4FECC9F0C2E0DE41A16AD0 /* QuickActionExtension */,
+				60AFFFE65C6B4E8534156DC1 /* KMDIOSCore */,
+				F06B3E12C2F48606A29DC482 /* MarkEditIOS */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -473,6 +562,8 @@
 				87152B9A2EC599CA00B39F06 /* FinderExtension.appex */,
 				961FB6D2491B1AF90D6F16F4 /* ConversationCaptureHelper.app */,
 				26BFBACDCB375CD97A896688 /* QuickActionExtension.appex */,
+				C81ED2D5FF807CD80B634D00 /* MarkEditIOS.app */,
+				F1E1D9AABC7386409E556247 /* KMDShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -652,6 +743,7 @@
 			isa = PBXGroup;
 			children = (
 				B7DD60EECF6D0A4B4C8E65B6 /* OS X */,
+				56938849CAC75CCB3631135F /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -819,6 +911,18 @@
 			path = Replace;
 			sourceTree = "<group>";
 		};
+		934D25FD9B77A0D8F1408B39 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				C946CC16BE68D04D0978B111 /* KMDIOSApp.swift */,
+				0CC89922978A55A43D9E57AE /* DocumentSession.swift */,
+				F2F82597C3DB35E4D3C60797 /* ContentView.swift */,
+				A67658171776005B8110C636 /* EditorHostView.swift */,
+			);
+			name = Sources;
+			path = Sources;
+			sourceTree = "<group>";
+		};
 		9F4FECC9F0C2E0DE41A16AD0 /* QuickActionExtension */ = {
 			isa = PBXGroup;
 			children = (
@@ -838,9 +942,73 @@
 			name = "OS X";
 			sourceTree = "<group>";
 		};
+		F06B3E12C2F48606A29DC482 /* MarkEditIOS */ = {
+			isa = PBXGroup;
+			children = (
+				934D25FD9B77A0D8F1408B39 /* Sources */,
+				0A761ACEDF34BA314DDCB34B /* Resources */,
+				F084873CB2845E465B431C2E /* ShareExtension */,
+			);
+			name = MarkEditIOS;
+			path = MarkEditIOS;
+			sourceTree = "<group>";
+		};
+		F084873CB2845E465B431C2E /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				B5D6B5D5735DD02FD814F153 /* ShareViewController.swift */,
+				70EC9C96279224F194A6AF78 /* Info.plist */,
+				1CA1F4F9813A774B762E12D8 /* KMDShareExtension.entitlements */,
+			);
+			name = ShareExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		365628E3507497AAAC1ADBE5 /* KMDShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8FE55AD5A289EF3108B09685 /* Build configuration list for PBXNativeTarget "KMDShareExtension" */;
+			buildPhases = (
+				875C29C2654C9CB6F50DD800 /* Sources */,
+				872A89D0461CFD53D4AD909B /* Frameworks */,
+				C78CAC8282ABB05F4004BA55 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KMDShareExtension;
+			packageProductDependencies = (
+				B95F229306381C74C6B14AC2 /* KMDIOSCore */,
+			);
+			productName = KMDShareExtension;
+			productReference = F1E1D9AABC7386409E556247 /* KMDShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		483D888242B8C90037C01114 /* MarkEditIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFEB48A2364301716D81081C /* Build configuration list for PBXNativeTarget "MarkEditIOS" */;
+			buildPhases = (
+				5073DE4B919191F17DB1D086 /* Sources */,
+				06E57E3F3C4B00C91575C907 /* Frameworks */,
+				24E4B6E7315CFB55C14D7AD8 /* Resources */,
+				8334932CFDED9C126340512A /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4793F7D5BE44C39F3CD8B633 /* PBXTargetDependency */,
+			);
+			name = MarkEditIOS;
+			packageProductDependencies = (
+				4F42816A9218551BAA0A6C7A /* MarkEditKit */,
+				597A0C660DD6D616C55457F0 /* KMDIOSCore */,
+			);
+			productName = MarkEditIOS;
+			productReference = C81ED2D5FF807CD80B634D00 /* MarkEditIOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4B3A972CDA261163602B6B02 /* ConversationCaptureHelper */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C02E4F76FDCC7B58B15AECF4 /* Build configuration list for PBXNativeTarget "ConversationCaptureHelper" */;
@@ -913,7 +1081,7 @@
 				AB2100023000000000000001 /* ResourceCore */,
 				AB2100043000000000000001 /* ResourceUI */,
 			);
-			productName = "kmd";
+			productName = kmd;
 			productReference = 870A51A2294700DE0095C7EB /* kmd.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -999,11 +1167,24 @@
 				87152B992EC599CA00B39F06 /* FinderExtension */,
 				4B3A972CDA261163602B6B02 /* ConversationCaptureHelper */,
 				6905FF735E4D06A886895980 /* QuickActionExtension */,
+				483D888242B8C90037C01114 /* MarkEditIOS */,
+				365628E3507497AAAC1ADBE5 /* KMDShareExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		24E4B6E7315CFB55C14D7AD8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14960BD2C622E4E9741308D2 /* Localizable.xcstrings in Resources */,
+				88E3163F48204AFBDAA53A66 /* Assets.xcassets in Resources */,
+				86104BB19A28809E7CC781C1 /* index.html in Resources */,
+				7A0712C8613E5704F79F5C61 /* chunks in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		870A51A0294700DE0095C7EB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1047,6 +1228,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				7C53EC8A4F5A20EF7338851A /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C78CAC8282ABB05F4004BA55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1111,6 +1299,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				826BEBFDED71A42A9E90D357 /* QuickActionViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5073DE4B919191F17DB1D086 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E235176613D000C5481C6368 /* KMDIOSApp.swift in Sources */,
+				375DCA115A9B0626594FF4DB /* DocumentSession.swift in Sources */,
+				E2723F82FD67D8DF554CF403 /* ContentView.swift in Sources */,
+				0A571210597AD4C5679E188B /* EditorHostView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1250,9 +1449,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		875C29C2654C9CB6F50DD800 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A8E00933BDA1AF8D4B16C21 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4793F7D5BE44C39F3CD8B633 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = KMDShareExtension;
+			target = 365628E3507497AAAC1ADBE5 /* KMDShareExtension */;
+			targetProxy = 715574B8B743A3CBFE90B89F /* PBXContainerItemProxy */;
+		};
 		7097FDF5A374702B7D4DF878 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = QuickActionExtension;
@@ -1314,6 +1527,62 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0D13A65172D4F227D2BAD476 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/Resources/KMDIOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A64LJ32AZT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarkEditIOS/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios;
+				PRODUCT_MODULE_NAME = KMDIOS;
+				PRODUCT_NAME = kmd;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4DCCEBBC59F80F50D4CC1087 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/ShareExtension/KMDShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A64LJ32AZT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarkEditIOS/ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios.share;
+				PRODUCT_MODULE_NAME = KMDShareExtension;
+				PRODUCT_NAME = KMDShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		55FFCC0685B5782ABCDBC66A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1515,7 +1784,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MarkEditMac/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "kmd";
+				INFOPLIST_KEY_CFBundleDisplayName = kmd;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -1528,7 +1797,7 @@
 				MARKETING_VERSION = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited)";
 				PRODUCT_MODULE_NAME = MarkEdit;
-				PRODUCT_NAME = "kmd";
+				PRODUCT_NAME = kmd;
 				REGISTER_APP_GROUPS = "$(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1552,7 +1821,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MarkEditMac/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "kmd";
+				INFOPLIST_KEY_CFBundleDisplayName = kmd;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -1565,7 +1834,7 @@
 				MARKETING_VERSION = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited)";
 				PRODUCT_MODULE_NAME = MarkEdit;
-				PRODUCT_NAME = "kmd";
+				PRODUCT_NAME = kmd;
 				REGISTER_APP_GROUPS = "$(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
@@ -1745,6 +2014,37 @@
 			};
 			name = Release;
 		};
+		DEA490F79F7B7D54534DD6D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/Resources/KMDIOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A64LJ32AZT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarkEditIOS/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios;
+				PRODUCT_MODULE_NAME = KMDIOS;
+				PRODUCT_NAME = kmd;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		E71F86F6E8E80385CACB0933 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1762,6 +2062,31 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		FB5588F6DC6408A20E03C97E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/ShareExtension/KMDShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A64LJ32AZT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarkEditIOS/ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios.share;
+				PRODUCT_MODULE_NAME = KMDShareExtension;
+				PRODUCT_NAME = KMDShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -1804,6 +2129,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		8FE55AD5A289EF3108B09685 /* Build configuration list for PBXNativeTarget "KMDShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DCCEBBC59F80F50D4CC1087 /* Release */,
+				FB5588F6DC6408A20E03C97E /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C02E4F76FDCC7B58B15AECF4 /* Build configuration list for PBXNativeTarget "ConversationCaptureHelper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1822,9 +2156,26 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		DFEB48A2364301716D81081C /* Build configuration list for PBXNativeTarget "MarkEditIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEA490F79F7B7D54534DD6D3 /* Release */,
+				0D13A65172D4F227D2BAD476 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4F42816A9218551BAA0A6C7A /* MarkEditKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkEditKit;
+		};
+		597A0C660DD6D616C55457F0 /* KMDIOSCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KMDIOSCore;
+		};
 		8701D0A32CC12321006AF8C2 /* FileVersion */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FileVersion;
@@ -1884,6 +2235,10 @@
 		AB2100043000000000000001 /* ResourceUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ResourceUI;
+		};
+		B95F229306381C74C6B14AC2 /* KMDIOSCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KMDIOSCore;
 		};
 		CC000020300000000000FD02 /* FileDrop */ = {
 			isa = XCSwiftPackageProductDependency;

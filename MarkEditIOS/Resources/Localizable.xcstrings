@@ -1,0 +1,45 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Add Markdown headings to build the live outline." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajoutez des titres Markdown pour créer le plan dynamique." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Markdown 見出しを追加するとライブアウトラインが作成されます。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Markdown 标题以生成实时大纲。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "加入 Markdown 標題以產生即時大綱。" } }
+      }
+    },
+    "Cancel" : {},
+    "Document structure" : {},
+    "Done" : {},
+    "Editor" : {},
+    "Inbox" : {},
+    "Inbox is empty" : {},
+    "New" : {},
+    "No headings yet" : {},
+    "No supported content was shared." : {},
+    "Open" : {},
+    "Outline" : {},
+    "Preview" : {},
+    "Reading shared content…" : {},
+    "Save" : {},
+    "Save to Inbox" : {},
+    "Sections" : {},
+    "Share with kmd" : {},
+    "Shared with kmd" : {},
+    "Start writing to see the rendered document." : {},
+    "Unable to complete the action" : {},
+    "Untitled" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sans titre" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "名称未設定" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未命名" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未命名" } }
+      }
+    },
+    "View" : {},
+    "Words" : {}
+  },
+  "version" : "1.0"
+}
+
