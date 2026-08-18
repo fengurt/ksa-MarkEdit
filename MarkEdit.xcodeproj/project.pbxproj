@@ -1569,8 +1569,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/ShareExtension/KMDShareExtension.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A64LJ32AZT;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1580,6 +1580,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios.share;
 				PRODUCT_MODULE_NAME = KMDShareExtension;
 				PRODUCT_NAME = KMDShareExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "kmd iOS Share App Store 2026";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -2027,8 +2028,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MarkEditIOS/Resources/KMDIOS.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A64LJ32AZT;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -2042,6 +2043,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = art.apuch.kmd.ios;
 				PRODUCT_MODULE_NAME = KMDIOS;
 				PRODUCT_NAME = kmd;
+				PROVISIONING_PROFILE_SPECIFIER = "kmd iOS App Store 2026";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = NO;
 				SUPPORTS_MACCATALYST = NO;

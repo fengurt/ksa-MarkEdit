@@ -60,15 +60,22 @@ def add_build_file(phase, reference, attributes: nil)
   build_file
 end
 
-def configure_target(target, bundle_id:, plist:, entitlements:, product_name:, module_name:, skip_install:)
+def configure_target(target, bundle_id:, plist:, entitlements:, product_name:, module_name:, skip_install:, release_profile:)
   target.build_configurations.each do |configuration|
     settings = configuration.build_settings
     settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES' if target.symbol_type == :app_extension
     settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon' unless target.symbol_type == :app_extension
     settings['CLANG_ENABLE_MODULES'] = 'YES'
     settings['CODE_SIGN_ENTITLEMENTS'] = entitlements
-    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Development'
-    settings['CODE_SIGN_STYLE'] = 'Automatic'
+    if configuration.name == 'Release'
+      settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'iPhone Distribution'
+      settings['CODE_SIGN_STYLE'] = 'Manual'
+      settings['PROVISIONING_PROFILE_SPECIFIER'] = release_profile
+    else
+      settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Development'
+      settings['CODE_SIGN_STYLE'] = 'Automatic'
+      settings.delete('PROVISIONING_PROFILE_SPECIFIER')
+    end
     settings['CURRENT_PROJECT_VERSION'] = '1'
     settings['DEVELOPMENT_TEAM'] = 'A64LJ32AZT'
     settings['GENERATE_INFOPLIST_FILE'] = 'NO'
@@ -148,7 +155,8 @@ configure_target(
   entitlements: 'MarkEditIOS/Resources/KMDIOS.entitlements',
   product_name: 'kmd',
   module_name: 'KMDIOS',
-  skip_install: false
+  skip_install: false,
+  release_profile: 'kmd iOS App Store 2026'
 )
 app.build_configurations.each do |configuration|
   configuration.build_settings.delete('ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME')
@@ -160,7 +168,8 @@ configure_target(
   entitlements: 'MarkEditIOS/ShareExtension/KMDShareExtension.entitlements',
   product_name: 'KMDShareExtension',
   module_name: 'KMDShareExtension',
-  skip_install: true
+  skip_install: true,
+  release_profile: 'kmd iOS Share App Store 2026'
 )
 
 project.save
