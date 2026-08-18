@@ -47,7 +47,7 @@ struct ContentView: View {
     }
     .fileImporter(
       isPresented: $importsDocument,
-      allowedContentTypes: [.markdown, .plainText],
+      allowedContentTypes: [.kmdMarkdown, .plainText],
       allowsMultipleSelection: false
     ) { result in
       guard case .success(let urls) = result, let url = urls.first else {
@@ -62,7 +62,7 @@ struct ContentView: View {
         set: { if !$0 { session.exportRequest = nil } }
       ),
       document: session.exportRequest.map { MarkdownFileDocument(text: $0.text) },
-      contentType: .markdown,
+      contentType: .kmdMarkdown,
       defaultFilename: session.exportRequest?.filename ?? "Untitled.md"
     ) { result in
       guard case .success(let url) = result else {
@@ -227,4 +227,3 @@ private struct SharedInboxView: View {
     }
   }
 }
-

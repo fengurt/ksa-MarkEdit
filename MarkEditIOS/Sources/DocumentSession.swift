@@ -224,7 +224,7 @@ struct MarkdownExportRequest: Identifiable {
 }
 
 struct MarkdownFileDocument: FileDocument {
-  static var readableContentTypes: [UTType] { [.markdown, .plainText] }
+  static var readableContentTypes: [UTType] { [.kmdMarkdown, .plainText] }
   var text: String
 
   init(text: String) {
@@ -248,3 +248,6 @@ extension Notification.Name {
   static let kmdGotoEditorPosition = Notification.Name("art.apuch.kmd.goto-editor-position")
 }
 
+extension UTType {
+  static let kmdMarkdown = UTType(importedAs: "net.daringfireball.markdown")
+}

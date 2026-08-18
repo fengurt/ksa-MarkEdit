@@ -68,24 +68,35 @@ final class ShareViewController: UIViewController {
 
   private func content(from provider: NSItemProvider) async -> SharedInboxEnvelope? {
     let candidates: [(UTType, SharedInboxEnvelope.Kind)] = [
-      (.markdown, .markdown),
+      (UTType(importedAs: "net.daringfireball.markdown"), .markdown),
       (.html, .html),
       (.plainText, .text),
       (.url, .url),
     ]
 
     for (type, kind) in candidates where provider.hasItemConformingToTypeIdentifier(type.identifier) {
-      guard let data = try? await provider.loadDataRepresentation(for: type) else { continue }
+      guard let data = await loadData(from: provider, type: type) else { continue }
       let text = String(data: data, encoding: .utf8)
         ?? String(data: data, encoding: .utf16)
-      guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+      guard let text,
+            !text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else { continue }
       return SharedInboxEnvelope(
         kind: kind,
         text: text,
-        sourceURL: kind == .url ? text.trimmingCharacters(in: .whitespacesAndNewlines) : nil
+        sourceURL: kind == .url
+          ? text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+          : nil
       )
     }
     return nil
+  }
+
+  private func loadData(from provider: NSItemProvider, type: UTType) async -> Data? {
+    await withCheckedContinuation { continuation in
+      provider.loadDataRepresentation(for: type) { data, _ in
+        continuation.resume(returning: data)
+      }
+    }
   }
 
   @objc private func save() {
@@ -117,4 +128,3 @@ final class ShareViewController: UIViewController {
     return SharedInboxRepository(rootURL: container.appending(path: "SharedInbox", directoryHint: .isDirectory))
   }
 }
-

@@ -209,7 +209,9 @@ extension EditorHostController: EditorModuleCoreDelegate {
   func editorCoreCompositionEnded(_ sender: EditorModuleCore, selectedLineColumn: LineColumnInfo) {}
 
   func editorCoreLinkClicked(_ sender: EditorModuleCore, link: String) {
-    guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased()) else { return }
+    guard let url = URL(string: link),
+          let scheme = url.scheme?.lowercased(),
+          ["http", "https"].contains(scheme) else { return }
     UIApplication.shared.open(url)
   }
 
@@ -273,7 +275,8 @@ extension EditorHostController: WKNavigationDelegate {
   ) {
     guard navigationAction.navigationType == .linkActivated,
           let url = navigationAction.request.url,
-          ["http", "https"].contains(url.scheme?.lowercased()) else {
+          let scheme = url.scheme?.lowercased(),
+          ["http", "https"].contains(scheme) else {
       decisionHandler(.allow)
       return
     }
@@ -318,4 +321,3 @@ private final class EditorChunkLoader: NSObject, WKURLSchemeHandler {
     "woff2": "font/woff2",
   ]
 }
-
