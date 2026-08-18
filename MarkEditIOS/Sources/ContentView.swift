@@ -205,20 +205,175 @@ private struct MarkdownPreview: View {
         )
         .frame(maxWidth: .infinity, minHeight: 260)
       } else {
-        Text(renderedText)
-          .textSelection(.enabled)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(20)
+        LazyVStack(alignment: .leading, spacing: 14) {
+          ForEach(MarkdownPreviewBlock.parse(text)) { block in
+            preview(block)
+          }
+        }
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
       }
     }
     .background(Color(uiColor: .secondarySystemBackground))
   }
 
-  private var renderedText: AttributedString {
-    (try? AttributedString(
-      markdown: text,
+  @ViewBuilder
+  private func preview(_ block: MarkdownPreviewBlock) -> some View {
+    switch block.kind {
+    case .heading(let level, let source):
+      inlineText(source)
+        .font(headingFont(level))
+        .fontWeight(level <= 2 ? .bold : .semibold)
+        .padding(.top, level == 1 ? 6 : 2)
+    case .paragraph(let source):
+      inlineText(source)
+        .font(.body)
+    case .unordered(let source):
+      HStack(alignment: .firstTextBaseline, spacing: 10) {
+        Text("•")
+        inlineText(source)
+      }
+      .font(.body)
+      .padding(.leading, 8)
+    case .ordered(let number, let source):
+      HStack(alignment: .firstTextBaseline, spacing: 8) {
+        Text("\(number).")
+          .foregroundStyle(.secondary)
+        inlineText(source)
+      }
+      .font(.body)
+      .padding(.leading, 8)
+    case .quote(let source):
+      HStack(alignment: .top, spacing: 10) {
+        RoundedRectangle(cornerRadius: 2)
+          .fill(.tertiary)
+          .frame(width: 4)
+        inlineText(source)
+          .foregroundStyle(.secondary)
+      }
+    case .code(let source):
+      ScrollView(.horizontal) {
+        Text(source)
+          .font(.system(.callout, design: .monospaced))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(12)
+      }
+      .background(.background.opacity(0.75), in: RoundedRectangle(cornerRadius: 10))
+    case .rule:
+      Divider()
+    }
+  }
+
+  private func inlineText(_ source: String) -> Text {
+    let rendered = (try? AttributedString(
+      markdown: source,
       options: .init(interpretedSyntax: .full, failurePolicy: .returnPartiallyParsedIfPossible)
-    )) ?? AttributedString(text)
+    )) ?? AttributedString(source)
+    return Text(rendered)
+  }
+
+  private func headingFont(_ level: Int) -> Font {
+    switch level {
+    case 1: .largeTitle
+    case 2: .title2
+    case 3: .title3
+    default: .headline
+    }
+  }
+}
+
+private struct MarkdownPreviewBlock: Identifiable {
+  enum Kind {
+    case heading(Int, String)
+    case paragraph(String)
+    case unordered(String)
+    case ordered(Int, String)
+    case quote(String)
+    case code(String)
+    case rule
+  }
+
+  let id: Int
+  let kind: Kind
+
+  static func parse(_ source: String) -> [Self] {
+    let lines = source.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+    var blocks: [Self] = []
+    var paragraph: [String] = []
+    var code: [String] = []
+    var isCode = false
+
+    func append(_ kind: Kind) {
+      blocks.append(Self(id: blocks.count, kind: kind))
+    }
+    func flushParagraph() {
+      guard !paragraph.isEmpty else { return }
+      append(.paragraph(paragraph.joined(separator: " ")))
+      paragraph.removeAll(keepingCapacity: true)
+    }
+
+    for line in lines {
+      let trimmed = line.trimmingCharacters(in: .whitespaces)
+      if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
+        flushParagraph()
+        if isCode {
+          append(.code(code.joined(separator: "\n")))
+          code.removeAll(keepingCapacity: true)
+        }
+        isCode.toggle()
+        continue
+      }
+      if isCode {
+        code.append(line)
+        continue
+      }
+      if trimmed.isEmpty {
+        flushParagraph()
+        continue
+      }
+
+      if let heading = heading(in: trimmed) {
+        flushParagraph()
+        append(.heading(heading.level, heading.text))
+      } else if trimmed == "---" || trimmed == "***" || trimmed == "___" {
+        flushParagraph()
+        append(.rule)
+      } else if let item = unorderedItem(in: trimmed) {
+        flushParagraph()
+        append(.unordered(item))
+      } else if let item = orderedItem(in: trimmed) {
+        flushParagraph()
+        append(.ordered(item.number, item.text))
+      } else if trimmed.hasPrefix(">") {
+        flushParagraph()
+        append(.quote(String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)))
+      } else {
+        paragraph.append(trimmed)
+      }
+    }
+    flushParagraph()
+    if isCode, !code.isEmpty { append(.code(code.joined(separator: "\n"))) }
+    return blocks
+  }
+
+  private static func heading(in line: String) -> (level: Int, text: String)? {
+    let level = line.prefix(while: { $0 == "#" }).count
+    guard (1...6).contains(level), line.dropFirst(level).first == " " else { return nil }
+    return (level, String(line.dropFirst(level + 1)))
+  }
+
+  private static func unorderedItem(in line: String) -> String? {
+    guard line.count > 2, ["- ", "* ", "+ "].contains(String(line.prefix(2))) else { return nil }
+    return String(line.dropFirst(2))
+  }
+
+  private static func orderedItem(in line: String) -> (number: Int, text: String)? {
+    let digits = line.prefix(while: { $0.isNumber })
+    guard !digits.isEmpty,
+          let number = Int(digits),
+          line.dropFirst(digits.count).hasPrefix(". ") else { return nil }
+    return (number, String(line.dropFirst(digits.count + 2)))
   }
 }
 
